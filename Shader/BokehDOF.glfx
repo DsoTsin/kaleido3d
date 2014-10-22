@@ -1,0 +1,346 @@
+GLShader bokehBlurVS
+{
+	layout(location = $$ATTR_POSITION) in vec2 Position;
+
+	void main()
+	{
+		gl_Position  = vec4(Position,0,1);
+	}
+}
+
+GLShader bokehBlurFS
+{
+	uniform sampler2D		BlurDepthTex;
+	uniform sampler2D		ColorTex;
+	uniform vec2			Direction;
+	uniform float			MaxCoCRadius;
+	out vec4 				FragColor;
+
+	void main()
+	{
+		vec3 color				= texelFetch(ColorTex,ivec2(floor(gl_FragCoord.xy)),0).xyz;
+		vec2 bd					= texelFetch(BlurDepthTex,ivec2(floor(gl_FragCoord.xy)),0).xy;
+		float blur				= bd.x;
+		float depth				= bd.y;
+		float cocSize			= blur * MaxCoCRadius;
+		vec3 outputColor		= vec3(0);
+
+		if(cocSize>0)
+		{
+			int count			= 0;
+			int nSamples		= int(ceil(MaxCoCRadius));
+			float totalWeight	= 0;
+
+			for(int i=-nSamples;i<=nSamples;++i)
+			{
+				vec2 coord		= floor(gl_FragCoord.xy) + i*Direction;
+				vec2 blurDepth	= texelFetch(BlurDepthTex,ivec2(coord),0).xy;
+
+				float cocWeight = clamp(cocSize + 1.0f - abs(float(i)),0,1);
+				float depthWeight= float(blurDepth.y >= depth);
+				float blurWeight= blurDepth.x;
+				float tapWeight = cocWeight * clamp(depthWeight + blurWeight,0,1);
+
+				vec3 color		= texelFetch(ColorTex,ivec2(coord),0).xyz;
+				
+				outputColor		+= color*tapWeight;
+				totalWeight		+= tapWeight;
+			}
+			outputColor /= totalWeight;
+		}
+		else
+		{
+			outputColor = color;
+		}
+
+		FragColor		 = vec4(outputColor,1);
+	}
+}
+
+GLShader bokehBlurPoissionFS{
+	uniform sampler2D		BlurDepthTex;
+	uniform sampler2D		ColorTex;
+	uniform sampler2D		RotationTex;
+	uniform int				NSamples;
+	uniform float			MaxCoCRadius;
+	uniform vec2			Samples[32];
+	out vec4 				FragColor;
+
+	void main()
+	{
+		ivec2 pix               = ivec2(floor(gl_FragCoord.xy));
+		vec3 color				= texelFetch(ColorTex,pix,0).xyz;
+		vec2 bd					= texelFetch(BlurDepthTex,pix,0).xy;
+		float blur				= bd.x;
+		float depth				= bd.y;
+		float cocSize			= blur * MaxCoCRadius;
+		vec3 outputColor		= vec3(0);
+		vec2 theta	            = texelFetch(RotationTex,pix,0).xy;
+		mat2 rot 	            = mat2(theta.x,theta.y,-theta.y,theta.x);
+		if(cocSize>0)
+		{
+			int count			= 0;
+			float totalWeight	= 0;
+			for(int i=0;i<NSamples;++i)
+			{
+				float neighDist = length(Samples[i])*cocSize;
+				vec2 coord		= floor(gl_FragCoord.xy) + (rot * Samples[i])*cocSize;
+				vec2 blurDepth	= texelFetch(BlurDepthTex,ivec2(coord),0).xy;
+				float cocWeight = clamp(cocSize + 1.0f - neighDist,0,1);
+
+				float depthWeight= float(blurDepth.y >= depth);
+				float blurWeight= blurDepth.x;
+				float tapWeight = cocWeight * clamp(depthWeight + blurWeight,0,1);
+				vec3 color		= texelFetch(ColorTex,ivec2(coord),0).xyz;
+				
+				outputColor		+= color*tapWeight;
+				totalWeight		+= tapWeight;
+			}
+			outputColor /= totalWeight;
+		}
+		else
+		{
+			outputColor = color;
+		}
+
+		FragColor		 = vec4(outputColor,1);
+	}
+}
+
+GLShader bokehCocFS{
+	uniform sampler2D		PositionTex;
+	uniform mat4			ViewMat;
+	uniform float			FarStart;
+	uniform float			FarEnd;
+	out vec4 				FragColor;
+
+	void main()
+	{
+		vec4 p		= textureLod(PositionTex,gl_FragCoord.xy / vec2(textureSize(PositionTex,0)),0);
+		float atInf = float(p.w==0.f);
+		p.w			= 1.f;
+		float depth = max(-(ViewMat * p).z,atInf*1000.f);
+		float blur  = clamp( (depth-FarStart) / (FarEnd-FarStart), 0.01f, 1.f);
+		FragColor   = vec4(blur,depth,1,1);
+	}
+}
+
+GLShader bokehDetectionFS
+{
+	//-----------------------------------------------------------------------------
+	layout(binding = 0, offset = 0) uniform atomic_uint BokehCounter;
+	layout(size4x32) writeonly      uniform  image2D 	BokehPositionTex;
+	layout(size4x32) writeonly      uniform  image2D 	BokehColorTex;
+	//-----------------------------------------------------------------------------
+	uniform sampler2D		BlurDepthTex;
+	uniform sampler2D		ColorTex;
+	uniform float			MaxCoCRadius;
+	uniform float			LumThreshold;
+	uniform float			CoCThreshold;
+	out vec4 				FragColor;
+	//------------------------------------------------------------------------------
+
+
+	void main()
+	{
+		vec2 rcpSize  =  1.f / vec2(textureSize(ColorTex,0));
+		vec2  coord   = gl_FragCoord.xy * rcpSize;
+		vec2  bd	  = textureLod(BlurDepthTex,coord,0).xy;
+		float blur    = bd.x;
+		float depth   = bd.y;
+		vec3  color   = textureLod(ColorTex,coord,0).xyz;
+		float cocSize = blur * MaxCoCRadius;
+
+		// Compute 5x5 neighborhood color with 9 samples
+		vec3 avgColor   = vec3(0);
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2(-1.5f,-1.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2( 0.5f,-1.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2( 1.5f,-1.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2(-1.5f, 0.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2( 0.5f, 0.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2( 1.5f, 0.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2(-1.5f, 1.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2( 0.5f, 1.5f))*rcpSize,0).xyz;
+		avgColor += textureLod(ColorTex,(gl_FragCoord.xy+vec2( 1.5f, 1.5f))*rcpSize,0).xyz;
+		avgColor /= 9;
+
+		// Compute luminosity (with equal weights)
+		float colorLum   = dot(vec3(1), color);
+		float avgLum     = dot(vec3(1), avgColor);
+		float difLum     = max(colorLum-avgLum,0);
+
+		// Count point where intensity of neighbors is less than the current pixel
+		if(difLum>LumThreshold && cocSize>CoCThreshold)
+		{
+			ivec2 bufSize, coord;
+			int current = int(atomicCounterIncrement(BokehCounter));
+			bufSize 	= textureSize(ColorTex,0).xy;
+			coord.y 	= int(floor(current/bufSize.y));
+			coord.x 	= current - coord.y*bufSize.y;
+
+			// Compute energy of the bokeh according to CoC size
+			vec3 lcolor = color.xyz / (3.141592654f*cocSize*cocSize);
+			imageStore(BokehPositionTex,coord,vec4(gl_FragCoord.x,gl_FragCoord.y,depth,blur));
+			imageStore(BokehColorTex,coord,vec4(lcolor,1));
+			color 		= vec3(0,0,0);
+		}
+
+		FragColor = vec4(color,1);
+	}
+}
+
+technique bokehBlur{
+	pass0{
+		VertexShader = bokehBlurVS(420core);
+		FragmentShader = bokehBlurFS(420core);
+	}
+}
+
+GLShader bokehRenderingVS{
+	uniform vec2		PixelScale;
+	uniform sampler2D	BokehPositionTex; //(x,y,scale)
+	uniform sampler2D	BokehColorTex;
+	uniform float		MaxBokehRadius;
+	layout(location = $$ATTR_POSITION) in vec3 Position;
+	out float 			vRadius;
+	out float 			vDepth;
+	out vec4 			vColor;
+
+	void main()
+	{
+		ivec2 bufSize, coord;
+		bufSize 	 = textureSize(BokehPositionTex,0).xy;
+		coord.y 	 = int(floor(gl_InstanceID/bufSize.y));
+		coord.x 	 = gl_InstanceID - coord.y*bufSize.y;
+
+		vColor		 = texelFetch(BokehColorTex,coord,0);
+		vec4 pos	 = texelFetch(BokehPositionTex,coord,0);
+		vRadius		 = pos.w * MaxBokehRadius;
+		vDepth		 = pos.z;
+		gl_Position	 = vec4((Position.xy+pos.xy)*PixelScale,0,1);
+	}
+}
+
+GLShader bokehRenderingGS{
+	uniform vec2		PixelScale;
+	in  float 			vRadius[1];
+	in  float 			vDepth[1];
+	in  vec4 			vColor[1];
+	out vec4			gColor;
+	out float			gDepth;
+	out vec2  			gTexCoord;
+
+	layout(points) in;
+	layout(triangle_strip, max_vertices = 4) out;
+	//-----------------------------------------------------------------------------
+	void main()
+	{
+		gl_Layer 	 = 0;
+		gColor		 = vColor[0];
+		gDepth		 = vDepth[0];
+		vec2 offsetx = vec2(PixelScale.x*vRadius[0],0);
+		vec2 offsety = vec2(0,PixelScale.y*vRadius[0]);
+		vec2 offsets = vec2(-1,-1); // Screen offset
+
+		// Expand point into a quad
+		gl_Position = vec4(offsets + 2*(gl_in[0].gl_Position.xy - offsetx - offsety),0,1);
+		gTexCoord	= vec2(0,0);
+		EmitVertex();
+		gl_Position = vec4(offsets + 2*(gl_in[0].gl_Position.xy + offsetx - offsety),0,1);
+		gTexCoord	= vec2(1,0);
+		EmitVertex();
+		gl_Position = vec4(offsets + 2*(gl_in[0].gl_Position.xy - offsetx + offsety),0,1);
+		gTexCoord	= vec2(0,1);
+		EmitVertex();
+		gl_Position = vec4(offsets + 2*(gl_in[0].gl_Position.xy + offsetx + offsety),0,1);
+		gTexCoord	= vec2(1,1);
+		EmitVertex();
+
+		EndPrimitive();
+	}
+}
+
+GLShader bokehRenderingFS{
+	uniform sampler2D		BokehShapeTex;
+	uniform sampler2D		BlurDepthTex;
+	uniform float			BokehDepthCutoff;
+	in  vec4				gColor;
+	in  float				gDepth;
+	in  vec2				gTexCoord;
+	out vec4 				FragColor;
+
+	void main()
+	{
+		float alpha	= textureLod(BokehShapeTex,gTexCoord,0).x;
+		vec2  bd	= textureLod(BlurDepthTex,gl_FragCoord.xy/vec2(textureSize(BlurDepthTex,0)),0).xy;
+		float blur  = bd.x;
+		float depth = bd.y;
+
+		// Depth test for avoiding bokeh overlapping above on-focused objects
+		float weight= clamp(depth - gDepth + BokehDepthCutoff,0,1);
+		weight		= clamp(weight + blur,0,1);
+
+		FragColor	= vec4(gColor.xyz * alpha * weight,gColor.w);
+
+		// For debugging/displaying bokehs
+	//	if(gl_FragCoord.x<10000)
+	//	{
+	//		FragColor	= vec4(0,0,15000,1);
+	//	}
+	}
+}
+
+technique bokehRendering{
+	pass0 
+	{
+		VertexShader = bokehRenderingVS(420core);
+		GeometryShader = bokehRenderingGS(420core);
+		FragmentShader = bokehRenderingFS(420core);
+	}
+}
+
+GLShader bokehRestVS
+{
+	layout(location = 0) in vec3 Position;
+	void main()
+	{
+		gl_Position = vec4(Position,1);
+	}
+}
+
+GLShader bokehResetFS{
+	layout(size1x32) coherent uniform uimage1D 	BokehCountTex;
+	out vec4 FragColor;
+
+	void main()
+	{
+		imageStore(BokehCountTex,1,uvec4(0));
+		FragColor = vec4(0,0,0,0);
+	}
+}
+
+technique bokehReset{
+	pass0{
+		VertexShader = bokehReset(420core);
+		FragmentShader = bokehReset(420core);
+	}
+}
+
+GLShader bokehSynFS{
+	layout(binding = 0, offset = 0) uniform atomic_uint BokehCounter;
+	layout(size1x32) writeonly uniform uimage1D IndirectBufferTex;
+	out vec4 FragColor;
+
+	void main()
+	{
+		imageStore(IndirectBufferTex,1,uvec4(atomicCounter(BokehCounter),0,0,0));
+		FragColor = vec4(0,0,0,0);
+	}
+}
+
+technique bokehSyn{
+	pass0{
+		VertexShader = bokehRestVS(420core);
+		FragmentShader = bokehSynFS(420core);
+	}
+}

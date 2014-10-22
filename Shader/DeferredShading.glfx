@@ -1,0 +1,133 @@
+uniform mat4 gMVP;
+uniform mat4 gProj;
+uniform mat4 gView;
+uniform mat4 gModel;
+
+struct VS_Varying
+{
+    vec3    wPosition;
+    vec3    normal;
+    vec2    texcoord;
+    flat uint    material_id;
+};
+
+shader DeferredCommonVS(
+	in vec3 position	:0,
+	in vec3 normal		:1,
+	in vec3 texcoord	:2,
+	out VS_Varing vs_out)
+{
+    mat4 modelview = gView * gModel;
+
+    gl_Position = gProj * modelview * vec4(position, 1);
+	
+    vs_out.wPosition = mat3(gModel) * position;
+    vs_out.normal = mat3(gModel) * normal;
+    vs_out.texcoord = texcoord;
+    vs_out.material_id = uint(gl_InstanceID);
+}
+
+layout(binding=0) uniform sampler2D texDiffuse;
+
+shader DeferredCommonFS(
+	out uvec4 color0:	0,
+	out vec4 color1:	1,
+	in VS_Varying fs_in)
+{
+	uvec4 	out0 	= uvec4(0);
+	vec4 	out1 	= vec4(0);
+	
+	vec3 	color	= texture(texDiffuse, fs_in.texcoord).rgb;
+	
+	out0.x			= packHalf2x16(color.xy);
+	out0.y 			= packHalf2x16(vec2(color.z, fs_in.normal.x));
+	out0.z 			= packHalf2x16(fs_in.normal.yz);
+	
+    out1.xyz 		= fs_in.wPosition;
+    out1.w 	 		= 30.0;
+
+    color0 = out0;
+    color1 = out1;
+}
+
+program DeferredCommon
+{
+	vs(430) = DeferredCommonVS();
+	fs(430) = DeferredCommonFS();
+};
+
+shader DeferredLightingVS(
+	in vec2 position: 0)
+{
+	gl_Position 	= vec4(position, 0, 1);
+}
+
+layout(location = 0) uniform usampler2D gbuf0;
+layout(location = 1) uniform sampler2D 	gbuf1;
+
+struct fragment_info_t
+{
+    vec3 color;
+    vec3 normal;
+    float specular_power;
+    vec3 ws_coord;
+    uint material_id;
+};
+
+void unpackGBuffer(ivec2 coord,
+                   out fragment_info_t fragment)
+{
+    uvec4 data0 = texelFetch(gbuf_tex0, ivec2(coord), 0);
+    vec4 data1 = texelFetch(gbuf_tex1, ivec2(coord), 0);
+    vec2 temp;
+
+    temp = unpackHalf2x16(data0.y);
+    fragment.color = vec3(unpackHalf2x16(data0.x), temp.x);
+    fragment.normal = normalize(vec3(temp.y, unpackHalf2x16(data0.z)));
+    fragment.material_id = data0.w;
+
+    fragment.ws_coord = data1.xyz;
+    fragment.specular_power = data1.w;
+}
+
+vec4 light_fragment(fragment_info_t fragment)
+{
+    int i;
+    vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
+
+    if (fragment.material_id != 0)
+    {
+        for (i = 0; i < num_lights; i++)
+        {
+            vec3 L = light[i].position - fragment.ws_coord;
+            float dist = length(L);
+            L = normalize(L);
+            vec3 N = normalize(fragment.normal);
+            vec3 R = reflect(-L, N);
+            float NdotR = max(0.0, dot(N, R));
+            float NdotL = max(0.0, dot(N, L));
+            float attenuation = 50.0 / (pow(dist, 2.0) + 1.0);
+
+            vec3 diffuse_color  = 1.0 * light[i].color * fragment.color * NdotL * attenuation;
+            vec3 specular_color = vec3(1.0) /* * light[i].color */ * pow(NdotR, fragment.specular_power) * attenuation;
+
+            result += vec4(diffuse_color + specular_color, 0.0);
+        }
+    }
+
+    return result;
+}
+
+shader DeferredLightingFS(
+	out vec4 FragColor :0)
+{
+    fragment_info_t fragment;
+    unpackGBuffer(ivec2(gl_FragCoord.xy), fragment)
+    FragColor = light_fragment(fragment);
+}
+
+program DeferredLighting
+{
+	vs(430) = DeferredLightingVS();
+	fs(430)	= DeferredLightingPS();
+};

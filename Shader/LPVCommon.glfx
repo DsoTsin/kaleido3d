@@ -1,0 +1,100 @@
+uniform mat4 	gProjMatrix;
+uniform mat4 	gridSpace;
+uniform float 	gridOriginZ;
+
+shader RSMVS(
+	in vec3 position:0,
+	in vec3 normal:1,
+	in vec2 texcoord:2,
+	out vec2 gridSpaceNormal,
+	out vec2 tc,
+	out float depth)
+{
+	mat4 mvp 	= gProjMatrix*gridSpace;
+	mat3 grid3 	= mat3(gridSpace);
+	tc 			= texcoord;
+	float z 	= (grid3*position).z;
+	depth 		= z-gridOriginZ;
+	gridSpaceNormal = vec2(grid3*normal);
+	// RSM
+	gl_Position = mvp*vec4(position, 1.0);
+}
+
+
+uniform sampler2D 	diffTex;
+uniform vec4 		matColor;
+shader RSMFS(
+	in vec2 gridSpaceNormal,
+	in vec2 tc,
+	in float depth,
+	out vec3 color0:0,
+	out vec3 color1:1
+	out vec3 color2:2)
+{
+	// write color, normal in grid space and depth in grid space into RSM
+	
+	vec3 diffuse 	= texture2D(diffTex, tc).rgb * matColor.a + matColor.rgb;
+	color0.rg 		= gridSpaceNormal;
+	color1.rgb 		= diffuse;
+	color2.r 		= depth;
+}
+
+program RSM
+{
+	vs(430) = RSMVS();
+	fs(430) = RSMFS();
+};
+
+
+uniform mat4 gViewMatrix;
+uniform vec3 invGridSize;
+uniform vec3 gridOrigin;
+
+shader LPVIndirectLightVS(
+	in  vec3 position:0,
+	in	vec3 normal:1,
+	out vec3 lightSpaceNormal,
+	out vec3 gridCoords)
+{
+	mat4 mvp 			= gProjMatrix*gViewMatrix;
+ 	gl_Position 		= mvp*vec4(position, 1.0);
+	lightSpaceNormal 	= mat3(gridSpace)*normal;
+	vec3 gridPos 		= mat3(gridSpace) * vec3(position);
+	gridCoords 			= gridPos - gridOrigin;
+	gridCoords 			*= invGridSize;
+}
+
+
+// see [stupid spherical harmonics tricks, Microsoft Corp.]
+vec3 rotateZhConeCoeff(in vec3 dir) 
+{ 
+	const float zh_second_band = 1.0233266;
+	vec2 theta12_cs = normalize(dir.xz);
+	vec2 phi12_cs = vec2(sqrt(1.0 - dir.y * dir.y), dir.y); 	
+	vec3 rotated_coeffs;
+	rotated_coeffs.x = zh_second_band * phi12_cs.x * theta12_cs.y; 
+	rotated_coeffs.y = zh_second_band * phi12_cs.y; 
+	rotated_coeffs.z = -zh_second_band * phi12_cs.x * theta12_cs.x;
+	return rotated_coeffs;
+}
+
+// create vpls on surface
+vec4 createVpl(in vec3 normal)
+{
+	const float zh_first_band = 0.88622689;
+	const float zh_second_band = 1.0233266;
+	return (abs(normal.y) < 0.99) ? vec4(zh_first_band, rotateZhConeCoeff(normal) ) : vec4(zh_first_band, 0.0, zh_second_band * sign(normal.y), 0.0);
+}
+
+shader LPVIndirectLightFS(
+	in vec3 lightSpaceNormal,
+	in vec3 gridCoords)
+{
+
+}
+
+program LPVIndirectLight
+{
+	vs(430) = LPVIndirectLightVS();
+	fs(430) = LPVIndirectLightFS();
+};

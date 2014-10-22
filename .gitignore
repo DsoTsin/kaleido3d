@@ -1,0 +1,45 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+Binary
+Lib
+build*
+Build*
+
+# Visual Studio files
+debug
+release
+VisualStudio*
+*.sdf
+Makefile*
+*.user
+*.pdb
+*.ilk
+*.exp
+*.ini
+BinTmp
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+CMakeFiles
+CMakeFiles*
+Debug
+*.dir
+Win32
+x64
+*.suo
+vs20*
+
+#ignored dirs
+/Data/Objects/*
+Document/html/*
+ThirdParty/*
+

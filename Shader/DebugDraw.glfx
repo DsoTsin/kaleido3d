@@ -1,0 +1,24 @@
+uniform mat4 ModelMatrix;
+uniform mat4 ViewMatrix;
+uniform mat4 ProjMatrix;
+layout(binding = 0) uniform sampler2D TexPlane;
+
+shader DbgPlaneVSMain(in vec3 Pos:0, out vec3 vertColor, out vec2 texCoord)
+{
+	vec4 screen_pos = ProjMatrix*ViewMatrix*ModelMatrix*vec4(Pos, 1.0);
+	vertColor = normalize(Pos);
+	texCoord = vec2(Pos.x/800.0f+0.5f,Pos.z/800.0f+0.5f);
+	gl_Position = screen_pos;
+}
+
+shader DbgPlanePSMain(in vec3 vertColor, in vec2 texCoord, out vec4 FragColor:0)
+{
+//	FragColor = vec4(vertColor, 1.0);
+	FragColor = texture(TexPlane, texCoord);
+}
+
+program DbgPlaneDraw
+{
+	vs(430) = DbgPlaneVSMain();
+	fs(430) = DbgPlanePSMain();
+};
