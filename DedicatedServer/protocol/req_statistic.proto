@@ -1,0 +1,6 @@
+package protocol;
+message req_statistic
+{
+	required string 	mac=1;
+	required int64 		loginTime=2;
+}

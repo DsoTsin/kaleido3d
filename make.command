@@ -1,0 +1,1 @@
+sh "`dirname "$0"`"/make.sh

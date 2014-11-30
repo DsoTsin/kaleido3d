@@ -1,0 +1,15 @@
+package protocol;
+
+import "req_register.proto";
+import "req_statistic.proto";
+
+message meta_request
+{
+	enum Type {
+		REGISTER=0;
+	}
+	required string			uin				=1;
+	required Type 			type 			=2;
+	optional req_register 	registerInfo 	=3;
+	optional req_statistic	statisticInfo	=4;
+}
