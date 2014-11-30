@@ -5,6 +5,10 @@
 
 NS_MATHLIB_BEGIN
 
+typedef tVectorN<float, 3> Vec3f;
+typedef tVectorN<float, 4> Vec4f;
+typedef tMatrixNxN<float, 4> Mat4f;
+
 const float EPSILON= 0.0001f;
 
 class Plane

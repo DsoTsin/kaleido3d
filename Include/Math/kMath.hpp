@@ -12,17 +12,19 @@
 #define NS_MATHLIB_END }
 
 #include "kTypeTrait.hpp"
-#include <Config/Prerequisities.h>
+#include "../Kaleido3D.h"
 #include <Config/OSHeaders.h>
 
-#if defined(K3DCOMPILER_CLANG)|defined(K3DCOMPILER_GCC)
+#if K3DCOMPILER_CLANG || K3DCOMPILER_GCC
 #include <cmath>
+#elif K3DCOMPILER_MSVC
+#pragma warning(disable:4201) // disable anonymous union warnings
 #endif
 
 NS_MATHLIB_BEGIN
 
 // Vector Math ---------------------------------------------------------------------------------
-template <class T> inline typename T::value_type DotProduct( T a, T b );
+template <class T> KFORCE_INLINE typename T::value_type DotProduct( T a, T b );
 
 template <typename T, int N>
 struct tVectorN;
@@ -49,8 +51,8 @@ struct tVectorN
 
   enum { Len = N };
   typedef T value_type;
-  inline T& operator [] ( int index )                  { assert( index < N && "tVectorN : index < N -- Failed !" ); return m_data[ index ]; }
-  inline const T operator [] ( int index )const	{ assert( index < N && "tVectorN : index < N -- Failed !" ); return m_data[ index ]; }
+  KFORCE_INLINE T& operator [] ( int index )                  { assert( index < N && "tVectorN : index < N -- Failed !" ); return m_data[ index ]; }
+  KFORCE_INLINE const T operator [] ( int index )const	{ assert( index < N && "tVectorN : index < N -- Failed !" ); return m_data[ index ]; }
 
   operator const T* ()
   {
@@ -62,7 +64,7 @@ protected:
 };
 
 template <typename T, int N>
-inline const T Length(const tVectorN<T, N>& rhs) {
+KFORCE_INLINE const T Length(const tVectorN<T, N>& rhs) {
   return T(sqrt( 1.0*DotProduct( rhs, rhs ) ));
 }
 
@@ -86,14 +88,14 @@ tVectorN<T, N> Minimize(tVectorN<T, N> const &v1, tVectorN<T, N> const &v2)
 
 ///////////////////////////Operator Implement//////////////////////////////
 template <typename T, int N>
-inline tVectorN<T, N> operator + (tVectorN<T, N> const & a, tVectorN<T, N> const & b)
+KFORCE_INLINE tVectorN<T, N> operator + (tVectorN<T, N> const & a, tVectorN<T, N> const & b)
 {
   tVectorN<T, N> result;
   for (int i = 0; i < N; i++) result[i] = a[i] + b[i];
   return result;
 }
 template <typename T, int N>
-inline tVectorN<T, N> operator - (tVectorN<T, N> const & a, tVectorN<T, N> const & b)
+KFORCE_INLINE tVectorN<T, N> operator - (tVectorN<T, N> const & a, tVectorN<T, N> const & b)
 {
   tVectorN<T, N> result;
   for (int i = 0; i < N; i++) result[i] = a[i] - b[i];
@@ -101,7 +103,7 @@ inline tVectorN<T, N> operator - (tVectorN<T, N> const & a, tVectorN<T, N> const
 }
 
 template <typename T, int N>
-inline tVectorN<T, N> operator + (tVectorN<T, N> const & a, T const & b)
+KFORCE_INLINE tVectorN<T, N> operator + (tVectorN<T, N> const & a, T const & b)
 {
   tVectorN<T, N> result;
   for (int i = 0; i < N; i++) result[i] = a[i] + b;
@@ -109,7 +111,7 @@ inline tVectorN<T, N> operator + (tVectorN<T, N> const & a, T const & b)
 }
 
 template <typename T, int N>
-inline tVectorN<T, N> operator - (tVectorN<T, N> const & a, T const & b)
+KFORCE_INLINE tVectorN<T, N> operator - (tVectorN<T, N> const & a, T const & b)
 {
   tVectorN<T, N> result;
   for (int i = 0; i < N; i++) result[i] = a[i] - b;
@@ -117,7 +119,7 @@ inline tVectorN<T, N> operator - (tVectorN<T, N> const & a, T const & b)
 }
 
 template <typename T, int N>
-inline tVectorN<T, N> operator * (tVectorN<T, N> const & a, tVectorN<T, N> const & b)
+KFORCE_INLINE tVectorN<T, N> operator * (tVectorN<T, N> const & a, tVectorN<T, N> const & b)
 {
   tVectorN<T, N> result;
   for ( int i = 0; i < N; i++ ) result[ i ] = a[ i ] * b[ i ];
@@ -125,7 +127,7 @@ inline tVectorN<T, N> operator * (tVectorN<T, N> const & a, tVectorN<T, N> const
 }
 
 template <typename T, int N>
-inline tVectorN<T, N> operator * (tVectorN<T, N> const & a, typename tVectorN<T, N>::value_type const & b)
+KFORCE_INLINE tVectorN<T, N> operator * (tVectorN<T, N> const & a, typename tVectorN<T, N>::value_type const & b)
 {
   tVectorN<T, N> result;
   for ( int i = 0; i < N; i++ )
@@ -134,7 +136,7 @@ inline tVectorN<T, N> operator * (tVectorN<T, N> const & a, typename tVectorN<T,
 }
 
 template <typename T, int N>
-inline tVectorN<T, N> operator / (tVectorN<T, N> const & a, typename tVectorN<T, N>::value_type const & b)
+KFORCE_INLINE tVectorN<T, N> operator / (tVectorN<T, N> const & a, typename tVectorN<T, N>::value_type const & b)
 {
   tVectorN<T, N> result;
   for ( int i = 0; i < N; i++ )
@@ -158,7 +160,7 @@ public:
   }
 };
 template <class T>
-inline typename T::value_type DotProduct( T a, T b )
+KFORCE_INLINE typename T::value_type DotProduct( T a, T b )
 {
   return tDotProduct<T::Len, T>::result( a, b );
 }
@@ -206,8 +208,8 @@ struct tVectorN<T, 3>
   tVectorN( T x, T y, T z ) { m_data[ 0 ] = x; m_data[ 1 ] = y;  m_data[ 2 ] = z; }
   tVectorN( const T *ptr )	{ this->template init<T>( ptr ); }
 
-  inline T& operator [] ( int index )				{ assert( index < 3 && "tVector3 : index < 3 -- Failed !" ); return m_data[ index ]; }
-  inline const T operator [] ( int index )const	{ assert( index < 3 && "tVector3 : index < 3 -- Failed !" ); return m_data[ index ]; }
+  KFORCE_INLINE T& operator [] ( int index )				{ assert( index < 3 && "tVector3 : index < 3 -- Failed !" ); return m_data[ index ]; }
+  KFORCE_INLINE const T operator [] ( int index )const	{ assert( index < 3 && "tVector3 : index < 3 -- Failed !" ); return m_data[ index ]; }
 
   operator const T* ()
   {
@@ -223,19 +225,19 @@ struct tVectorN<T, 3>
   }
   //-------------------------------------------------------
 
-  inline tVectorN & operator += (const tVectorN & other)
+  KFORCE_INLINE tVectorN & operator += (const tVectorN & other)
   {
     this->x += other.x; this->y += other.y; this->z += other.z;
     return *this;
   }
 
-  inline tVectorN & operator -= (const tVectorN & other)
+  KFORCE_INLINE tVectorN & operator -= (const tVectorN & other)
   {
     this->x -= other.x; this->y -= other.y; this->z -= other.z;
     return *this;
   }
 
-  inline tVectorN & operator -= (const T & other)
+  KFORCE_INLINE tVectorN & operator -= (const T & other)
   {
     this->x -= other; this->y -= other; this->z -= other;
     return *this;
@@ -283,14 +285,14 @@ struct tVectorN<T, 4>
     return tVectorN<T, 3>( x, y, z );
   }
 
-  inline tVectorN<T, 3> ToVec3() const
+  KFORCE_INLINE tVectorN<T, 3> ToVec3() const
   {
       return tVectorN<T, 3>( this->x, this->y, this->z );
   }
 
   //-------------------------------------------------------
   template <class U>
-  inline void init( const U *s_offset )
+  KFORCE_INLINE void init( const U *s_offset )
   {
     assert( sizeof(U) <= sizeof(T) && s_offset );
     ::memcpy( m_data, s_offset, 4 * sizeof(U) );
@@ -330,16 +332,16 @@ public:
   typedef T value_type;
   enum { N = _N };
   typedef tVectorN<T, _N> RowType;
-  inline tMatrixNxN() {}
-  inline tMatrixNxN( const tMatrixNxN& that ) { Assign( that ); }
+  KFORCE_INLINE tMatrixNxN() {}
+  KFORCE_INLINE tMatrixNxN( const tMatrixNxN& that ) { Assign( that ); }
 
-  inline RowType& operator [] ( int index ) { assert( index < _N && "tMatrixNxN : index < _N -- Failed !" );    return data[ index ]; }
-  inline const RowType operator [] ( int index ) const { assert( index < _N && "tMatrixNxN : index < _N -- Failed !" ); return data[ index ]; }
+  KFORCE_INLINE RowType& operator [] ( int index ) { assert( index < _N && "tMatrixNxN : index < _N -- Failed !" );    return data[ index ]; }
+  KFORCE_INLINE const RowType operator [] ( int index ) const { assert( index < _N && "tMatrixNxN : index < _N -- Failed !" ); return data[ index ]; }
 
-//  friend inline tMatrixNxN operator * (const tMatrixNxN &a, const tMatrixNxN &b);
-//  friend inline tMatrixNxN operator * (const tMatrixNxN &a, const RowType &b);
-//  friend inline tMatrixNxN operator * (const RowType &a, const tMatrixNxN &b);
-  friend inline tMatrixNxN Transpose( const tMatrixNxN &a ){
+//  friend KFORCE_INLINE tMatrixNxN operator * (const tMatrixNxN &a, const tMatrixNxN &b);
+//  friend KFORCE_INLINE tMatrixNxN operator * (const tMatrixNxN &a, const RowType &b);
+//  friend KFORCE_INLINE tMatrixNxN operator * (const RowType &a, const tMatrixNxN &b);
+  friend KFORCE_INLINE tMatrixNxN Transpose( const tMatrixNxN &a ){
       tMatrixNxN<T, _N> result;
       for ( int i = 0; i < _N; i++ )
         for ( int j = 0; j < _N; j++ )
@@ -355,7 +357,7 @@ public:
   }
 
 protected:
-  inline void Assign( const tMatrixNxN& that )
+  KFORCE_INLINE void Assign( const tMatrixNxN& that )
   {
     int n;
     for ( n = 0; n < _N; n++ )
@@ -365,7 +367,7 @@ protected:
   RowType data[ _N ];
 };
 
-//! \fn	template <typename T, int _N> inline tMatrixNxN<T, _N> operator+ (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+//! \fn	template <typename T, int _N> KFORCE_INLINE tMatrixNxN<T, _N> operator+ (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
 //! \brief	Addition operator.
 //! \tparam	T 	Generic type parameter.
 //! \tparam	_N	Type of the n.
@@ -373,7 +375,7 @@ protected:
 //! \param	b	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
 //! \return	The result of the operation.
 template <typename T, int _N>
-inline tMatrixNxN<T, _N> operator - (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+KFORCE_INLINE tMatrixNxN<T, _N> operator - (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
 {
   tMatrixNxN<T, _N> result;
   //tMatrixNxN<T, _N> bt = Transpose( b );//this line is too expensive
@@ -387,7 +389,7 @@ inline tMatrixNxN<T, _N> operator - (const tMatrixNxN<T, _N> &a, const tMatrixNx
   return result;
 }
 
-//! \fn	template <typename T, int _N> inline tMatrixNxN<T, _N> operator+ (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+//! \fn	template <typename T, int _N> KFORCE_INLINE tMatrixNxN<T, _N> operator+ (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
 //! \brief	Addition operator of Two Matrices.
 //! \tparam	T 	Generic type parameter.
 //! \tparam	_N	Type of the n.
@@ -395,7 +397,7 @@ inline tMatrixNxN<T, _N> operator - (const tMatrixNxN<T, _N> &a, const tMatrixNx
 //! \param	b	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
 //! \return	The result of the operation.
 template <typename T, int _N>
-inline tMatrixNxN<T, _N> operator + (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+KFORCE_INLINE tMatrixNxN<T, _N> operator + (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
 {
   tMatrixNxN<T, _N> result;
   //tMatrixNxN<T, _N> bt = Transpose( b );//this line is too expensive
@@ -409,7 +411,7 @@ inline tMatrixNxN<T, _N> operator + (const tMatrixNxN<T, _N> &a, const tMatrixNx
   return result;
 }
 
-//! \fn	template <typename T, int _N> inline tMatrixNxN<T, _N> operator* (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+//! \fn	template <typename T, int _N> KFORCE_INLINE tMatrixNxN<T, _N> operator* (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
 //! \brief	Multiplication of Two tMatrixes.
 //! \tparam	T 	Generic type parameter.
 //! \tparam	_N	Type of the n.
@@ -417,7 +419,7 @@ inline tMatrixNxN<T, _N> operator + (const tMatrixNxN<T, _N> &a, const tMatrixNx
 //! \param	b	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
 //! \return	The result of the operation.
 template <typename T, int _N>
-inline tMatrixNxN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+KFORCE_INLINE tMatrixNxN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
 {
   tMatrixNxN<T, _N> result;
   //tMatrixNxN<T, _N> bt = Transpose( b );//this line is too expensive
@@ -435,7 +437,7 @@ inline tMatrixNxN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tMatrixNx
   return result;
 }
 
-//! \fn	template <typename T, int _N> inline tVectorN<T, _N> operator* (const tMatrixNxN<T, _N> &a, const tVectorN<T, _N> &b)
+//! \fn	template <typename T, int _N> KFORCE_INLINE tVectorN<T, _N> operator* (const tMatrixNxN<T, _N> &a, const tVectorN<T, _N> &b)
 //! \brief	Multiplication Of tMatrixNN and tVector.
 //! \tparam	T 	Generic type parameter.
 //! \tparam	_N	Type of the n.
@@ -443,7 +445,7 @@ inline tMatrixNxN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tMatrixNx
 //! \param	b	The const tVectorN&lt;T,_N&gt; &amp; to process.
 //! \return	The result of the operation.
 template <typename T, int _N>
-inline tVectorN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tVectorN<T, _N> &b)
+KFORCE_INLINE tVectorN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tVectorN<T, _N> &b)
 {
   tVectorN<T, _N> result;
 
@@ -454,13 +456,13 @@ inline tVectorN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tVectorN<T,
   return result;
 }
 
-//! \fn	template <typename T, int _N> inline std::ostream & operator<< (std::ostream & os, const tVectorN<T, _N> &vec)
+//! \fn	template <typename T, int _N> KFORCE_INLINE std::ostream & operator<< (std::ostream & os, const tVectorN<T, _N> &vec)
 //! \brief	&lt;&lt;&lt;typename T,int _N&gt; casting operator.
 //! \param [in,out]	os	The operating system.
 //! \param	vec					The vector.
 //! \return	The result of the operation.
 template <typename T, int _N>
-inline std::ostream & operator << (std::ostream & os, const tVectorN<T, _N> &vec)
+KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tVectorN<T, _N> &vec)
 {
   os << "Vector" << _N << ":\n";
   for ( int i = 0; i < _N; i++ )
@@ -478,7 +480,7 @@ inline std::ostream & operator << (std::ostream & os, const tVectorN<T, _N> &vec
 }
 
 template <typename T, int _Col, int _Row >
-inline std::ostream & operator << (std::ostream & os, const tMatrixMxN<T, _Col, _Row> &mat)
+KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tMatrixMxN<T, _Col, _Row> &mat)
 {
   os << "Mat" << _Col << "x" << _Row << ":\n";
   for ( int i = 0; i < _Row; i++ )
@@ -497,7 +499,7 @@ inline std::ostream & operator << (std::ostream & os, const tMatrixMxN<T, _Col, 
 }
 
 template <typename T, int _N>
-inline std::ostream & operator << (std::ostream & os, const tMatrixNxN<T, _N> &mat)
+KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tMatrixNxN<T, _N> &mat)
 {
   os << "Mat" << _N << ":\n";
   for ( int i = 0; i < _N; i++ )
@@ -567,7 +569,7 @@ public:
     return data[ 0 ];
   }
 
-  friend inline tMatrixNxN<T, 4> operator * (const tMatrixNxN<T, 4> & m1, const tMatrixNxN<T, 4> & m2)
+  friend KFORCE_INLINE tMatrixNxN<T, 4> operator * (const tMatrixNxN<T, 4> & m1, const tMatrixNxN<T, 4> & m2)
   {
     typename tMatrixNxN<T, 4>::RowType const SrcA0 = m1[ 0 ];
     typename tMatrixNxN<T, 4>::RowType const SrcA1 = m1[ 1 ];
@@ -587,7 +589,7 @@ public:
     return Result;
   }
 
-  inline tMatrixNxN<T, 4> Inverse()
+  KFORCE_INLINE tMatrixNxN<T, 4> Inverse()
   {
     tMatrixNxN<T, 4> result;
     T temp[ 12 ];
@@ -631,7 +633,7 @@ protected:
 
 //---------------------------------------------------------
 template <typename T>
-inline T ToRadian( T const & degree )
+KFORCE_INLINE T ToRadian( T const & degree )
 {
   assert( kType<T>::is_float );
 
@@ -640,7 +642,7 @@ inline T ToRadian( T const & degree )
 }
 
 template <typename T>
-inline T ToDegree( T const & rad )
+KFORCE_INLINE T ToDegree( T const & rad )
 {
   assert( kType<T>::is_float );
 
@@ -650,7 +652,7 @@ inline T ToDegree( T const & rad )
 //-----------------------------------------------------------
 
 template <typename T>
-static inline tVectorN<T, 3> CrossProduct( const tVectorN<T, 3>& a, const tVectorN<T, 3>& b )
+static KFORCE_INLINE tVectorN<T, 3> CrossProduct( const tVectorN<T, 3>& a, const tVectorN<T, 3>& b )
 {
   return tVectorN<T, 3>( a[ 1 ] * b[ 2 ] - b[ 1 ] * a[ 2 ],
       a[ 2 ] * b[ 0 ] - b[ 2 ] * a[ 0 ],
@@ -658,7 +660,7 @@ static inline tVectorN<T, 3> CrossProduct( const tVectorN<T, 3>& a, const tVecto
 }
 
 template <typename T>
-inline tMatrixNxN<T, 4> MakeIdentityMatrix()
+KFORCE_INLINE tMatrixNxN<T, 4> MakeIdentityMatrix()
 {
   static tMatrixNxN<T, 4> one;
   one[ 0 ][ 0 ] = T( 1.0 );
@@ -669,7 +671,7 @@ inline tMatrixNxN<T, 4> MakeIdentityMatrix()
 }
 
 template <typename T>
-inline tMatrixNxN<T, 4> Rotate( const tVectorN<T, 3> &vec, T angle, const tMatrixNxN<T, 4>& m )
+KFORCE_INLINE tMatrixNxN<T, 4> Rotate( const tVectorN<T, 3> &vec, T angle, const tMatrixNxN<T, 4>& m )
 {
   T rad = ToRadian( angle );
   T c = cos( rad );
@@ -705,7 +707,7 @@ inline tMatrixNxN<T, 4> Rotate( const tVectorN<T, 3> &vec, T angle, const tMatri
 /// \param angle
 /// \return Origin Matrix Multiplied Rotation Matrix
 template <typename T>
-inline tMatrixNxN<T, 4> MakeRotationMatrix( const tVectorN<T, 3> &vec, T angle )
+KFORCE_INLINE tMatrixNxN<T, 4> MakeRotationMatrix( const tVectorN<T, 3> &vec, T angle )
 {
   return Rotate( vec, angle, MakeIdentityMatrix<T>() );
 }
@@ -716,7 +718,7 @@ inline tMatrixNxN<T, 4> MakeRotationMatrix( const tVectorN<T, 3> &vec, T angle )
 /// \param m
 /// \return Translated Matrix
 template <typename T>
-inline tMatrixNxN<T, 4> Translate( const tVectorN<T, 3> &v, const tMatrixNxN<T, 4>& m )
+KFORCE_INLINE tMatrixNxN<T, 4> Translate( const tVectorN<T, 3> &v, const tMatrixNxN<T, 4>& m )
 {
   tMatrixNxN<T, 4> res( m );
   res[ 3 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ] + m[ 3 ];
@@ -728,7 +730,7 @@ inline tMatrixNxN<T, 4> Translate( const tVectorN<T, 3> &v, const tMatrixNxN<T, 
 /// \param v Translation Vector 3
 /// \return translated Matrix
 template <typename T>
-inline tMatrixNxN<T, 4> MakeTranslationMatrix( T x, T y, T z )
+KFORCE_INLINE tMatrixNxN<T, 4> MakeTranslationMatrix( T x, T y, T z )
 {
   tMatrixNxN<T,4> mat4;
   mat4[0] = {T( 1.0 ), T( 0.0 ), T( 0.0 ), T( 0.0 )};
@@ -744,12 +746,12 @@ inline tMatrixNxN<T, 4> MakeTranslationMatrix( T x, T y, T z )
 /// \param v Translation Vector 3
 /// \return translated Matrix
 template <typename T>
-inline tMatrixNxN<T, 4> MakeTranslationMatrix( tVectorN<T, 3> & vec )
+KFORCE_INLINE tMatrixNxN<T, 4> MakeTranslationMatrix( tVectorN<T, 3> & vec )
 {
   return MakeTranslationMatrix( vec[ 0 ], vec[ 1 ], vec[ 2 ] );
 }
 
-//! \fn template <typename T> inline tMatrixNxN<T, 4> MakeFrustum( T left, T right, T bottom, T top, T n, T f )
+//! \fn template <typename T> KFORCE_INLINE tMatrixNxN<T, 4> MakeFrustum( T left, T right, T bottom, T top, T n, T f )
 //! \brief  Makes a frustum matrix For Light...
 //! \tparam T can be float, double.
 //! \param  left    The left plane distance.
@@ -761,7 +763,7 @@ inline tMatrixNxN<T, 4> MakeTranslationMatrix( tVectorN<T, 3> & vec )
 //!
 //! \return A Frustum tMatrixNxN&lt;T,4&gt;
 template <typename T>
-inline tMatrixNxN<T, 4> MakeFrustum(
+KFORCE_INLINE tMatrixNxN<T, 4> MakeFrustum(
     T left, T right,
     T bottom, T top,
     T n, T f )
@@ -797,7 +799,7 @@ inline tMatrixNxN<T, 4> MakeFrustum(
 /// \param far_plane
 /// \return Matrix4X4 Perspective Matrix
 template <typename T, class MatType = tMatrixNxN<T, 4> >
-inline MatType Perspective( T fovY, T ratio, T near_plane, T far_plane )
+KFORCE_INLINE MatType Perspective( T fovY, T ratio, T near_plane, T far_plane )
 {
   MatType result;
   T q = T( 1.0 ) / T( ::tan( ToRadian( T( 0.5 ) * fovY ) ) );
@@ -811,7 +813,7 @@ inline MatType Perspective( T fovY, T ratio, T near_plane, T far_plane )
   return result;
 }
 
-//! \fn template < typename T > inline tMatrixNxN<T, 4> LookAt( const tVectorN<T, 3> & eye, const tVectorN<T, 3> & center, const tVectorN<T, 3> & up )
+//! \fn template < typename T > KFORCE_INLINE tMatrixNxN<T, 4> LookAt( const tVectorN<T, 3> & eye, const tVectorN<T, 3> & center, const tVectorN<T, 3> & up )
 //! \brief  LookAt for Camera
 //! \tparam T Generic type parameter.
 //! \param  eye     The eye.
@@ -820,7 +822,7 @@ inline MatType Perspective( T fovY, T ratio, T near_plane, T far_plane )
 //!
 //! \return A tMatrixNxN&lt;T,4&gt;
 template < typename T >
-inline tMatrixNxN<T, 4> LookAt(
+KFORCE_INLINE tMatrixNxN<T, 4> LookAt(
     const tVectorN<T, 3> & eye,
     const tVectorN<T, 3> & center,
     const tVectorN<T, 3> & up )
@@ -846,18 +848,6 @@ inline tMatrixNxN<T, 4> LookAt(
   return Result;
 }
 
-
-#ifdef ENABLE_SSE
-#include "kMat4_SSE.inl"
-#endif
-
-//-----------------------------------------------------
-typedef tMatrixNxN<float, 4>  Mat4f;
-typedef tVectorN<float, 4>    Vec4f;
-typedef tVectorN<float, 3>    Vec3f;
-typedef tVectorN<int, 3>      Vec3i;
-typedef tVectorN<float, 2>    Vec2f;
-typedef tVectorN<int, 2>      Vec2i;
 //-----------------------------------------------------
 //----------------------Matrix Math End----------------------------//
 //////////////////////////////////////////////////////////////////////////
@@ -891,7 +881,7 @@ public:
   {
   }
 
-  inline void SetValue( const tVectorN<T, 4> & vec )
+  KFORCE_INLINE void SetValue( const tVectorN<T, 4> & vec )
   {
     m_data[ 0 ] = vec[ 0 ];
     m_data[ 1 ] = vec[ 1 ];
@@ -900,12 +890,12 @@ public:
   }
 
   /**
-   * \fn  inline Quaternion & operator*= (const Quaternion & other)
+   * \fn  KFORCE_INLINE Quaternion & operator*= (const Quaternion & other)
    * \brief Grassmann Product
    * \param [in] another quaternion.
    * \return  The result of the operation.
    */
-  inline Quaternion & operator *= (const Quaternion & p)
+  KFORCE_INLINE Quaternion & operator *= (const Quaternion & p)
   {
     T t1 = w * p.w - x * p.x - y * p.y - z * p.z;
     T t2 = w * p.x + x * p.w + y * p.z - z * p.y;
@@ -915,10 +905,10 @@ public:
     return *this;
   }
 
-  //! \fn inline Quaternion Conjugate()
+  //! \fn KFORCE_INLINE Quaternion Conjugate()
   //! \brief  Gets the conjugate.
   //! \return A Quaternion.
-  inline Quaternion Conjugate() { return Quaternion( w, -x, -y, -z ); }
+  KFORCE_INLINE Quaternion Conjugate() { return Quaternion( w, -x, -y, -z ); }
 
   //! \fn Quaternion Inverse()
   //! \brief  Gets the inverse.
@@ -960,7 +950,7 @@ public:
   //! \fn tMatrixNxN<T, 4> AsMatrix();
   //! \brief  Converts this Quaternion to a Mat4f.
   //! \return A tMatrixNxN&lt;T,4&gt;
-  inline tMatrixNxN<T, 4> AsMatrix()
+  KFORCE_INLINE tMatrixNxN<T, 4> AsMatrix()
   {
     tMatrixNxN<T, 4> Result;
     Result[ 0 ][ 0 ] = T(1) - 2 * y * y - 2 * z * z;
@@ -1024,9 +1014,51 @@ private:
     };
   };
 };
-
-typedef Quaternion<float> Quaternionf;
 //--------------------Quaternion Operations With Matrix Math-------------------//
+
+//--------------------CODE BELOW IS FROM MINIENGINE----------------------------//
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Developed by Minigraph
+//
+// Author:  James Stanard 
+//
+
+template <typename T> KFORCE_INLINE T AlignUpWithMask(T value, size_t mask)
+{
+	return (T)(((size_t)value + mask) & ~mask);
+}
+
+template <typename T> KFORCE_INLINE T AlignDownWithMask(T value, size_t mask)
+{
+	return (T)((size_t)value & ~mask);
+}
+
+template <typename T> KFORCE_INLINE T AlignUp(T value, size_t alignment)
+{
+	return AlignUpWithMask(value, alignment - 1);
+}
+
+template <typename T> KFORCE_INLINE T AlignDown(T value, size_t alignment)
+{
+	return AlignDownWithMask(value, alignment - 1);
+}
+
+template <typename T> KFORCE_INLINE bool IsAligned(T value, size_t alignment)
+{
+	return 0 == ((size_t)value & (alignment - 1));
+}
+
+template <typename T> KFORCE_INLINE T DivideByMultiple(T value, size_t alignment)
+{
+	return (T)((value + alignment - 1) / alignment);
+}
 
 NS_MATHLIB_END
 

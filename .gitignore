@@ -7,7 +7,7 @@ Binary
 Lib
 build*
 Build*
-
+Bin/*
 # Visual Studio files
 debug
 release
@@ -20,6 +20,8 @@ Makefile*
 *.exp
 *.ini
 BinTmp
+
+DedicatedServer/protocol/cpp/
 
 # Compiled Dynamic libraries
 *.so
@@ -38,8 +40,24 @@ x64
 *.suo
 vs20*
 
+*.html
+
 #ignored dirs
+Data/*.html
 /Data/Objects/*
 Document/html/*
-ThirdParty/*
+!ThirdParty/Dispatcher/*
+ThirdParty/
+!ThirdParty/glew/*
+Shader/GLSL/*
+Shader/Metal/*
+Source/.idea/*
+Lib*
+Lib/*
+DedicatedServer/src/Server
 
+Swift/kaleido3d.xcodeproj/project.xcworkspace/xcuserdata/
+Swift/kaleido3d.xcodeproj/xcuserdata/
+.DS_Store
+xcshareddata
+/Project/xcode4

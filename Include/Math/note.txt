@@ -1,1 +1,0 @@
-It turned out that AVX is worth implementing
