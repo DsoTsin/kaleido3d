@@ -1,25 +1,28 @@
 #pragma once
-#include "../k3dImage.h"
+#include "../Image.h"
 
-class DDSHelper : public k3dImage {
-public:
-  DDSHelper();
-  ~DDSHelper();
+namespace k3d {
 
-  bool Load(uint8 *dataPtr, uint32 length) override;
-  bool IsCompressed() const override;
+	class DDSHelper : public Image {
+	public:
+		DDSHelper();
+		~DDSHelper();
 
-  void Clear();
-  static bool upperLeftOrigin;
+		bool Load(uint8 *dataPtr, uint32 length) override;
+		bool IsCompressed() const override;
+
+		void Clear();
+		static bool upperLeftOrigin;
 
 
-private:
+	private:
 
-  void flipSurface(uint8 *surf, int32 width, int32 height, int32 depth);
-  static void flipBlocksDxtc1(uint8 *ptr, uint32 numBlocks);
-  static void flipBlocksDxtc3(uint8 *ptr, uint32 numBlocks);
-  static void flipBlocksDxtc5(uint8 *ptr, uint32 numBlocks);
-  static void flipBlocksBc4(uint8 *ptr, uint32 numBlocks);
-  static void flipBlocksBc5(uint8 *ptr, uint32 numBlocks);
+		void flipSurface(uint8 *surf, int32 width, int32 height, int32 depth);
+		static void flipBlocksDxtc1(uint8 *ptr, uint32 numBlocks);
+		static void flipBlocksDxtc3(uint8 *ptr, uint32 numBlocks);
+		static void flipBlocksDxtc5(uint8 *ptr, uint32 numBlocks);
+		static void flipBlocksBc4(uint8 *ptr, uint32 numBlocks);
+		static void flipBlocksBc5(uint8 *ptr, uint32 numBlocks);
 
-};
+	};
+}

@@ -6,7 +6,7 @@
 #include <GL/glext.h>
 #include <GL/glcorearb.h>
 #endif
-#include <Core/k3dDbg.h>
+#include <Core/LogUtil.h>
 
 #ifdef max
 #undef max
@@ -14,6 +14,7 @@
 
 #include <algorithm>
 
+using namespace k3d;
 //copy from nv_dds
 // surface description flags
 const unsigned long DDSF_CAPS           = 0x00000001l;

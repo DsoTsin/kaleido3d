@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 project (Kaleido3D)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${MeeGL_SOURCE_DIR}/../Project")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kaleido3D_SOURCE_DIR}/../Project")
 
 option(BUILD_SHARED on)
 set(LIB_TYPE STATIC)
@@ -37,7 +37,7 @@ endif(MSVC)
 
 find_package(OpenGL)
 
-set(K3D_THIRD_PARTY "../ThirdParty")
+set(K3D_THIRD_PARTY "${Kaleido3D_SOURCE_DIR}/../ThirdParty")
 
 include_directories(. ../Include
 	${K3D_THIRD_PARTY}/SDL2-2.0.3/include
@@ -45,9 +45,14 @@ include_directories(. ../Include
 	${K3D_THIRD_PARTY}/OpenGL
 )
 
+include(../Project/pch.cmake)
 include(../Project/FindSDL2.cmake)
 set(SDL2_DIR ${K3D_THIRD_PARTY}/SDL2-2.0.3)
 find_package(SDL2)
 
 add_subdirectory(Core)
+add_subdirectory(Renderer)
+add_subdirectory(Engine)
+
+add_subdirectory(Launcher)
 
