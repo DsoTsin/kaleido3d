@@ -1,5 +1,5 @@
 ````
-	Copyright (c) 2014, Tsin Studio. All rights reserved.
+    Copyright (c) 2014, Tsin Studio. All rights reserved.
     Copyright (c) 2014, Qin Zhou. All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
@@ -21,23 +21,77 @@
     PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
     OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.	
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.    
 ````
 
-Kaleido3D
+Introduction
+=========
+> **Main Feature**
+> 
+>* `Next Generation Graphics Library` 
+>* Modern C++ Code (**`C++ 11`**)
+>* Modern Graphics Renderer (`DirectX 11+` and **`OpenGL NG`**)
+>* **`Maya`** Digital Content Creation Tools
+
+----------
+
+Build Required
 =========
 
-Kaleido3D : Next Generation Graphics Lib
-# Tsin Studio
+> **Compiler Required:**
+> 
+>* [CMake 2.8+][1]
+>* Visual Studio **2013** Update 3 +
+>* Clang 3.4 +
+>* G++ 4.8 +
 
-![Example](http://tsinstudio.eu5.org/wp-content/uploads/2013/11/TsLogo225x801.png)
+----------
 
-
-Build Kaleido3D:
-=========
-	you'll need Qt 5.3.0, then run make.bat/make.sh
-	
 Build Documents:
 =========
-	cd Document and run makedoc.bat
+    cd Document and run makedoc.bat
 
+----------
+
+
+Directories:
+=========
+
+> **Source:**
+> 
+>* ***Core***   *A Cross Platform Implementation Of `IO`, `SIMD` Math, Image And Thread*  
+>* ***Renderer***   Implement Include OpenGL (`With NV Extensions`) And DirectX 3D 11
+>*  **Engine**
+>* **Launcher**
+>* **Physics**
+    
+> **ThirdParty**
+> 
+>*  GLEW
+>*  [PhysX 3.3.1][2]
+>*  SDL2.0.3
+>*  [rapidJson][3]
+
+> **Include**
+>
+>*  Interface
+>*  SIMD Math Library
+>* Template Library
+
+
+> **Shader:**  *Effects Implemented With HLSL And GLSL*
+    
+> **DedicatedServer:** *A server application implemented by GoLang.*
+
+> **Swift:** *A protype of low level renderer(`iOS Metal+Swift`).*
+
+----------
+
+Contact
+=========
+> If you have any suggestion, please contact me via [**sina weibo**](http://weibo.com/tsinstudio) or [**email**](mailto:dsotsen@gmail.com). 
+
+
+[1]: http://www.cmake.org
+[2]: https://developer.nvidia.com/gameworksdownload
+[3]: https://github.com/miloyip/rapidjson

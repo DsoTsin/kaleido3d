@@ -38,8 +38,17 @@ x64
 *.suo
 vs20*
 
+*.html
+
 #ignored dirs
+Data/*.html
 /Data/Objects/*
 Document/html/*
-ThirdParty/*
-
+ThirdParty/
+!ThirdParty/glew/*
+Shader/GLSL/*
+Shader/Metal/*
+Source/.idea/*
+Lib*
+Lib/*
+DedicatedServer/src/Server

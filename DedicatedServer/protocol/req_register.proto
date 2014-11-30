@@ -1,0 +1,8 @@
+package protocol;
+message req_register
+{
+	required string 	username=1;
+	required string 	password=2;
+	required string 	email=3;
+	optional int32		sex=4;
+}

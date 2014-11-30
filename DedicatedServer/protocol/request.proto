@@ -1,0 +1,12 @@
+package protocol;
+
+import "req_register.proto";
+
+message meta_request
+{
+	enum Type {
+		REGISTER=0;
+	}
+	required Type 			type 			=1;
+	optional req_register 	registerInfo 	=2;
+}
