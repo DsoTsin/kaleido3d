@@ -6,7 +6,7 @@
 #include <d3d11.h>
 
 namespace k3d {
-
+	 
 	class Window;
 
 	enum class DXFeature {
@@ -24,6 +24,7 @@ namespace k3d {
 
 		void Destroy();
 
+		friend class DirectXRenderer;
 	private:
 
 		DirectXContext(Window *);
@@ -40,6 +41,7 @@ namespace k3d {
 	public:
 
 		~DirectXRenderer() override;
+		void SwapBuffers() override;
 
 		static DirectXRenderer * CreateRenderer(DirectXContext *);
 

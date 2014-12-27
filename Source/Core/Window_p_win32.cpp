@@ -1,11 +1,11 @@
-#include <Config/OSHeaders.h>
-
 #include "Window_p_win32.h"
 #include "Window.h"
+#include "Appbase.h"
 
 #include <assert.h>
-
 #include <strsafe.h>
+
+#include <Config/OSHeaders.h>
 
 TCHAR gClassName[256] = "Kaleido3D";
 
@@ -20,54 +20,10 @@ OutputDebugString((LPCSTR)lpMsgBuf);\
 LocalFree(lpMsgBuf);
 
 //--------------------------------------------------------------------------------------
-// Called every time the application receives a message
-//--------------------------------------------------------------------------------------
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT ps;
-	HDC hdc;
-
-	switch (message)
-	{
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-		EndPaint(hWnd, &ps);
-		break;
-
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-
-	return 0;
-}
-
-//--------------------------------------------------------------------------------------
 // Register class and create window
 //--------------------------------------------------------------------------------------
 HRESULT InitWindow(HINSTANCE hInstance, int nCmdShow, HWND & hWnd)
 {
-	// Register class
-	WNDCLASSEX wcex;
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInstance;
-	wcex.hIcon = LoadIcon(hInstance, NULL);
-	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = NULL;
-	wcex.lpszClassName = gClassName;
-	wcex.hIconSm = LoadIcon(wcex.hInstance, NULL);
-	if (!RegisterClassEx(&wcex)) {
-		OUTPUT_LAST_ERROR();
-		return E_FAIL;
-	}
 	// Create window
 	RECT rc = { 0, 0, 640, 480 };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);

@@ -30,11 +30,6 @@ source_group(
 )
 
 source_group(
-	GLDevice FILES
-	OGLDevice.hpp OGLDevice.cpp
-)
-
-source_group(
 	Renderer FILES
 	OGLRenderer.h OGLRenderer.cpp
 )

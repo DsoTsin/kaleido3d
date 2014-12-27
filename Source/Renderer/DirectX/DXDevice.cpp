@@ -1,10 +1,12 @@
-#include "DirectXRenderer.h"
-#include <Core/Window.h>
-#include <Config/OSHeaders.h>
-
 #include <assert.h>
-
 #include <d3d11_2.h>
+
+#include <Config/OSHeaders.h>
+#include <Core/Window.h>
+#include <Core/LogUtil.h>
+
+#include "DirectXRenderer.h"
+
 
 using namespace k3d;
 
@@ -80,9 +82,12 @@ DirectXContext * DirectXContext::CreateContext(Window * window, DXFeature featur
 		NULL, preference.driverType, NULL, createDeviceFlags, 
 		featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
 		&sd, &(context->pSwapChain), &(context->pDevice), &preference.featureLevel, &(context->pImmediateContext));
+
 	if (FAILED(hr)) {
 		return nullptr;
 	}
+	kDebug("D3D11CreateDeviceAndSwapChain successful!!\n");
+
 	// Create a render target view
 	ID3D11Texture2D* pBackBuffer;
 	hr = context->pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
@@ -93,6 +98,7 @@ DirectXContext * DirectXContext::CreateContext(Window * window, DXFeature featur
 	pBackBuffer->Release();
 	if (FAILED(hr))
 		return nullptr;
+	kDebug("CreateRenderTargetView successful!!\n");
 
 	// Create depth stencil texture
 	D3D11_TEXTURE2D_DESC descDepth;
@@ -121,6 +127,7 @@ DirectXContext * DirectXContext::CreateContext(Window * window, DXFeature featur
 	hr = context->pDevice->CreateDepthStencilView(context->pDepthStencil, &descDSV, &(context->pDepthStencilView));
 	if (FAILED(hr))
 		return nullptr;
+	kDebug("CreateDepthStencilView successful!!\n");
 
 	context->pImmediateContext->OMSetRenderTargets(1, &(context->pRenderTargetView), context->pDepthStencilView);
 

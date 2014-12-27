@@ -1,17 +1,26 @@
 #include "DirectXRenderer.h"
 
-using namespace k3d;
+#include <assert.h>
 
-DirectXRenderer * DirectXRenderer::CreateRenderer(DirectXContext * context) {
-	DirectXRenderer * renderer = new DirectXRenderer(context);
-	return renderer;
-}
+namespace k3d {
 
-DirectXRenderer::DirectXRenderer(DirectXContext * context) {
-	(void)context;
+	DirectXRenderer * DirectXRenderer::CreateRenderer(DirectXContext * context) {
+		DirectXRenderer * renderer = new DirectXRenderer(context);
+		return renderer;
+	}
 
-}
+	DirectXRenderer::DirectXRenderer(DirectXContext * context) {
+		pContext = context;
+	}
 
-DirectXRenderer::~DirectXRenderer() {
+	DirectXRenderer::~DirectXRenderer() {
+
+	}
+
+	void DirectXRenderer::SwapBuffers()
+	{
+		assert(pContext != nullptr && pContext->pSwapChain != nullptr);
+		pContext->pSwapChain->Present(0, 0);
+	}
 
 }

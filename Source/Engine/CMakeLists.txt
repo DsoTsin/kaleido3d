@@ -55,10 +55,21 @@ source_group(
 	${RENDERER_SRCS}
 )
 
+set(ENGINE_SRCS
+	Engine.h
+	Engine.cpp
+)
+
+source_group(
+	Engine FILES
+	${ENGINE_SRCS}
+)
+
 add_library(
 	Engine STATIC
 	${CAMERA_SRCS}
 	${ASSET_SRCS}
 	${SCENE_SRCS}
 	${RENDERER_SRCS}
+	${ENGINE_SRCS}
 )
