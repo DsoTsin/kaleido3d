@@ -1,10 +1,12 @@
 #pragma once
 #include <Config/OSHeaders.h>
+#include <memory>
 
 namespace k3d {
 	
 	class AppBase {
 	public:
+
 		AppBase();
 
 		void SetEngine(class Engine * engine) {
@@ -20,10 +22,18 @@ namespace k3d {
 			WPARAM	wParam;
 			LPARAM	lParam;
 		};
+		
 		static LRESULT CALLBACK AppWndProc(HWND hwnd, UINT32 msg, WPARAM wParam, LPARAM lParam);
-		static AppBase* CreateApplication(const HINSTANCE instance, const HICON icon);
+		
+		static std::unique_ptr<AppBase> & CreateApplication(const HINSTANCE instance, const HICON icon);
+
 	protected:
+		
 		LRESULT processWinMessage(WinMsg & msg);
+		
+		AppBase(const HINSTANCE instance, const HICON icon);
+		
+		bool InitClass(WNDCLASSEX & wndClass);
 #endif
 		Engine * pEngine;
 	

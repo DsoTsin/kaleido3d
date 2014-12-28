@@ -6,16 +6,6 @@
 
 namespace k3d {
 
-	class TaskManager;
-
-	class Task : public ITask
-	{
-	public:
-		Task();
-		void    Execute();
-	};
-
-
 	class TaskManager : public ITaskManager
 	{
 	private:

@@ -16,11 +16,14 @@ namespace k3d {
 	public:
 		File();
 		explicit File(const char *fileName);
+
 		~File();
 
 		bool      Open(IOFlag flag);
 		bool      Open(const char* fileName, IOFlag flag);
-
+#if K3DPLATFORM_OS_WIN
+		bool	  Open(const WCHAR *fileName, IOFlag flag);
+#endif
 		int64     GetSize();
 
 		bool      IsEOF();

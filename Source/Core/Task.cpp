@@ -1,12 +1,6 @@
 #include "Task.h"
 #include <functional>
 namespace k3d {
-	Task::Task() {}
-
-	void Task::Execute()
-	{
-		std::cout << "K3D Task Excuted! " << std::this_thread::get_id();
-	}
 
 	TaskManager::TaskManager() :m_Capacity(4)
 	{

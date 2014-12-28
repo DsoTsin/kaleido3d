@@ -23,6 +23,19 @@ namespace k3d {
 			m_pThreadPool = new std::thread_pool(2);
 
 		LOG_MESSAGE("AssetManager Initialized With two workers.");
+
+#if K3DPLATFORM_OS_WIN
+		char _path[2048] = { 0 };
+		DWORD _len = GetEnvironmentVariableA("Kaleido3D_Dir", _path, 2048);
+		if (_len > 0) {
+			Log::Message("Kaleido3D_Dir Found. \"%s\"", _path);
+			m_SearchPaths.push_back(_path);
+		}
+		else {
+			Log::Error("Kaleido3D_Dir Not Found.");
+		}
+#endif
+		//m_SearchPaths
 	}
 
 	void AssetManager::Shutdown()
@@ -44,7 +57,6 @@ namespace k3d {
 			return;
 		}
 		ifs.close();
-
 	}
 
 	void AssetManager::AddSearchPath(const char *path)
@@ -67,7 +79,7 @@ namespace k3d {
 			[&bp, &sp](const char *name, std::function<void()> _callback)
 		{
 			//    ++m_NumPendingObject;
-			File file;
+			MemMapFile file;
 			bool opened = file.Open(name, IORead);
 			assert(opened == true);
 			if (opened)
@@ -157,6 +169,11 @@ namespace k3d {
 			assert(__read == length);
 			file.Close();
 		}
+	}
+
+	void AssetManager::CommitAsynMeshTask(const AsynMeshTask & task)
+	{
+
 	}
 
 

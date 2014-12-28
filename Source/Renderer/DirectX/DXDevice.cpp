@@ -1,6 +1,4 @@
 #include <assert.h>
-#include <d3d11_2.h>
-
 #include <Config/OSHeaders.h>
 #include <Core/Window.h>
 #include <Core/LogUtil.h>
@@ -10,7 +8,7 @@
 
 using namespace k3d;
 
-DirectXContext::~DirectXContext() {}
+DXDevice::~DXDevice() {}
 
 struct DriverPreference {
 	D3D_DRIVER_TYPE driverType;
@@ -39,7 +37,7 @@ DriverPreference GetDriverPreference(DXFeature feature) {
 	return preference;
 }
 
-DirectXContext * DirectXContext::CreateContext(Window * window, DXFeature feature) {
+DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
 	assert(window!=nullptr && window->GetHandle()!=nullptr && "window is not initialized!");
 
 	HWND hWnd = reinterpret_cast<HWND>(window->GetHandle());
@@ -67,7 +65,7 @@ DirectXContext * DirectXContext::CreateContext(Window * window, DXFeature featur
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
 
-	DirectXContext * context = new DirectXContext(window);
+	DXDevice * context = new DXDevice(window);
 	DriverPreference preference = GetDriverPreference(feature);
 
 	static D3D_FEATURE_LEVEL featureLevels[] =
@@ -144,7 +142,7 @@ DirectXContext * DirectXContext::CreateContext(Window * window, DXFeature featur
 	return context;
 }
 
-DirectXContext::DirectXContext(Window *)
+DXDevice::DXDevice(Window *)
 : pDevice(nullptr)
 , pSwapChain(nullptr)
 , pRenderTargetView(nullptr)
@@ -153,7 +151,7 @@ DirectXContext::DirectXContext(Window *)
 , pDepthStencilView(nullptr)
 {}
 
-void DirectXContext::Destroy() {
+void DXDevice::Destroy() {
 	if (pImmediateContext)	pImmediateContext->ClearState();
 	if (pDepthStencil)		pDepthStencil->Release();
 	if (pDepthStencilView)	pDepthStencilView->Release();

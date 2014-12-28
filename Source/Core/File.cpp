@@ -6,16 +6,7 @@
 #endif
 #include <algorithm>
 
-
-#ifdef K3DPLATFORM_OS_WIN
-#include <tchar.h>
-//#define BUFFERSIZE 5
-DWORD g_BytesTransferred = 0;
-void charTowchar(const char *chr, wchar_t *wchar, int size)
-{
-  MultiByteToWideChar(CP_ACP, 0, chr, (int)strlen(chr) + 1, wchar, size / sizeof(wchar[0]));
-}
-#endif
+#include "Utils/StringUtils.h"
 
 namespace k3d {
 
@@ -54,7 +45,7 @@ namespace k3d {
 	{
 #if defined(K3DPLATFORM_OS_WIN)
 		wchar_t name_buf[1024];
-		charTowchar(fileName, name_buf, sizeof(name_buf));
+		CharToWchar(fileName, name_buf, sizeof(name_buf));
 
 		DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 		int   accessRights = 0;
@@ -83,6 +74,38 @@ namespace k3d {
 #endif
 		return true;
 	}
+
+
+#if K3DPLATFORM_OS_WIN
+
+	bool File::Open(const WCHAR *fileName, IOFlag flag)
+	{
+		DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		int   accessRights = 0;
+
+		if (flag & IORead)
+			accessRights |= GENERIC_READ;
+		if (flag & IOWrite)
+			accessRights |= GENERIC_WRITE;
+
+		SECURITY_ATTRIBUTES securityAttrs = { sizeof(SECURITY_ATTRIBUTES), NULL, FALSE };
+		DWORD  createDisp = (flag & IOWrite) ? CREATE_ALWAYS : OPEN_EXISTING;
+
+		m_hFile = ::CreateFileW(
+			fileName,// file to open
+			accessRights,
+			shareMode,
+			&securityAttrs,
+			createDisp,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL);
+		if (m_hFile == INVALID_HANDLE_VALUE)
+			return false;
+		return true;
+	}
+
+#endif
+
 
 	int64 File::GetSize() {
 		int64 len = 0;
@@ -214,7 +237,7 @@ namespace k3d {
 
 #ifdef K3DPLATFORM_OS_WIN
 		wchar_t name_buf[1024];
-		charTowchar(fileName, name_buf, sizeof(name_buf));
+		CharToWchar(fileName, name_buf, sizeof(name_buf));
 		m_FileHandle = ::CreateFileW(name_buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 		if (m_FileHandle == INVALID_HANDLE_VALUE) return false;
 

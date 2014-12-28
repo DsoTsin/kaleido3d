@@ -24,6 +24,8 @@ namespace k3d {
 
 		void MakeCurrent();
 
+		void SwapBuffers();
+
 	private:
 		explicit	OGLDevice(Window *);
 
@@ -35,12 +37,27 @@ namespace k3d {
 	class OGLRenderer : public IRenderer {
 	public:
 		~OGLRenderer() override;
-		void SwapBuffers() override;
 
+		void PrepareFrame() override;
+
+		// traverse the scene tree and render the elements
+		void DrawOneFrame() override;
+
+		// do postprocessing and swap buffers
+		void EndOneFrame() override;
+
+		void DrawMesh(IRenderMesh *) override;
+		
 		static OGLRenderer * CreateRenderer(OGLDevice *);
 
-	private:
+		void OnResize(int width, int height) override;
+			 
+	protected:
 		OGLRenderer(OGLDevice *);
+
+		void SwapBuffers();
+
+	private:
 
 		OGLDevice * pDevice;
 	};

@@ -4,15 +4,33 @@
 #include <Engine/Engine.h>
 #include <Engine/RendererFactory.h>
 
-using namespace k3d;
+#include <string>
 
-int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
+using namespace k3d;
+using namespace std;
+
+int WINAPI wWinMain(
+	_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR lpCmdLine,
+	_In_ int nCmdShow) 
+{
 	UNREFERENCED_PARAMETER(hInstance);
 	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
 	UNREFERENCED_PARAMETER(nCmdShow);
+	Log::InitLogFile("Launcher.html");
 
-	AppBase * ptr = AppBase::CreateApplication(GetModuleHandle(NULL), NULL);
+	wstring cmdLine{ lpCmdLine };
+	string str(cmdLine.length(), ' ');
+	if (!str.empty()) {
+		std::copy(cmdLine.begin(), cmdLine.end(), str.begin());
+		Log::Warning("cmdline %s", str.c_str());
+	}
+	else {
+		str = "dx11";
+	}
+
+	std::unique_ptr<AppBase> & app = AppBase::CreateApplication(GetModuleHandle(NULL), NULL);
 
 	Window window;
 	window.SetWindowCaption("TsinStudio¹¤×÷ÊÒ");
@@ -20,13 +38,14 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	window.Show();
 
-	IRenderer * renderer = RendererFactory::SetUpRenderer("opengl", &window);
+	IRenderer * renderer = RendererFactory::SetUpRenderer(str.c_str(), &window);
 	
-	Engine * engine = Engine::CreateEngine();
-	engine->SetRenderer(renderer);
+	Engine engine = Singleton<Engine>::Get();
+	engine.SetRenderer(renderer);
 	
-	ptr->SetEngine(engine);
-	ptr->StartMessageLooping();
+	app->SetEngine(&engine);
+	app->StartMessageLooping();
 
+	Log::CloseLog();
 	return 0;
 }

@@ -9,8 +9,19 @@ struct ITaskManager;
 */
 struct ITask
 {
-	virtual				  ~ITask() {}
-  virtual void    Execute() = 0;
+	virtual			~ITask() {}
+	virtual void    Execute() = 0;
+
+	virtual void	OnFinish() = 0;
+	virtual void	OnStop() {}
+	virtual void	OnResume() {}
+	virtual void	OnCanceled() {}
+};
+
+enum class TaskPriority {
+	RealTime,
+	BackGround,
+	Normal
 };
 
 struct ITaskManager

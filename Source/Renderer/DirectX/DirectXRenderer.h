@@ -3,7 +3,7 @@
 #define __DirectXRenderer_h__
 
 #include <Interface/IRenderer.h>
-#include <d3d11.h>
+#include "DXCommon.h"
 
 namespace k3d {
 	 
@@ -15,19 +15,22 @@ namespace k3d {
 		Level_12_0
 	};
 
-	class DirectXContext {
+	class DXDevice {
 	public:
 
-		~DirectXContext();
+		~DXDevice();
 
-		static DirectXContext * CreateContext(Window * , DXFeature feature);
+		static DXDevice * CreateContext(Window * , DXFeature feature);
 
 		void Destroy();
+
+		ID3D11Device *			Device() { return pDevice; }
+		ID3D11DeviceContext *	ImmediateContext() { return pImmediateContext; }
 
 		friend class DirectXRenderer;
 	private:
 
-		DirectXContext(Window *);
+		DXDevice(Window *);
 
 		ID3D11Device *				pDevice;
 		IDXGISwapChain *			pSwapChain;
@@ -41,17 +44,33 @@ namespace k3d {
 	public:
 
 		~DirectXRenderer() override;
-		void SwapBuffers() override;
 
-		static DirectXRenderer * CreateRenderer(DirectXContext *);
+		void PrepareFrame() override;
+
+		// traverse the scene tree and render the elements
+		void DrawOneFrame() override;
+
+		// do postprocessing and swap buffers
+		void EndOneFrame() override;
+
+		void DrawMesh(IRenderMesh *) override;
+
+		void OnResize(int width, int height) override;
+
+		static DirectXRenderer * CreateRenderer(DXDevice *);
 
 	protected:
 
-		DirectXRenderer(DirectXContext *);
+		void SwapBuffers();
+
+		DirectXRenderer(DXDevice *);
 
 		DirectXRenderer() = default;
 
-		DirectXContext * pContext;
+		DXDevice * pContext;
+	
+		bool isInitialized;
+
 	};
 }
 

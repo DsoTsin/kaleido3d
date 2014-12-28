@@ -6,11 +6,12 @@
 #include <KTL/threadpool.h>
 #include <KTL/semaphore.h>
 #include <KTL/Singleton.h>
+#include <Core/AsynMeshTask.h>
 
 namespace k3d {
 	class Image;
 	class Mesh;
-	class k3dShader;
+	class Shader;
 
 	struct BytesPackage
 	{
@@ -100,6 +101,11 @@ namespace k3d {
 			BytesPackage & bp
 			);
 
+		void CommitAsynMeshTask(
+			const AsynMeshTask & task
+			);
+		
+
 		//  template <class T>
 		//  void AsynLoadMesh(const char *meshName, void (T::*ptr)(), T*);
 
@@ -122,6 +128,7 @@ namespace k3d {
 		typedef MapMesh::iterator MapMeshIter;
 		typedef std::unordered_map<k3dString, std::shared_ptr<Image> > MapImage;
 		typedef MapImage::iterator MapImageIter;
+
 		//  typedef std::unordered_map<k3dString, std::shared_ptr<k3dShader> > MapShader;
 		//  typedef MapShader::iterator MeshMapIter;
 
