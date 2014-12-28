@@ -1,5 +1,6 @@
 #include "AppBase.h"
 #include "Engine/Engine.h"
+#include <memory>
 
 #if K3DPLATFORM_OS_WIN
 #include "Win32Res/resource.h"
@@ -16,7 +17,7 @@ LocalFree(lpMsgBuf);
 namespace k3d {
 
 	// Gloabal Variables
-	static AppBase *	gApp = nullptr;
+	static std::unique_ptr<AppBase> gApp = nullptr;
 #if K3DPLATFORM_OS_WIN
 	static TCHAR		gClassName[256] = "Kaleido3D";
 #endif
@@ -56,36 +57,46 @@ namespace k3d {
 			PostQuitMessage(0);
 			break;
 		default:
-			if (gApp != nullptr) {
+			if (gApp.get() != nullptr) {
 				return gApp->processWinMessage(_msg);
 			}
 		}
 		return 0;
 	}
 
-	AppBase * AppBase::CreateApplication(const HINSTANCE instance, const HICON icon) {
-		// Register class
-		if (gApp == nullptr) {
-			WNDCLASSEX wcex;
-			wcex.cbSize = sizeof(WNDCLASSEX);
-			wcex.style = CS_HREDRAW | CS_VREDRAW;
-			wcex.lpfnWndProc = AppBase::AppWndProc;
-			wcex.cbClsExtra = 0;
-			wcex.cbWndExtra = 0;
-			wcex.hInstance = instance;
-			wcex.hIcon = icon==NULL? LoadIcon(instance, MAKEINTRESOURCE( IDI_IC_LAUNCHER )) : icon;
-			wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-			wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-			wcex.lpszMenuName = NULL;
-			wcex.lpszClassName = gClassName;
-			wcex.hIconSm = LoadIcon(wcex.hInstance, NULL);
-			if (!RegisterClassEx(&wcex)) {
-				OUTPUT_LAST_ERROR();
-				return nullptr;
-			}
-			gApp = new AppBase;
+	std::unique_ptr<AppBase> & AppBase::CreateApplication(const HINSTANCE instance, const HICON icon) {
+		if (!gApp) {
+			std::unique_ptr<AppBase> ptr{ new AppBase(instance, icon) };
+			gApp = std::move(ptr);
 		}
 		return gApp;
+	}
+
+	AppBase::AppBase(const HINSTANCE instance, const HICON icon) {
+		WNDCLASSEX wcex;
+		wcex.cbSize = sizeof(WNDCLASSEX);
+		wcex.style = CS_HREDRAW | CS_VREDRAW;
+		wcex.lpfnWndProc = AppBase::AppWndProc;
+		wcex.cbClsExtra = 0;
+		wcex.cbWndExtra = 0;
+		wcex.hInstance = instance;
+		wcex.hIcon = icon == NULL ? LoadIcon(instance, MAKEINTRESOURCE(IDI_IC_LAUNCHER)) : icon;
+		wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+		wcex.lpszMenuName = NULL;
+		wcex.lpszClassName = gClassName;
+		wcex.hIconSm = LoadIcon(wcex.hInstance, NULL);
+		// may not be elegate
+		bool res = InitClass(wcex);
+		assert(res == true);
+	}
+
+	bool AppBase::InitClass(WNDCLASSEX & wndClass) {
+		if (!RegisterClassEx(&wndClass)) {
+			OUTPUT_LAST_ERROR();
+			return false;
+		}
+		return true;
 	}
 
 	LRESULT AppBase::processWinMessage(WinMsg & msg) {

@@ -15,7 +15,7 @@ namespace k3d {
 
 	enum MVersion {
 		VERSION_1_0 = 201402u,
-		VERSION_1_1 = 201403u
+		VERSION_1_1 = 201501u
 	};
 
 	enum Atrrib {
@@ -23,7 +23,7 @@ namespace k3d {
 		HAS_TRANSFORM = 0x1,
 		HAS_BBOX = 0x1 << 1,
 		HAS_TANGENT = 0x1 << 2,
-		hAS_TRISTRIP = 0x1 << 3
+		HAS_TRISTRIP = 0x1 << 3
 	};
 
 	/**
@@ -83,19 +83,60 @@ namespace k3d {
 		uint32_t        NumUVs;
 	};
 
-	struct KALIGN(4) Vertex
+	struct KALIGN(4) Vertex4F
+	{
+		float PosX, PosY, PosZ, PosW;
+	};
+
+	struct KALIGN(4) Vertex3F
+	{
+		float PosX, PosY, PosZ;
+	};
+
+	struct KALIGN(4) Vertex3F3F
+	{
+		float PosX, PosY, PosZ;
+		float NorX, NorY, NorZ;
+	};
+
+	struct KALIGN(4) Vertex3F2F
+	{
+		float PosX, PosY, PosZ;
+		float U, V;
+	};
+
+	struct KALIGN(4) Vertex3F3F2F
+	{
+		float PosX, PosY, PosZ;
+		float NorX, NorY, NorZ;
+		float U, V;
+	};
+
+	struct KALIGN(4) Normal3F
 	{
 		float x, y, z;
 	};
 
-	struct KALIGN(4) Normal
-	{
-		float x, y, z;
-	};
-
-	struct KALIGN(4) TexCoord
+	struct KALIGN(4) TexCoord2F
 	{
 		float u, v;
+	};
+
+	enum VtxFormat {
+		POS3_F32,
+		POS4_F32,
+		POS3_F32_UV2_F32,
+		POS3_F32_NOR3_F32,
+		POS3_F32_NOR3_F32_UV2_F32,
+		POS3_F32_NOR3_F32_UV2X2_F32,
+		POS3_F32_NOR3_F32_UV2X3_F32,
+		PER_INSTANCE // all components are seperated
+	};
+
+	enum PrimType {
+		POINTS,
+		TRIANGLES,
+		TRIANGLE_STRIPS
 	};
 
 	class Mesh {
@@ -107,34 +148,36 @@ namespace k3d {
 		void    Release();
 
 		void    SetMeshName(const char* meshName);
-		void    SetBBox(float maxCorner[3], float minCorner[3]);
-		void    SetIndexBuffer(std::vector<int> & indexBuffer);
-		void    SetVertexBuffer(std::vector<kMath::Vec3f> & vertexBuffer);
-		void    SetNormalBuffer(std::vector<kMath::Vec3f> & normalBuffer);
-		void		SetUVBuffer(std::vector<kMath::Vec2f> & uvBuffer);
-		void		SetMaterialID(uint32 matID);
+		void    SetBBox(float maxCorner[3], float minCorner[3]) {
+				m_MaxCorner.init(maxCorner);
+				m_MinCorner.init(minCorner);
+		}
+		void	SetMaterialID(uint32 matID) { m_MaterialID = matID; }
 
-		const char * MeshName() const;
+		const char * MeshName() const {	return m_MeshName; }
+		bool		IsLoaded() const { return m_IsLoaded; }
 
-		bool    IsLoaded() const;
-		bool    HasNormalData() const;
-		bool    HasTangentData() const;
+		kMath::AABB GetBoundingBox() const { return kMath::AABB(m_MaxCorner, m_MinCorner); }
+		uint32		GetMaterialID() const { return m_MaterialID; }
+		
+		int			GetIndexNum() const	{ return m_NumIndices; }
+		uint32*		GetIndexBuffer() const { return m_IndexData; }
+		void		SetIndexBuffer(std::vector<uint32> & indexBuffer);
 
-		kMath::AABB GetBoundingBox() const;
-		int     GetVertexNum() const;
-		int     GetIndexNum() const;
-		int     GetTrianglesNum() const;
-		uint32  GetMaterialID() const;
+		PrimType	GetPrimType() const { return m_PrimType; }
+		void		SetPrimType(PrimType const & type) { m_PrimType = type; }
 
-		float * GetTangentBuffer() const;
-		float * GetTexCoordBuffer() const;
-		float * GetNormalBuffer() const;
-		float * GetVertexBuffer() const;
-		uint32* GetIndexBuffer() const;
+		int			GetVertexNum() const { return m_NumVertices; }
+		VtxFormat	GetVertexFormat() const { return m_VtxFmt; }
+		void		SetVertexFormat(VtxFormat const & fmt) { m_VtxFmt = fmt; }
+
+		float *		GetVertexBuffer() const { return (float*)&m_P3Buffer[0]; }
+		void		SetVertexBuffer(void* dataPtr);
+		void		SetVertexNum(int num) { m_NumVertices = num; }
 
 		KOBJECT_CLASSNAME(Mesh)
 
-			friend class k3dAssetManager;
+		friend class AssetManager;
 
 		friend class Archive& operator << (class Archive & arch, const Mesh & mesh);
 		friend class Archive& operator >> (class Archive & arch, Mesh & mesh);
@@ -143,27 +186,30 @@ namespace k3d {
 		Mesh(const Mesh &) = delete;
 		Mesh& operator = (const Mesh &) = delete;
 
-
 		bool                m_IsLoaded;
-
 		char                m_MeshName[96];
-		uint32              m_NumIndices;
-		uint32              m_NumVertices;
-		uint32              m_NumNormals;
-		uint32              m_NumTangents;
-		uint32              m_NumUVs;
+				
+		// IndexBuffer
+		PrimType				m_PrimType;
+		uint32					m_NumIndices;
+		uint32*					m_IndexData;
 
-		uint32*             m_IndexData;
-		kMath::Vec3f*       m_VertexData;
-		kMath::Vec3f*       m_NormalData;
-		kMath::Vec3f*       m_TangentsData;
-		kMath::Vec2f*       m_UVData;
+		// VertexBuffer
+		VtxFormat				m_VtxFmt;
+		uint32					m_NumVertices;
+		union {
+			Vertex3F3F2F*		m_P3N3T2Buffer;
+			Vertex3F3F*			m_P3N3Buffer;
+			Vertex3F*			m_P3Buffer;
+			Vertex4F*			m_P4Buffer;
+		};
 
-		uint32        m_MaterialID;
-		kMath::Vec3f  m_MaxCorner;
-		kMath::Vec3f  m_MinCorner;
-
+		uint32			m_MaterialID;
+		kMath::Vec3f	m_MaxCorner;
+		kMath::Vec3f	m_MinCorner;
 	};
+
+	typedef std::shared_ptr<Mesh> SpMesh;
 }
 
 #endif

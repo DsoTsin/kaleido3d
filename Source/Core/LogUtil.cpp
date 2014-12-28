@@ -78,9 +78,13 @@ namespace k3d {
 
 	bool Log::InitLogFile(const char *name)
 	{
+		std::string path;
+		const char * env = getenv("Kaleido3D_Dir");
+		path = (env == nullptr) ? "./" : env;
+		path += "/" + std::string(name);
 		if (g_LogFile == NULL)
 			g_LogFile = GetIODevice<File>();
-		if (!g_LogFile->Open(name, IOWrite)) return false;
+		if (!g_LogFile->Open(path.c_str(), IOWrite)) return false;
 		OutputStr2IODevice(g_LogFile, "<!DOCTYPE html>\n<html>\n");
 		OutputStr2IODevice(g_LogFile, "<head>\n\t<meta charset=\"utf-8\"/><title>kaleido3d log</title>");
 		OutputStr2IODevice(g_LogFile, "\n\t<link rel=\"stylesheet\" href=\"./k3dLog/style.css\">\n</head>");

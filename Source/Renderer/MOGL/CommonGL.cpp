@@ -12,8 +12,10 @@
 
 #include <Core/LogUtil.h>
 
+using namespace k3d;
 //Global Variables
 static bool nv_command_list_feature = false;
+
 
 
 static NVPROC getGLFunction(const char *name) {
@@ -31,11 +33,13 @@ void GLInitializer::InitAndCheck() {
     const char *glVersion = (const char*) glGetString(GL_VERSION);
     const char *glRenderer = (const char*) glGetString(GL_RENDERER);
 
-	k3d::kDebug("GL Info:\n\t%s\n\t%s\nogl_LoadFunctions=%d\n", glVersion, glRenderer, code);
+	kDebug("GL Info:\n\t%s\n\t%s\nogl_LoadFunctions=%d\n", glVersion, glRenderer, code);
 
 	int nv_support_code = init_NV_command_list(getGLFunction);
 	nv_command_list_feature = (nv_support_code != 0);
-	k3d::kDebug("Nvidia Command List Feature: %d\n", nv_support_code);
+	kDebug("Nvidia Command List Feature: %d\n", nv_support_code);
+
+	Log::Warning("OpenGL Renderer=%s, Version=%s, Nvidia Command-List=%s", glRenderer, glVersion, nv_command_list_feature?"On":"Off");
 }
 
 bool GLInitializer::NVCommandListSupported() {

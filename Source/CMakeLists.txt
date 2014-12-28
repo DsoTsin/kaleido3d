@@ -39,7 +39,9 @@ find_package(OpenGL)
 
 set(K3D_THIRD_PARTY "${Kaleido3D_SOURCE_DIR}/../ThirdParty")
 
-include_directories(. ../Include
+include_directories(
+	.
+	../Include
 	${K3D_THIRD_PARTY}/SDL2-2.0.3/include
 	${K3D_THIRD_PARTY}/rapidjson/include
 	${K3D_THIRD_PARTY}/OpenGL
@@ -53,6 +55,7 @@ find_package(SDL2)
 add_subdirectory(Core)
 add_subdirectory(Renderer)
 add_subdirectory(Engine)
-
 add_subdirectory(Launcher)
+add_subdirectory(Tools/MayaDCC)
 
+add_subdirectory(UnitTest)

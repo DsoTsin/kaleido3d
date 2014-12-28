@@ -6,9 +6,7 @@
 namespace k3d {
 	class Engine {
 	public:
-
-		static Engine* CreateEngine();
-
+		
 		~Engine();
 
 		void SetRenderer(IRenderer * renderer);
@@ -16,9 +14,10 @@ namespace k3d {
 		void DoOnInitEngine();
 
 		void DoOnDrawFrame();
-
+		// trick
+		friend class Singleton<Engine>;
 	protected:
-		Engine() = default;
+		Engine();
 
 	private:
 		IRenderer *pRenderer;

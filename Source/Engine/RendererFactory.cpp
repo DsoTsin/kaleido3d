@@ -22,7 +22,7 @@ namespace k3d {
 				renderer = OGLRenderer::CreateRenderer(device);
 			}
 			else if (renderName == "dx11") {
-				DirectXContext * context = DirectXContext::CreateContext(window, DXFeature::Level_11_2);
+				DXDevice * context = DXDevice::CreateContext(window, DXFeature::Level_11_2);
 				renderer = DirectXRenderer::CreateRenderer(context);
 			}
 			else {

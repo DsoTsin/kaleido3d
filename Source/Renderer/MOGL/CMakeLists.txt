@@ -31,7 +31,19 @@ source_group(
 
 source_group(
 	Renderer FILES
-	OGLRenderer.h OGLRenderer.cpp
+	OGLRenderer.h OGLRenderer.cpp OGLDevice.cpp
+)
+
+
+source_group(
+	DDSHelper FILES
+	DDSHelper/DDSHelper.h
+	DDSHelper/DDSHelper.cpp	
+)
+
+source_group(
+	Shader FILES
+	OGLShader.h OGLShader.cpp
 )
 
 add_definitions(-DGLEW_STATIC)

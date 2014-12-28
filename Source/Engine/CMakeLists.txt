@@ -46,8 +46,11 @@ include_directories(
 )
 
 set(RENDERER_SRCS
+	Shader.h
 	RendererFactory.h
 	RendererFactory.cpp
+	RenderResourceManager.h
+	RenderResourceManager.cpp
 )
 
 source_group(

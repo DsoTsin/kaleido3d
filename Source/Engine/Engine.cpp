@@ -1,11 +1,9 @@
 #include "Engine.h"
 namespace k3d {
 
-	Engine * Engine::CreateEngine()
+	Engine::Engine()
 	{
-		Engine *engine = new Engine;
-		engine->pRenderer = nullptr;
-		return engine;
+		pRenderer = nullptr;
 	}
 
 	Engine::~Engine()
@@ -28,7 +26,12 @@ namespace k3d {
 	void Engine::DoOnDrawFrame()
 	{
 		assert(pRenderer != nullptr && "You should call \"SetRenderer\" method!!");
-		pRenderer->SwapBuffers();
+		pRenderer->PrepareFrame();
+		//....
+		pRenderer->DrawOneFrame();
+
+		//....
+		pRenderer->EndOneFrame();
 	}
 
 
