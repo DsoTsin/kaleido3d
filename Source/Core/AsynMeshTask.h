@@ -10,7 +10,8 @@ namespace k3d {
 	class AsynMeshTask : public IBaseThread {
 	public:
 
-		AsynMeshTask(const char *meshPackName, TaskPriority priority = TaskPriority::Normal);
+		explicit AsynMeshTask(const char *meshPackName, TaskPriority priority = TaskPriority::Normal);
+		explicit AsynMeshTask(std::string meshPackName, TaskPriority priority = TaskPriority::Normal);
 
 		~AsynMeshTask() override;
 

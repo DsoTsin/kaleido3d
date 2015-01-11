@@ -4,10 +4,16 @@
 
 namespace k3d {
 
+	class Message;
+
 	enum class WindowMode {
 		NORMAL,
 		FULLSCREEN
 	};
+
+	namespace WindowImpl {
+		class WindowPrivate;
+	}
 
 	class Window {
 	public:
@@ -15,21 +21,21 @@ namespace k3d {
 
 		virtual ~Window();
 
-		void SetWindowCaption(const char * name);
-
-		void Show(WindowMode mode = WindowMode::NORMAL);
-
-		void Resize(int width, int height);
-
-		void Move(int x, int y);
+		void	SetWindowCaption(const char * name);
+		void	Show(WindowMode mode = WindowMode::NORMAL);
+		void	Resize(int width, int height);
+		void	Move(int x, int y);
 
 		//implemented by platform
-		void* GetHandle();
+		void*	GetHandle();
+
+		bool	PollMessage(Message & messge);
+
 
 	private:
 		Window & operator = (Window const &) = delete;
 
-		class WindowPrivate *pipl;
+		WindowImpl::WindowPrivate *pipl;
 	};
 
 };

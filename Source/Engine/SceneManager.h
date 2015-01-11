@@ -1,5 +1,5 @@
 #pragma once
-#include <KTL/Singleton.h>
+#include <KTL/Singleton.hpp>
 #include "SceneObject.h"
 
 namespace k3d {

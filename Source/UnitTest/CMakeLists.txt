@@ -1,3 +1,46 @@
-add_subdirectory(AssetLoader)
-add_subdirectory(DXRenderer)
-#add_subdirectory(OGLRenderer)
+add_executable(UTAssetLoader
+	UTAssetLoader.cpp
+	../Core/Win32Res/win32icon.rc
+)
+
+
+target_link_libraries(
+	UTAssetLoader
+	Core Engine
+)
+
+
+add_executable(UTDXRenderer
+	UTDXRenderer.cpp
+	../Core/Win32Res/win32icon.rc
+)
+
+target_link_libraries(
+	UTDXRenderer
+	Core Engine Renderer_DX
+	d3d11
+	d3dcompiler
+	dxguid
+	winmm
+	comctl32
+)
+
+add_executable(UTTaskManager
+	UTTaskManager.cpp
+	../Core/Win32Res/win32icon.rc
+)
+
+target_link_libraries(
+	UTTaskManager
+	Core
+)
+
+add_executable(UTReflectFactory
+	UTReflectFactory.cpp
+	../Core/Win32Res/win32icon.rc
+)
+
+target_link_libraries(
+	UTReflectFactory
+	Core
+)

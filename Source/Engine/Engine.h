@@ -1,6 +1,6 @@
 #pragma once
 #include <Config/Prerequisities.h>
-#include <KTL/Singleton.h>
+#include <KTL/Singleton.hpp>
 #include <Interface/IRenderer.h>
 
 namespace k3d {

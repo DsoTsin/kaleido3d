@@ -2,13 +2,14 @@
 #include <Config/Prerequisities.h>
 
 #if K3DPLATFORM_OS_WIN
-#include "Window_p_win32.h"
+#include "Windows/WindowImpl.h"
 #endif
 
 using namespace k3d;
+using namespace k3d::WindowImpl;
 
 Window::Window()
-: pipl(new WindowPrivate)
+	: pipl(new WindowPrivate)
 {
 	pipl->Init();
 }
@@ -40,4 +41,16 @@ void Window::Resize(int width, int height) {
 void Window::Move(int x, int y) {
 	assert(pipl != nullptr);
 	pipl->Move(x, y);
+}
+
+bool Window::PollMessage(Message & message)
+{
+	if (pipl && pipl->PopMessage(message, false))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

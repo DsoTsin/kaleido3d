@@ -1,6 +1,7 @@
 #include "Mesh.h"
 #include <assert.h>
 #include <Core/Archive.h>
+#include <cstring>
 
 namespace k3d {
 
@@ -79,6 +80,8 @@ namespace k3d {
 			m_P3N3T2Buffer = new Vertex3F3F2F[m_NumVertices];
 			std::memcpy(m_P3N3T2Buffer, dataPtr, m_NumVertices*sizeof(Vertex3F3F2F));
 			break;
+		default:
+			break;
 		}
 	}
 			
@@ -122,6 +125,8 @@ namespace k3d {
 				mesh.m_P4Buffer = new Vertex4F[mesh.m_NumVertices];
 				arch.ArrayOut<Vertex4F>(mesh.m_P4Buffer, mesh.m_NumVertices);
 				break;
+			default:
+				break;
 			}
 		}
 
@@ -161,6 +166,8 @@ namespace k3d {
 				break;
 			case POS4_F32:
 				arch.ArrayIn<Vertex4F>(mesh.m_P4Buffer, mesh.m_NumVertices);
+				break;
+			default:
 				break;
 			}
 		}

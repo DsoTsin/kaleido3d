@@ -14,7 +14,8 @@ namespace k3d {
 	{
 		m_IsLoading = false;
 		m_HasPendingObject = false;
-		m_NumPendingObject = 0;
+		m_NumPendingObject.store(0, std::memory_order_release);
+		0;
 	}
 
 	void AssetManager::Init()

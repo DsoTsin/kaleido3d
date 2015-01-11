@@ -17,8 +17,6 @@ source_group(
 set(ASSET_SRCS
 	Model.h
 	Model.cpp
-	AssetManager.h
-	AssetManager.cpp
 )
 
 source_group(

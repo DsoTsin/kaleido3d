@@ -47,3 +47,4 @@ Document/html/*
 ThirdParty/*
 Shader/GLSL/*
 Shader/Metal/*
+Source/.idea/*

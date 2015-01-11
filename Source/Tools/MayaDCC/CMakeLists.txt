@@ -1,4 +1,4 @@
-set(MAYA_PLUGIN_NAME "MayaDCC")
+set(MAYA_PLUGIN_NAME "Kaleido3D_DCC")
 
 if(WIN32)
 set(MAYA_DIRECTORY "C:\\Program Files\\Autodesk\\Maya2015")

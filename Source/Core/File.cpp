@@ -45,7 +45,7 @@ namespace k3d {
 	{
 #if defined(K3DPLATFORM_OS_WIN)
 		wchar_t name_buf[1024];
-		CharToWchar(fileName, name_buf, sizeof(name_buf));
+		StringUtil::CharToWchar(fileName, name_buf, sizeof(name_buf));
 
 		DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 		int   accessRights = 0;
@@ -237,7 +237,7 @@ namespace k3d {
 
 #ifdef K3DPLATFORM_OS_WIN
 		wchar_t name_buf[1024];
-		CharToWchar(fileName, name_buf, sizeof(name_buf));
+		StringUtil::CharToWchar(fileName, name_buf, sizeof(name_buf));
 		m_FileHandle = ::CreateFileW(name_buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 		if (m_FileHandle == INVALID_HANDLE_VALUE) return false;
 

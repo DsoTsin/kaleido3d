@@ -1,11 +1,11 @@
 #include "AsynMeshTask.h"
+#include "AsynMeshTask.h"
 
 #include "Archive.h"
 #include "Mesh.h"
 #include "File.h"
 #include "LogUtil.h"
-
-#include <Engine/AssetManager.h>
+#include "AssetManager.h"
 
 namespace k3d {
 
@@ -13,6 +13,12 @@ namespace k3d {
 	{
 		m_MeshPackName	= meshPackName ;
 		m_Priority		= priority;
+	}
+
+	AsynMeshTask::AsynMeshTask(std::string meshPackName, TaskPriority priority)
+	{
+		m_MeshPackName = meshPackName;
+		m_Priority = priority;
 	}
 
 	AsynMeshTask::~AsynMeshTask()
@@ -30,7 +36,7 @@ namespace k3d {
 			kDebug("AsynMeshTask::dcc package version %d\n", header.Version);
 			char ClassName[64] = { 0 };
 			arch.ArrayOut( ClassName, 64 );
-			kDebug("AsynMeshTask:;dcc class name = %s\n", ClassName);
+			kDebug("AsynMeshTask::dcc class name = %s\n", ClassName);
 			std::string className(ClassName);
 			while (className != "End")
 			{

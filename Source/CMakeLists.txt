@@ -38,6 +38,7 @@ endif(MSVC)
 find_package(OpenGL)
 
 set(K3D_THIRD_PARTY "${Kaleido3D_SOURCE_DIR}/../ThirdParty")
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${Kaleido3D_SOURCE_DIR}/../Binary/")
 
 include_directories(
 	.

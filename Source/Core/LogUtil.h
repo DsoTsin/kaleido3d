@@ -2,6 +2,7 @@
 #ifndef __k3dDbg_h__
 #define __k3dDbg_h__
 #include <Config/Prerequisities.h>
+#include "Utils/StringUtils.h"
 
 namespace k3d {
 
@@ -32,6 +33,9 @@ namespace k3d {
 
 #define LOG_MESSAGE(message) \
     Log::Message(message);
+
+#define DBG_LINE_WITH_LAST_ERROR(message) \
+	kDebug("%s in file(%s) line(%d) %s\n", (message), __FILE__, __LINE__, GetLastWin32Error().c_str());
 }
 
 #endif

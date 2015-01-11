@@ -3,9 +3,9 @@
 #pragma once
 
 #include <Config/Prerequisities.h>
-#include <KTL/threadpool.h>
-#include <KTL/semaphore.h>
-#include <KTL/Singleton.h>
+#include <KTL/ThreadPool.hpp>
+#include <KTL/Semaphore.hpp>
+#include <KTL/Singleton.hpp>
 #include <Core/Mesh.h>
 #include <Core/AsynMeshTask.h>
 
@@ -50,7 +50,7 @@ namespace k3d {
 	};
 
 	//Curiously Recurring Template Pattern, CRTP
-	template <class T, typename RefObj = kCoreObject>
+	template <class T, typename RefObj>
 	class tResItem
 		: public kResourceItem
 		, public RefObj

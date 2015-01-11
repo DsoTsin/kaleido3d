@@ -4,6 +4,7 @@
 
 #include <Math/kMath.hpp>
 #include <Math/kGeometry.hpp>
+#include <Interface/IReflectable.h>
 
 namespace kMath {
 	typedef tVectorN<float, 2> Vec2f;
@@ -139,7 +140,7 @@ namespace k3d {
 		TRIANGLE_STRIPS
 	};
 
-	class Mesh {
+	class Mesh : public IReflectable {
 	public:
 
 		Mesh();
@@ -174,6 +175,8 @@ namespace k3d {
 		float *		GetVertexBuffer() const { return (float*)&m_P3Buffer[0]; }
 		void		SetVertexBuffer(void* dataPtr);
 		void		SetVertexNum(int num) { m_NumVertices = num; }
+
+		Mesh *		Reflect() override { return new Mesh; }
 
 		KOBJECT_CLASSNAME(Mesh)
 

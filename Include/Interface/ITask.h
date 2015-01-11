@@ -18,7 +18,7 @@ struct ITask
 	virtual void	OnCanceled() {}
 };
 
-enum class TaskPriority {
+enum class TaskPriority : uint32 {
 	RealTime,
 	BackGround,
 	Normal

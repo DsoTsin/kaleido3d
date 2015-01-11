@@ -3,8 +3,8 @@
 #include <Core/LogUtil.h>
 #include <Core/TaskManager.h>
 #include <Core/AsynMeshTask.h>
-#include <Engine/AssetManager.h>
-
+#include <Core/AssetManager.h>
+#include <string>
 
 using namespace k3d;
 
@@ -15,9 +15,14 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 	AssetManager & assetManager = AssetManager::Get();
 	assetManager.Init();
 
-	AsynMeshTask * meshTask = new AsynMeshTask("E:\\kaleido3d\\BuildCMakeProj\\UnitTest\\DXRenderer\\test.kspack");
-	TaskManager::Get().Post(meshTask);
+	const char * pathPrefix = ::getenv("Kaleido3d_Dir");
 
+	for (int i = 1; i < 4; i++) {
+		char buffer[128] = { 0 };
+		sprintf(buffer, "%s\\Test\\TestDCC_%d.kspack", pathPrefix, i);
+		AsynMeshTask * meshTask = new AsynMeshTask(buffer);
+		TaskManager::Get().Post(meshTask);
+	}
 	assetManager.Shutdown();
 	Log::CloseLog();
 	return 0;

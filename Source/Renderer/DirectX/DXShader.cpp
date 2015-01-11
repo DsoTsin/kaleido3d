@@ -29,7 +29,7 @@ namespace k3d {
 		dwShaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 		WCHAR smName[128] = { 0 };
-		CharToWchar(szShaderModel, smName, sizeof(smName));
+		StringUtil::CharToWchar(szShaderModel, smName, sizeof(smName));
 		std::wstring hashPath = PathToHash(szFileName).append(smName);
 		// First: Check shader cache
 		{

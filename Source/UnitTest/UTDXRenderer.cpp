@@ -4,12 +4,34 @@
 #include <Core/LogUtil.h>
 #include <Core/Window.h>
 #include <Core/AppBase.h>
+#include <Core/AsynMeshTask.h>
+#include <Core/Event.h>
 
 #include <Engine/Engine.h>
 #include <Engine/RendererFactory.h>
+
 #include <Renderer/DirectX/DirectXRenderer.h>
 
 using namespace k3d;
+
+// 跨线程通信 InterThreadCommunication
+Event::SpEvent gTestMeshReady;
+
+class TestMesh : public AsynMeshTask {
+public:
+
+	TestMesh(const char * meshPath) : AsynMeshTask(meshPath)
+	{
+
+	}
+
+	void OnFinish() override
+	{
+		gTestMeshReady = Event::SpEvent(new Event());
+		gTestMeshReady->Signal();
+	}
+};
+
 
 int WINAPI wWinMain(HINSTANCE,HINSTANCE,LPWSTR,int)
 {

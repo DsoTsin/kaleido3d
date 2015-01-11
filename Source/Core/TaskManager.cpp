@@ -1,5 +1,9 @@
 #include "TaskManager.h"
+#include "Windows/EventImpl.h"
+#include "Windows/ThreadImpl.h"
 #include <functional>
+
+
 namespace k3d {
 	/*
 	TaskManager::TaskManager() :m_Capacity(4)
@@ -32,33 +36,88 @@ namespace k3d {
 	}
 	*/
 
+	class NameThreadTask : public IBaseThread {
+	public:
+		using TaskQueue = TaskManager::TaskQueue;
+
+		NameThreadTask(TaskQueue * queue)
+			: m_ThreadQueue(nullptr)
+		{
+			m_ThreadQueue = queue;
+		}
+
+		void OnRun() override
+		{
+			assert(m_ThreadQueue != nullptr);
+			while (true)
+			{
+				if (m_ThreadQueue->empty())
+				{
+					ThreadImpl::sleep(0);
+				}
+				else
+				{
+					IBaseThread * task = m_ThreadQueue->front();
+					task->OnRun();
+					m_ThreadQueue->pop();
+				}
+			}
+		}
+
+	private:
+		TaskQueue	* m_ThreadQueue;
+	};
+
+	static void __stdcall _createTask(IBaseThread * task) {
+		if (task) {
+			task->OnRun();
+		}
+	}
+
+	void WThread::Wait(WThread * thread)
+	{
+		assert(thread);
+		EventImpl::waitSingleEvent(thread->m_Handle, INFINITE);
+	}
 
 	TaskManager::TaskManager()
 	{
-		initManager();
+		ThreadImpl::getSysInfo();
+	}
+
+
+	void TaskManager::initNamedThreadQueue()
+	{
+		for (int i = 0; i < MaxNamedThreadNum; ++i)
+		{
+			m_NamedTask[i] = new NameThreadTask(&m_NamedQueue[i]);
+			ThreadImpl::createThread(*(m_NamedTask[i]), TaskPriority::Normal, true, (WThread::ThreadFunctionPtr)&_createTask);
+			ThreadImpl::resumeThread(*(m_NamedTask[i]));
+		}
 	}
 
 	void TaskManager::Post(IBaseThread * task, TaskPriority priority)
 	{
-		createThread(task, priority);
+		ThreadImpl::createThread(*task, priority, (WThread::ThreadFunctionPtr)&_createTask);
 	}
+
 
 	void TaskManager::Suspend(IBaseThread * task)
 	{
-		suspendThread(task);
+		ThreadImpl::suspendThread(*task);
 	}
+
 
 	void TaskManager::Remove(IBaseThread * task)
 	{
-		terminateThread(task);
+		ThreadImpl::terminateThread(*task);
 	}
 
-	void TaskManager::RemoveAllTask()
+	void TaskManager::Post(IBaseThread * task, NamedThread thread)
 	{
-		while (!m_ThreadQueue.empty()) {
-			Remove(m_ThreadQueue.front());
-			m_ThreadQueue.pop();
-		}
+		m_NamedQueue[(uint32)thread].push(task);	
 	}
+	
+
 
 }
