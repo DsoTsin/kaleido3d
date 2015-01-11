@@ -1,13 +1,13 @@
 #pragma once 
 
-#include <Interface/ITask.h>
+#include "TaskManager.h"
 #include <string>
 
 namespace k3d {
 	
 	class Mesh;
 
-	class AsynMeshTask : public ITask {
+	class AsynMeshTask : public IBaseThread {
 	public:
 
 		AsynMeshTask(const char *meshPackName, TaskPriority priority = TaskPriority::Normal);

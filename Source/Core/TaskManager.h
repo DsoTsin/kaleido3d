@@ -2,6 +2,7 @@
 #ifndef __TaskManager_h__
 #define __TaskManager_h__
 #include <Interface/ITask.h>
+#include <KTL/Singleton.h>
 #include <queue>
 //#include <KTL/threadpool.h>
 
@@ -17,7 +18,7 @@ namespace k3d {
 	};
 
 
-	class TaskManager {
+	class TaskManager : public Singleton<TaskManager> {
 	public:
 
 		TaskManager();

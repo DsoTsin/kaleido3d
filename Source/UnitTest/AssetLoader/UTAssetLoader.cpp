@@ -1,6 +1,8 @@
 #include <Config/OSHeaders.h>
 
 #include <Core/LogUtil.h>
+#include <Core/TaskManager.h>
+#include <Core/AsynMeshTask.h>
 #include <Engine/AssetManager.h>
 
 
@@ -13,6 +15,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 	AssetManager & assetManager = AssetManager::Get();
 	assetManager.Init();
 
+	AsynMeshTask * meshTask = new AsynMeshTask("test.kspack");
+	TaskManager::Get().Post(meshTask);
 
 	assetManager.Shutdown();
 	Log::CloseLog();

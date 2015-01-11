@@ -3,6 +3,7 @@
 #include "Archive.h"
 #include "Mesh.h"
 #include "File.h"
+#include "LogUtil.h"
 
 #include <Engine/AssetManager.h>
 
@@ -25,6 +26,9 @@ namespace k3d {
 			Archive arch;
 			arch.SetIODevice(&mem);
 			
+		}
+		else {
+			kDebug("Cann't find file (%s).\n", m_MeshPackName.c_str());
 		}
 		mem.Close();
 
