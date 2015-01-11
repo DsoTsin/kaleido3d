@@ -14,7 +14,7 @@ namespace k3d {
 
 		~AsynMeshTask() override;
 
-		void Execute() override;
+		void OnRun() override;
 
 		void OnFinish() override;
 

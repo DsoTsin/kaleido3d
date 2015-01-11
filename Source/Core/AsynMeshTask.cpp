@@ -18,7 +18,7 @@ namespace k3d {
 	{
 	}
 	
-	void AsynMeshTask::Execute()
+	void AsynMeshTask::OnRun()
 	{
 		MemMapFile mem;
 		if (mem.Open(m_MeshPackName.c_str(), IORead)) {

@@ -1,7 +1,7 @@
-#include "Task.h"
+#include "TaskManager.h"
 #include <functional>
 namespace k3d {
-
+	/*
 	TaskManager::TaskManager() :m_Capacity(4)
 	{
 		m_pThreadPool = new std::thread_pool(m_Capacity);
@@ -30,4 +30,35 @@ namespace k3d {
 	{
 		task->Execute();
 	}
+	*/
+
+
+	TaskManager::TaskManager()
+	{
+		initManager();
+	}
+
+	void TaskManager::Post(IBaseThread * task, TaskPriority priority)
+	{
+		createThread(task, priority);
+	}
+
+	void TaskManager::Suspend(IBaseThread * task)
+	{
+		suspendThread(task);
+	}
+
+	void TaskManager::Remove(IBaseThread * task)
+	{
+		terminateThread(task);
+	}
+
+	void TaskManager::RemoveAllTask()
+	{
+		while (!m_ThreadQueue.empty()) {
+			Remove(m_ThreadQueue.front());
+			m_ThreadQueue.pop();
+		}
+	}
+
 }
