@@ -72,12 +72,12 @@ target_link_libraries(
 	opengl32
 )
 
-add_custom_command(
-  TARGET ${MAYA_PLUGIN_NAME}
-  POST_BUILD
-  COMMAND echo "copying ${MAYA_PLUGIN_NAME} to ${MAYA_DIRECTORY}"
-  COMMAND xcopy /Y "$ENV{Temp}\\Debug\\MayaDCC.mll" "${MAYA_DIRECTORY}/bin/plug-ins"
-)
+#add_custom_command(
+#  TARGET ${MAYA_PLUGIN_NAME}
+#  POST_BUILD
+#  COMMAND echo "copying ${MAYA_PLUGIN_NAME} to ${MAYA_DIRECTORY}"
+#  COMMAND xcopy /Y "$ENV{Temp}\\Debug\\MayaDCC.mll" "${MAYA_DIRECTORY}/bin/plug-ins"
+#)
 
 set_target_properties(
 	${MAYA_PLUGIN_NAME} PROPERTIES 

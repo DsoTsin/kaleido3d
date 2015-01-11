@@ -114,7 +114,7 @@ MPxFileTranslator::MFileKind DCTranslator::identifyFile(
 	const char * name = fileName.name().asChar();
 	size_t   nameLength = strlen(name);
 
-	if ((nameLength > 14) && !_stricmp(name + nameLength - 7, ".kscene"))
+	if ((nameLength > 14) && !_stricmp(name + nameLength - 7, MAYA_TRANSLATOR_EXT))
 		return kCouldBeMyFileType;
 	else
 		return kNotMyFileType;

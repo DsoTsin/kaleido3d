@@ -45,4 +45,4 @@
 #define MAYA_PLUGIN_REQUIREDAPI		"Any"
 
 #define MAYA_TRANSLATOR				"kaleido3d digital content package"
-#define MAYA_TRANSLATOR_EXT			"ksmesh"
+#define MAYA_TRANSLATOR_EXT			"kspack"

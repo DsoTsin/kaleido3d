@@ -15,7 +15,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 	AssetManager & assetManager = AssetManager::Get();
 	assetManager.Init();
 
-	AsynMeshTask * meshTask = new AsynMeshTask("test.kspack");
+	AsynMeshTask * meshTask = new AsynMeshTask("E:\\kaleido3d\\BuildCMakeProj\\UnitTest\\DXRenderer\\test.kspack");
 	TaskManager::Get().Post(meshTask);
 
 	assetManager.Shutdown();

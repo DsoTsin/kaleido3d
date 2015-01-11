@@ -56,6 +56,6 @@ add_subdirectory(Core)
 add_subdirectory(Renderer)
 add_subdirectory(Engine)
 add_subdirectory(Launcher)
-add_subdirectory(Tools/MayaDCC $ENV{Temp})
+add_subdirectory(Tools/MayaDCC)
 
 add_subdirectory(UnitTest)

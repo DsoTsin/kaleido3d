@@ -2,8 +2,8 @@
 #include <Core/File.h>
 #include <Core/LogUtil.h>
 #include <Core/Image.h>
-#include <Core/Mesh.h>
 #include <Core/Variant.h>
+#include <Core/TaskManager.h>
 
 #include <fstream>
 #include <algorithm>
@@ -171,11 +171,17 @@ namespace k3d {
 		}
 	}
 
-	void AssetManager::CommitAsynMeshTask(const AsynMeshTask & task)
+	void AssetManager::CommitAsynMeshTask(AsynMeshTask * task)
 	{
-
+		assert(task != nullptr);
+		TaskManager::Get().Post(task);
 	}
 
+	void AssetManager::AppendMesh(SpMesh meshPtr)
+	{
+		kDebug("AssetManager::Mesh (%s) Appended.\n", meshPtr->MeshName());
+		m_MeshMap[meshPtr->MeshName()] = meshPtr;
+	}
 
 	void AssetManager::Free(char *byte_ptr)
 	{
