@@ -40,8 +40,8 @@ source_group(
 	Concurrent FILES
 	TaskManager.h
 	TaskManager.cpp
-	Event.h
-	Event.cpp
+	ConditionVariable.h
+	ConditionVariable.cpp
 )
 
 source_group(
@@ -55,6 +55,8 @@ source_group(
 source_group(
 	Message FILES
 	Message.h
+	InputDevice.h
+	InputDevice.cpp
 )
 
 source_group(

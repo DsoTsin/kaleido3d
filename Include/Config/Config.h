@@ -41,7 +41,7 @@
 
 
 #if K3DPLATFORM_OS_WIN
-    #define KALIGN( X ) alignas(X)
+    #define KALIGN( X ) __declspec( align(X) )
 #else
     #define KALIGN( X ) __attribute__( (aligned(X)) )
 #endif

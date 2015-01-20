@@ -244,7 +244,7 @@ namespace k3d {
 		m_szFile = ::GetFileSize(m_FileHandle, NULL);
 		if (m_szFile == INVALID_FILE_SIZE) return false;
 
-		HANDLE m_FileMappingHandle = ::CreateFileMapping(m_FileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+		m_FileMappingHandle = ::CreateFileMapping(m_FileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
 		if (m_FileMappingHandle == INVALID_HANDLE_VALUE) return false;
 
 		m_pData = (unsigned char*)MapViewOfFile(m_FileMappingHandle, FILE_MAP_READ, 0, 0, 0);

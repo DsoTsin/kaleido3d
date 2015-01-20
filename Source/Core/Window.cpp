@@ -14,11 +14,19 @@ Window::Window()
 	pipl->Init();
 }
 
+Window::Window(const char *windowName, int width, int height)
+	: pipl(new WindowPrivate)
+{
+	pipl->Init();
+	pipl->SetCaption(windowName);
+	pipl->Resize(width, height);
+}
+
 Window::~Window()
 {
 }
 
-void * Window::GetHandle() {
+void * Window::GetHandle() const{
 	assert(pipl != nullptr);
 	return pipl->handle;
 }

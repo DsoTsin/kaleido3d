@@ -1,7 +1,7 @@
 #include <Core/TaskManager.h>
 #include <Config/OSHeaders.h>
 #include <Core/LogUtil.h>
-#include <Core/Event.h>
+#include <Core/ConditionVariable.h>
 //#include <KTL/LockFreeQueue.hpp>
 
 /*
@@ -15,9 +15,9 @@ Main-----
 
 using namespace k3d;
 
-Event::SpEvent gEvent;
-Event::SpEvent gAEvent;
-Event::SpEvent gBEvent;
+SpConditionVariable gEvent;
+SpConditionVariable gAEvent;
+SpConditionVariable gBEvent;
 
 class NamedTask : public IBaseThread {
 public:
@@ -50,7 +50,7 @@ public:
 
 	void OnRun() {
 		int i = 0;
-		gAEvent = Event::SpEvent(new Event);
+		gAEvent = SpConditionVariable(new ConditionVariable);
 		while (true) {
 			i++;
 			::Sleep(1000);
@@ -73,7 +73,7 @@ public:
 	}
 
 	void OnRun() {
-		Event::WaitFor(gEvent, 80000);
+		ConditionVariable::WaitFor(gEvent, 80000);
 		kDebug("BTask:: Fuck you!!!\n");
 		while (true) {
 			::Sleep(1000);
@@ -88,7 +88,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 	TaskManager::Get();
 	TaskManager::Get().Init();
 
-	gEvent = Event::SpEvent(new Event);
+	gEvent = SpConditionVariable(new ConditionVariable);
 
 	NamedTask *gameTask = new NamedTask("GameTask::In Game Thread...\n");
 	TaskManager::Get().Post(gameTask);
@@ -104,7 +104,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 	kDebug("MainThread::BThread Wake Up!!\n");
 	gEvent->Signal();
 
-	Event::WaitFor(gAEvent);
+	ConditionVariable::WaitFor(gAEvent);
 	kDebug("MainThread::Release gEvent\n");
 	gEvent->Release();
 	gameTask->Join();

@@ -18,6 +18,7 @@ namespace k3d {
 	class Window {
 	public:
 		Window();
+		explicit Window(const char *windowName, int width, int height);
 
 		virtual ~Window();
 
@@ -27,14 +28,16 @@ namespace k3d {
 		void	Move(int x, int y);
 
 		//implemented by platform
-		void*	GetHandle();
+		void*	GetHandle() const;
 
 		bool	PollMessage(Message & messge);
 
+		Window & operator = (Window const &) = delete;
+		Window(const Window&) = delete;
+		Window(const Window&&) = delete;
 
 	private:
-		Window & operator = (Window const &) = delete;
-
+		
 		WindowImpl::WindowPrivate *pipl;
 	};
 

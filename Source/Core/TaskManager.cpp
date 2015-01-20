@@ -1,5 +1,5 @@
 #include "TaskManager.h"
-#include "Windows/EventImpl.h"
+#include "Windows/ConditionVariableImpl.h"
 #include "Windows/ThreadImpl.h"
 #include <functional>
 
@@ -77,7 +77,7 @@ namespace k3d {
 	void WThread::Wait(WThread * thread)
 	{
 		assert(thread);
-		EventImpl::waitSingleEvent(thread->m_Handle, INFINITE);
+		ConditionVariableImpl::waitSingleEvent(thread->m_Handle, INFINITE);
 	}
 
 	TaskManager::TaskManager()

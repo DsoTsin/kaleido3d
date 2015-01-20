@@ -3,9 +3,9 @@
 
 #include <Core/LogUtil.h>
 #include <Core/Window.h>
-#include <Core/AppBase.h>
+#include <Core/Message.h>
 #include <Core/AsynMeshTask.h>
-#include <Core/Event.h>
+#include <Core/ConditionVariable.h>
 
 #include <Engine/Engine.h>
 #include <Engine/RendererFactory.h>
@@ -15,7 +15,7 @@
 using namespace k3d;
 
 // 跨线程通信 InterThreadCommunication
-Event::SpEvent gTestMeshReady;
+SpConditionVariable gTestMeshReady;
 
 class TestMesh : public AsynMeshTask {
 public:
@@ -27,7 +27,7 @@ public:
 
 	void OnFinish() override
 	{
-		gTestMeshReady = Event::SpEvent(new Event());
+		gTestMeshReady = SpConditionVariable(new ConditionVariable());
 		gTestMeshReady->Signal();
 	}
 };
@@ -36,11 +36,8 @@ public:
 int WINAPI wWinMain(HINSTANCE,HINSTANCE,LPWSTR,int)
 {
 	Log::InitLogFile("UTDXRenderer.html");
-	std::unique_ptr<AppBase> & app = AppBase::CreateApplication(GetModuleHandle(NULL), NULL);
 
-	Window window;
-	window.SetWindowCaption("UTDXRenderer");
-	window.Resize(1700, 700);
+	Window window("UTDXRenderer", 1700, 700);
 	window.Show();
 
 	DXDevice * context = DXDevice::CreateContext(&window, DXFeature::Level_11_2);
@@ -49,8 +46,11 @@ int WINAPI wWinMain(HINSTANCE,HINSTANCE,LPWSTR,int)
 	Engine engine = Singleton<Engine>::Get();
 	engine.SetRenderer(renderer);
 
-	app->SetEngine(&engine);
-	app->StartMessageLooping();
+	Message msg;
+	while (window.PollMessage(msg))
+	{
+
+	}
 
 	Log::CloseLog();
 	return 0;
