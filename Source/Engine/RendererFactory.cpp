@@ -1,17 +1,16 @@
+#include "Kaleido3D.h"
 #include "RendererFactory.h"
 #include <Core/Window.h>
-#include <Renderer/MOGL/OGLRenderer.h>
-#include <Renderer/DirectX/DirectXRenderer.h>
 
-#include <map>
-#include <string>
-#include <assert.h>
+#if K3DPLATFORM_OS_WIN
+    #include <Renderer/MOGL/OGLRenderer.h>
+    #include <Renderer/DirectX/DirectXRenderer.h>
+#endif
 
 using namespace std;
 namespace k3d {
-	
+	/*
 	static map<string, IRenderer*> gRendererMap;
-
 	IRenderer * RendererFactory::SetUpRenderer(const char *name, Window *window) {
 		assert(window != nullptr);
 		string renderName{ name };
@@ -36,7 +35,7 @@ namespace k3d {
 		
 		return renderer;
 	}
-
+	*/
 	RendererFactory::RendererFactory() {
 
 	}

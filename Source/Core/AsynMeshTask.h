@@ -1,12 +1,12 @@
 #pragma once 
 
 #include "TaskManager.h"
+#include "Mesh.h"
 #include <string>
+
 
 namespace k3d {
 	
-	class Mesh;
-
 	class AsynMeshTask : public IBaseThread {
 	public:
 
@@ -18,6 +18,11 @@ namespace k3d {
 		void OnRun() override;
 
 		void OnFinish() override;
+
+	protected:
+
+		typedef std::vector<SpMesh>	SpVecMesh;
+		SpVecMesh		m_MeshPtrList;
 
 	private:
 

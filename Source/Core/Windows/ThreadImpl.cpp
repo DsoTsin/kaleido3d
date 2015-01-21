@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "ThreadImpl.h"
 
 #include <strsafe.h>

@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include <Config/OSHeaders.h>
 
 #include <Core/LogUtil.h>

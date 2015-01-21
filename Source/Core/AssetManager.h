@@ -2,12 +2,13 @@
 #define __k3dk3dAssetManager_h__
 #pragma once
 
-#include <Config/Prerequisities.h>
 #include <KTL/ThreadPool.hpp>
 #include <KTL/Semaphore.hpp>
 #include <KTL/Singleton.hpp>
+#include <Interface/IIODevice.h>
 #include <Core/Mesh.h>
 #include <Core/AsynMeshTask.h>
+#include <memory>
 
 
 namespace k3d {
@@ -17,46 +18,6 @@ namespace k3d {
 	struct BytesPackage
 	{
 		std::vector<kByte> Bytes;
-	};
-
-	/// Resource Item is
-	/// \brief The ResourceItem class
-	///
-	class kResourceItem
-	{
-	public:
-		enum ResType {
-			MESH_DATA,
-			TEX_DATA,
-			MATER_DATA,
-			SHADER_DATA,
-			OTHER
-		};
-
-		kResourceItem(const char*name, ResType t)
-			: m_ResType(t)
-		{
-			m_ResName = k3dString(name);
-		}
-
-		ResType   Type() const { return m_ResType; }
-		k3dString ResName() { return m_ResName; }
-
-	protected:
-
-		ResType   m_ResType;
-		k3dString m_ResName;
-
-	};
-
-	//Curiously Recurring Template Pattern, CRTP
-	template <class T, typename RefObj>
-	class tResItem
-		: public kResourceItem
-		, public RefObj
-	{
-	public:
-		tResItem(ResType type) : kResourceItem(nullptr, type) {}
 	};
 
 	/// AssetManager
@@ -126,10 +87,12 @@ namespace k3d {
 		/// \return std::shared_ptr<Image>
 		std::shared_ptr<Image> FindImage(const char *imgName);
 
-		typedef std::unordered_map<k3dString, SpMesh> MapMesh;
+		using string = std::string;
+
+		typedef std::unordered_map<string, SpMesh> MapMesh;
 		typedef MapMesh::iterator MapMeshIter;
 
-		typedef std::unordered_map<k3dString, std::shared_ptr<Image> > MapImage;
+		typedef std::unordered_map<string, std::shared_ptr<Image> > MapImage;
 		typedef MapImage::iterator MapImageIter;
 
 		//  typedef std::unordered_map<k3dString, std::shared_ptr<k3dShader> > MapShader;
@@ -137,9 +100,18 @@ namespace k3d {
 
 		AssetManager();
 
-	protected:
+	public:
+		typedef std::shared_ptr<IIODevice> SpIODevice;
 
-		std::vector<k3dString>  m_SearchPaths;
+		static SpIODevice		OpenAsset(const char * assetPath, IOFlag openFlag = IORead, bool fast = false);
+
+		static std::string		AssetPath(const char * assetRelativePath);
+
+
+	protected:
+		static	std::string		s_envAssetPath;
+
+		std::vector<string>		m_SearchPaths;
 		std::thread_pool*       m_pThreadPool;
 
 		MapMesh                 m_MeshMap;

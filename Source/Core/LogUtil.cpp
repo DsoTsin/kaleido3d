@@ -1,38 +1,89 @@
+#include "Kaleido3D.h"
 #include "LogUtil.h"
 #include <Config/OSHeaders.h>
 #include <cstdarg>
+#include <cstdio>
 #include "File.h"
 #include <mutex>
 
 namespace k3d {
-
+    
+    namespace Global{
+        static Debug::OutPutCallBack output = nullptr;
+    }
+    
 	Debug::Debug()
 	{}
 
+    void Debug::SetDebugOutFunction(Debug::OutPutCallBack callBack)
+    {
+        Global::output = callBack;
+    }
+    
 	Debug & Debug::operator<<(const char *str)
 	{
 #ifdef K3DPLATFORM_OS_WIN
 		OutputDebugStringA(str);
-#else
+#elif K3DPLATFORM_OS_LINUX
 		fputs(str, stderr);
 		fflush(stderr);
+#else
+        if(nullptr!=Global::output)
+        {
+            Global::output(str);
+        }
 #endif
 		return *this;
 	}
 
+	Debug & Debug::operator<<(std::string const & str)
+	{
+#ifdef K3DPLATFORM_OS_WIN
+		OutputDebugStringA(str.c_str());
+#elif K3DPLATFORM_OS_LINUX
+		fputs(str, stderr);
+        fflush(stderr);
+#else
+        if(nullptr!=Global::output)
+        {
+            Global::output(str.c_str());
+        }
+#endif
+		return *this;
+	}
 
-	void kDebug(const char *fmt, ...)
+	void Debug::Out(const char * tag, const char * fmt, ...)
 	{
 		va_list va;
-		char dbgStr[1024];
+		static char dbgStr[2048] = { 0 };
+		static char dbgBuffer[2048] = { 0 };
 		va_start(va, fmt);
 		::vsprintf(dbgStr, fmt, va); //!to fix: printf %d first argument error
 		va_end(va);
-		Debug() << dbgStr;
+		::sprintf(dbgBuffer, "[%s]::%s\n", tag, dbgStr);
+#if   K3DPLATFORM_OS_WIN
+		OutputDebugStringA(dbgBuffer);
+#elif K3DPLATFORM_OS_LINUX
+		fputs(dbgBuffer, stderr);
+        fflush(stderr);
+#else
+        if(nullptr!=Global::output)
+        {
+            Global::output(dbgBuffer);
+        }
+#endif
 	}
 
+	void Debug::Out(const char * tag, std::string const & log)
+	{
+		std::string outLog("[");
+		outLog += tag;
+		outLog += "]";
+		outLog += log;
+		Debug() << outLog ;
+	}
 
-	IIODevice *g_LogFile = NULL;
+	IIODevice *g_LogFile = nullptr;
 	std::mutex g_LogLock;
 
 	static void OutputStr2IODevice(IIODevice* device, const char *str)
@@ -52,8 +103,8 @@ namespace k3d {
 		return time_info;
 	}
 
-	static k3dString Txt2Html(const char *str) {
-		k3dString ret(GetLocalTime());
+	static std::string Txt2Html(const char *str) {
+		std::string ret(GetLocalTime());
 		const char *s = str;
 		while (*s) {
 			if (*s == '\t') {
@@ -66,7 +117,7 @@ namespace k3d {
 				ret += "&gt;";
 			}
 			else if (*s == '\n') {
-				if (*(s + 1)) ret += "<br/>" + k3dString(GetLocalTime());
+				if (*(s + 1)) ret += "<br/>" + std::string(GetLocalTime());
 			}
 			else {
 				ret += *s;
@@ -116,7 +167,7 @@ namespace k3d {
 		static char data[1024] = { 0 };
 		::vsprintf(data, fmt, va);
 		va_end(va);
-		k3dString line = "<h2>" + Txt2Html(data) + "</h2>\n\t\t\t\t";
+		std::string line = "<h2>" + Txt2Html(data) + "</h2>\n\t\t\t\t";
 		OutputStr2IODevice(g_LogFile, line.c_str());
 	}
 
@@ -129,7 +180,7 @@ namespace k3d {
 		::vsprintf(data, fmt, va);
 		va_end(va);
 
-		k3dString line = "<h5>" + Txt2Html(data) + "</h5>\n\t\t\t\t";
+		std::string line = "<h5>" + Txt2Html(data) + "</h5>\n\t\t\t\t";
 		OutputStr2IODevice(g_LogFile, line.c_str());
 	}
 
@@ -142,7 +193,7 @@ namespace k3d {
 		::vsprintf(data, fmt, va);
 		va_end(va);
 
-		k3dString line = "<h3>" + Txt2Html(data) + "</h3>\n\t\t\t\t";
+		std::string line = "<h3>" + Txt2Html(data) + "</h3>\n\t\t\t\t";
 		OutputStr2IODevice(g_LogFile, line.c_str());
 	}
 
@@ -155,7 +206,7 @@ namespace k3d {
 		::vsprintf(data, fmt, va);
 		va_end(va);
 
-		k3dString line = "<h4>" + Txt2Html(data) + "</h4>\n\t\t\t\t";
+		std::string line = "<h4>" + Txt2Html(data) + "</h4>\n\t\t\t\t";
 		OutputStr2IODevice(g_LogFile, line.c_str());
 	}
 }

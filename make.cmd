@@ -25,5 +25,13 @@ if not exist BuildCMakeProj mkdir BuildCMakeProj
 cd BuildCMakeProj
 cmake -G"Visual Studio 12 Win64" ..\Source
 if errorlevel 0 echo MSVC project files generated...
+
+
+if exist "%VS140COMNTOOLS%\..\IDE\devenv.exe" goto MSBuild
+
+:MSBuild 
+call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
+msbuild Kaleido3D.sln
+
 pause
 exit

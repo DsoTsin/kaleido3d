@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "FreeCamera.h"
 namespace k3d {
 

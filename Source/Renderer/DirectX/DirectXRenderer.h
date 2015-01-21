@@ -2,11 +2,17 @@
 #ifndef __DirectXRenderer_h__
 #define __DirectXRenderer_h__
 
+#include <KTL/NonCopyable.hpp>
+#include <KTL/Singleton.hpp>
+#include <KTL/RefCount.hpp>
 #include <Interface/IRenderer.h>
+
+#include <memory>
 #include "DXCommon.h"
 
 namespace k3d {
-	 
+	
+	class Shader;
 	class Window;
 
 	enum class DXFeature {
@@ -15,32 +21,36 @@ namespace k3d {
 		Level_12_0
 	};
 
-	class DXDevice {
+	class DXDevice : public Singleton<DXDevice> 
+	{
 	public:
 
 		~DXDevice();
-
-		static DXDevice * CreateContext(Window * , DXFeature feature);
+		
+		void Init(Window *, DXFeature feature);
 
 		void Destroy();
 
-		ID3D11Device *			Device() { return pDevice; }
-		ID3D11DeviceContext *	ImmediateContext() { return pImmediateContext; }
+		Ref<ID3D11Device>			Device() { return pDevice; }
+		Ref<ID3D11DeviceContext>	ImmediateContext() { return pImmediateContext; }
 
 		friend class DirectXRenderer;
+
+		DXDevice();
+	
 	private:
 
-		DXDevice(Window *);
-
-		ID3D11Device *				pDevice;
-		IDXGISwapChain *			pSwapChain;
-		ID3D11RenderTargetView *	pRenderTargetView;
-		ID3D11DeviceContext *       pImmediateContext;
-		ID3D11Texture2D *           pDepthStencil;
-		ID3D11DepthStencilView *    pDepthStencilView;
+		Ref<ID3D11Texture2D>			pBackBuffer;
+		Ref<ID3D11Device> 				pDevice;
+		Ref<IDXGISwapChain>				pSwapChain;
+		Ref<ID3D11RenderTargetView>		pRenderTargetView;
+		Ref<ID3D11DeviceContext>		pImmediateContext;
+		Ref<ID3D11Texture2D>			pDepthStencil;
+		Ref<ID3D11DepthStencilView>		pDepthStencilView;
 	};
 
-	class DirectXRenderer : public IRenderer {
+	class DirectXRenderer : public IRenderer, public Singleton<DirectXRenderer>, public std::enable_shared_from_this<DirectXRenderer>
+	{
 	public:
 
 		~DirectXRenderer() override;
@@ -54,21 +64,17 @@ namespace k3d {
 		void EndOneFrame() override;
 
 		void DrawMesh(IRenderMesh *) override;
+		void DrawMesh(IRenderMesh*, Shader*);
+		void DrawMesh(IRenderMesh*, Shader*, Matrix4f const & matrix);
 
 		void OnResize(int width, int height) override;
 
-		static DirectXRenderer * CreateRenderer(DXDevice *);
-
+		DirectXRenderer() = default;
+		
 	protected:
 
 		void SwapBuffers();
-
-		DirectXRenderer(DXDevice *);
-
-		DirectXRenderer() = default;
-
-		DXDevice * pContext;
-	
+			
 		bool isInitialized;
 
 	};

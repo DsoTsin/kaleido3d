@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include <Core/ReflectFactory.h>
 #include <Config/OSHeaders.h>
 

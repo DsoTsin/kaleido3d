@@ -26,7 +26,7 @@ using namespace k3d;
 
 static uint32 materialId = 0;
 
-static k3dString matAttributes[] = {
+static std::string matAttributes[] = {
   "DiffuseColor", "SpecularColor", "AmbientColor", "EmissiveColor",
   "DiffuseMap", "SpecularMap", "AmbientMap", "NormalMap", "EmissiveMap", "TransparencyMap", "DisplaceMap",
   "Shininess", "Transparency"
@@ -300,7 +300,7 @@ MS DCTranslator::GetMeshFromNode(MDagPath &dagPath, MS &status, Mesh &mesh) {
 		RemapToOGLFmt(mfnMesh, mesh,
 			triangleList, triangleNList, triangleUVList, uvSets[0]);
 
-		mesh.SetPrimType(TRIANGLES);
+		mesh.SetPrimType(PrimType::TRIANGLES);
 
 	}
 

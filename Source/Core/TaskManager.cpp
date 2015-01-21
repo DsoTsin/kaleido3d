@@ -1,40 +1,17 @@
+#include "Kaleido3D.h"
 #include "TaskManager.h"
+
+#if K3DPLATFORM_OS_WIN
 #include "Windows/ConditionVariableImpl.h"
 #include "Windows/ThreadImpl.h"
+#elif K3DPLATFORM_OS_IOS
+#include "iOS/ThreadImpl.h"
+#endif
+
 #include <functional>
 
 
 namespace k3d {
-	/*
-	TaskManager::TaskManager() :m_Capacity(4)
-	{
-		m_pThreadPool = new std::thread_pool(m_Capacity);
-	}
-
-	TaskManager::TaskManager(int capacity) : m_Capacity(capacity)
-	{
-		m_pThreadPool = new std::thread_pool(m_Capacity);
-	}
-
-	TaskManager::~TaskManager() {
-		delete m_pThreadPool;
-	}
-
-	void TaskManager::AddTask(ITask *task)
-	{
-		m_pThreadPool->enqueue(std::bind(&ITask::Execute, task));
-	}
-
-	size_t TaskManager::GetRunningTasks()
-	{
-		return m_pThreadPool->size();
-	}
-
-	void TaskManager::LaunchTask(ITask * task)
-	{
-		task->Execute();
-	}
-	*/
 
 	class NameThreadTask : public IBaseThread {
 	public:
@@ -77,7 +54,9 @@ namespace k3d {
 	void WThread::Wait(WThread * thread)
 	{
 		assert(thread);
+#if K3DPLATFORM_OS_WIN
 		ConditionVariableImpl::waitSingleEvent(thread->m_Handle, INFINITE);
+#endif
 	}
 
 	TaskManager::TaskManager()

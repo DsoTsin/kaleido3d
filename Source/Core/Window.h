@@ -26,7 +26,7 @@ namespace k3d {
 		void	Show(WindowMode mode = WindowMode::NORMAL);
 		void	Resize(int width, int height);
 		void	Move(int x, int y);
-
+		bool	IsOpen();
 		//implemented by platform
 		void*	GetHandle() const;
 

@@ -1,11 +1,11 @@
+#pragma once
 #ifndef __Types_H__
 #define __Types_H__
-#pragma once
 
-#ifdef K3DCOMPILER_CLANG
-#include "stdint.h"
+#if K3DPLATFORM_OS_IOS
+    #include "stdint.h"
 #else
-#include <cstdint>
+    #include <cstdint>
 #endif
 //#include <float.h>
 

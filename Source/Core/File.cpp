@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "File.h"
 #include <assert.h>
 #include "LogUtil.h"
@@ -13,11 +14,11 @@ namespace k3d {
 	File::File(const char *fileName)
 		:
 #ifdef K3DPLATFORM_OS_WIN
-		m_hFile(NULL)
+		m_hFile(NULL),
 #elif defined(K3DPLATFORM_OS_LINUX)
-		m_fd(-1)
+		m_fd(-1),
 #endif
-		, m_EOF(false)
+		 m_EOF(false)
 		, m_CurOffset(0)
 		, m_pFileName(fileName)
 	{}
@@ -25,11 +26,11 @@ namespace k3d {
 	File::File()
 		:
 #ifdef K3DPLATFORM_OS_WIN
-		m_hFile(NULL)
+		m_hFile(NULL),
 #elif defined(K3DPLATFORM_OS_LINUX)
-		m_fd(-1)
+		m_fd(-1),
 #endif
-		, m_EOF(false)
+		 m_EOF(false)
 		, m_CurOffset(0)
 		, m_pFileName(NULL)
 	{}
@@ -68,7 +69,7 @@ namespace k3d {
 			NULL);
 		if (m_hFile == INVALID_HANDLE_VALUE)
 			return false;
-#else
+#elif K3DPLATFORM_OS_LINUX
 		m_fd = open(fileName, flag == IORead ? O_RDONLY : O_WRONLY);
 		if (m_fd < 0) return false;
 #endif
@@ -214,7 +215,7 @@ namespace k3d {
 	MemMapFile::MemMapFile() :
 #ifdef K3DPLATFORM_OS_WIN
 		m_FileHandle(NULL), m_FileMappingHandle(NULL),
-#else
+#elif K3DPLATFORM_OS_LINUX
 		m_Fd(-1),
 #endif
 		m_szFile(0), m_pData(NULL)
@@ -313,7 +314,7 @@ namespace k3d {
 		UnmapViewOfFile(m_pData);
 		CloseHandle(m_FileMappingHandle);
 		//CloseHandle( m_FileHandle );
-#else
+#elif K3DPLATFORM_OS_LINUX
 		munmap(m_pData, m_szFile);
 		close(m_Fd);
 #endif

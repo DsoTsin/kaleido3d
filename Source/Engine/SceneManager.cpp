@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "SceneManager.h"
 #include "Camera.h"
 
@@ -49,7 +50,7 @@ namespace k3d {
 		ifstream ifs(scene_file);
 		if (!ifs.good())
 		{
-			kDebug("SceneManager::LoadFromJson Failed. Cannot find %s", scene_file);
+			Debug::Out("SceneManager", "LoadFromJson Failed. Cannot find %s", scene_file);
 			return false;
 		}
 

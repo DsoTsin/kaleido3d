@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "OctreeManager.h"
 
 #ifdef min

@@ -44,3 +44,11 @@ target_link_libraries(
 	UTReflectFactory
 	Core
 )
+
+set_target_properties(UTAssetLoader PROPERTIES FOLDER "Unit Test")
+
+set_target_properties(UTReflectFactory PROPERTIES FOLDER "Unit Test")
+
+set_target_properties(UTTaskManager PROPERTIES FOLDER "Unit Test")
+
+set_target_properties(UTDXRenderer PROPERTIES FOLDER "Unit Test")

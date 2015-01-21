@@ -10,6 +10,8 @@
 	#define K3DPLATFORM_OS_LINUX 1
 #elif defined(MAC_OSX)
 	#define K3DPLATFORM_OS_MAC 1
+#elif defined(K3DPLATFORM_OS_IOS)
+
 #else
 	#error "Not Support This Platform OS!!"
 #endif

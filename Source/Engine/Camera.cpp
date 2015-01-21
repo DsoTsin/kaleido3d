@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "Camera.h"
 #include <Core/LogUtil.h>
 //#include <Core/k3dInputEvent.h>

@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "WindowImpl.h"
 #include "../LogUtil.h"
 #include "../Window.h"
@@ -142,8 +143,8 @@ namespace k3d
 			if (window)
 			{
 				window->ProcessMessage(msg, wParam, lParam);
-				if (window->m_callback)
-					return CallWindowProc(reinterpret_cast<WNDPROC>(window->m_callback), hwnd, msg, wParam, lParam);
+				if (window->callback)
+					return CallWindowProc(reinterpret_cast<WNDPROC>(window->callback), hwnd, msg, wParam, lParam);
 			}
 
 			if (msg == WM_CLOSE)
@@ -158,6 +159,7 @@ namespace k3d
 			if (Global::gWindowCount == 0)
 				RegisterWindowClass();
 
+			callback = NULL;
 			// Create window
 			RECT rc = { 0, 0, 640, 480 };
 			::AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
@@ -166,7 +168,7 @@ namespace k3d
 				GetModuleHandle(NULL), this);
 
 			if (!handle) {
-				DBG_LINE_WITH_LAST_ERROR("InitWindow failed! ");
+				DBG_LINE_WITH_LAST_ERROR("WindowPrivate","InitWindow failed!");
 				return E_FAIL;
 			}
 
@@ -270,7 +272,7 @@ namespace k3d
 
 		void WindowPrivate::ProcessMessage()
 		{
-			if (!m_callback)
+			if (!callback)
 			{
 				MSG message;
 				while (::PeekMessage(&message, NULL, 0, 0, PM_REMOVE))

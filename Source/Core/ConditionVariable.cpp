@@ -1,7 +1,9 @@
+#include "Kaleido3D.h"
 #include "ConditionVariable.h"
 #include "LogUtil.h"
-
+#if K3DPLATFORM_OS_WIN
 #include "Windows/ConditionVariableImpl.h"
+#endif
 
 namespace k3d {
 

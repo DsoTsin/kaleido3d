@@ -12,7 +12,7 @@
 #define NS_MATHLIB_END }
 
 #include "kTypeTrait.hpp"
-#include <Config/Prerequisities.h>
+#include "../Kaleido3D.h"
 #include <Config/OSHeaders.h>
 
 #if K3DCOMPILER_CLANG || K3DCOMPILER_GCC

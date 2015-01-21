@@ -1,13 +1,12 @@
 #pragma once
-
-#include <Engine/Shader.h>
+#include <Interface/IShader.h>
 #include <Core/LogUtil.h>
 #include <GL/glew.h>
 
 namespace k3d {
 
 	template <GLuint HWShaderType, ShaderType shaderType>
-	class TGLShader : public TShader<GLuint, shaderType> {
+	class TGLShader : public TShader<GLuint, shaderType>, public IShader {
 	public:
 		static const GLuint hwShaderType = HWShaderType;
 
@@ -29,6 +28,9 @@ namespace k3d {
 			// AttachTo(shaderProg);
 			return true;
 		}
+
+		void LoadCache() override {}
+		void SaveCache() override {}
 
 		void AttachTo(GLuint prog) {
 			::glAttachShader(prog, ShaderInst);

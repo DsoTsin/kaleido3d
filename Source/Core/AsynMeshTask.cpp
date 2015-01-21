@@ -1,8 +1,7 @@
-#include "AsynMeshTask.h"
+#include "Kaleido3D.h"
 #include "AsynMeshTask.h"
 
 #include "Archive.h"
-#include "Mesh.h"
 #include "File.h"
 #include "LogUtil.h"
 #include "AssetManager.h"
@@ -27,16 +26,16 @@ namespace k3d {
 	
 	void AsynMeshTask::OnRun()
 	{
-		MemMapFile mem;
-		if (mem.Open(m_MeshPackName.c_str(), IORead)) {
+		AssetManager::SpIODevice meshPackage = AssetManager::OpenAsset(m_MeshPackName.c_str());
+		if (meshPackage) {
 			Archive arch;
-			arch.SetIODevice(&mem);
+			arch.SetIODevice(meshPackage.get());
 			MeshHeader header;
 			arch >> header;
-			kDebug("AsynMeshTask::dcc package version %d\n", header.Version);
+			Debug::Out("AsynMeshTask","dcc package version %d", header.Version);
 			char ClassName[64] = { 0 };
 			arch.ArrayOut( ClassName, 64 );
-			kDebug("AsynMeshTask::dcc class name = %s\n", ClassName);
+			Debug::Out("AsynMeshTask","dcc class name = %s", ClassName);
 			std::string className(ClassName);
 			while (className != "End")
 			{
@@ -45,6 +44,7 @@ namespace k3d {
 					SpMesh mesh(new Mesh);
 					arch >> *mesh;
 					AssetManager::Get().AppendMesh(mesh);
+					m_MeshPtrList.push_back(mesh);
 				}
 				//! read Next Class Name
 				arch.ArrayOut(ClassName, 64);
@@ -52,9 +52,8 @@ namespace k3d {
 			}
 		}
 		else {
-			kDebug("AsynMeshTask::Cann't find file (%s).\n", m_MeshPackName.c_str());
+			Debug::Out("AsynMeshTask","Cann't find file (%s).", m_MeshPackName.c_str());
 		}
-		mem.Close();
 
 		this->OnFinish();
 	}

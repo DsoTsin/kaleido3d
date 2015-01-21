@@ -1,6 +1,8 @@
+#include "Kaleido3D.h"
 #include "StringUtils.h"
 #include <Config/OSHeaders.h>
 
+#include "MD5.h"
 
 #if K3DPLATFORM_OS_WIN
 	#include <tchar.h>
@@ -9,6 +11,13 @@
 
 
 namespace k3d {
+
+	std::string StringUtil::GenerateMD5(std::string const & source)
+	{
+		static MD5 md5;
+		md5.update(source);
+		return md5.toString();
+	}
 
 #ifdef K3DPLATFORM_OS_WIN
 	
@@ -20,37 +29,35 @@ namespace k3d {
 
 	void StringUtil::WCharToChar(const wchar_t *wchr, char *cchar, int size)
 	{
-		int nlength = wcslen(wchr);
+		int nlength = (int)wcslen(wchr);
 		int nbytes = WideCharToMultiByte(CP_ACP, 0, wchr, nlength, NULL, 0, NULL, NULL);
 		if (nbytes>size)   nbytes = size;
 		WideCharToMultiByte(0, 0, wchr, nlength, cchar, nbytes, NULL, NULL);
 	}
-
-
-	std::wstring PathToHash(const wchar_t * filePath)
+	
+	std::string GenerateShaderCachePath(const char * szPath, const char * szEntryPoint, const char * szShaderModel)
 	{
-		std::wstring path(filePath);
-		std::hash<std::wstring> hashFun;
-		std::size_t code = hashFun(path);
+		char catName[1024] = { 0 };
+		::StringCbPrintfA(catName, 1024, "%s.%s.%s", szPath, szEntryPoint, szShaderModel);
+		std::string newName = StringUtil::GenerateMD5(catName);
+		std::string path(szPath);
+		std::size_t posL = path.find_last_of("/");
+		std::size_t posR = path.find_last_of("\\");
 
-		std::size_t posL = path.find_last_of(L"/");
-		std::size_t posR = path.find_last_of(L"\\");
-
-		std::size_t pos = std::wstring::npos;
-		if (posL != std::wstring::npos && posR != std::wstring::npos) {
+		std::size_t pos = std::string::npos;
+		if (posL != std::string::npos && posR != std::string::npos) {
 			pos = posL >= posR ? posL : posR;
 		}
-		else if (posL == std::wstring::npos) {
+		else if (posL == std::string::npos) {
 			pos = posR;
 		}
-		else if (posR == std::wstring::npos) {
+		else if (posR == std::string::npos) {
 			pos = posL;
 		}
-		wchar_t newName[128] = { 0 };
-		::StringCbPrintfW(newName, 128, L"%d", code);
-		if (pos != std::wstring::npos) {
+
+		if (pos != std::string::npos) {
 			path = path.substr(0, pos);
-			path.append(L"/").append(newName);
+			path.append("/").append(newName);
 		}
 		else {
 			path = { newName };

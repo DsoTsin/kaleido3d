@@ -2,12 +2,7 @@
 #define __Image_h__
 #pragma once
 
-#include <Config/Prerequisities.h>
-
 namespace k3d {
-
-	class ImagePrivate;
-
 	/// \brief The Image class
 	/// \class Image : client side texture data
 	/// \see  k3dTexture
@@ -23,7 +18,9 @@ namespace k3d {
 		Image();
 		virtual ~Image();
 
-		KOBJECT_PROPERTY(Name, k3dString);
+		using string = std::string;
+
+		KOBJECT_PROPERTY(Name, string);
 		KOBJECT_PROPERTY_GET(Width, uint32);
 		KOBJECT_PROPERTY_GET(Height, uint32);
 		KOBJECT_PROPERTY_GET(Depth, uint32);
@@ -50,7 +47,6 @@ namespace k3d {
 		uint32    m_ImgWidth;
 		uint32    m_ImgHeight;
 		uint32    m_ImgDepth;
-		class ImagePrivate;
 		uint32    m_ImgLayers;
 		//  uint32    m_ImgCnt;
 		int32     m_MipLev;
@@ -65,8 +61,7 @@ namespace k3d {
 		bool      m_IsCubeMap;
 		bool      m_IsCompressed;
 
-		k3dString m_ImgName;
-		ImagePrivate *d;
+		string	  m_ImgName;
 	};
 
 }

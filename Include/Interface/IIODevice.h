@@ -2,7 +2,6 @@
 #define __IIODevice_H__
 #pragma once
 
-#include <Config/Prerequisities.h>
 #include <Math/kTypeTrait.hpp>
 #include <assert.h>
 

@@ -1,8 +1,5 @@
 set(MAYA_PLUGIN_NAME "Kaleido3D_DCC")
 
-if(WIN32)
-set(MAYA_DIRECTORY "C:\\Program Files\\Autodesk\\Maya2015")
-endif()
 
 set(MAYA_HEADERS_DIR "${MAYA_DIRECTORY}/include")
 set(MAYA_LIBRARY_DIR "${MAYA_DIRECTORY}/lib")
@@ -104,5 +101,6 @@ set_target_properties(
 set_target_properties(
 	${MAYA_PLUGIN_NAME} PROPERTIES 
 	SUFFIX ".mll"
+	FOLDER "DCC Plugins"
 )
 endif()

@@ -16,7 +16,7 @@ source_group(
 set(
 	GLEW_SRC 
 	${GLEW_SOURCES_DIR}/include/GL/glew.h
-	${GLEW_SOURCES_DIR}/src/glew.c
+	${GLEW_SOURCES_DIR}/src/glew.cpp
 )
 
 source_group(
@@ -53,3 +53,6 @@ add_library(
 	${RENDERER_SRC_LIST}
 	${GLEW_SRC}
 )
+
+set_target_properties(Renderer_MOGL PROPERTIES FOLDER "Runtime")
+add_precompiled_header(Renderer_MOGL "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Renderer/MOGL/CommonGL.cpp")

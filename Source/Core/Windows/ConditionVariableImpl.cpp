@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "ConditionVariableImpl.h"
 #include "../LogUtil.h"
 
@@ -15,7 +16,7 @@ namespace k3d
 				eventName);
 			if (handle == NULL)
 			{
-				DBG_LINE_WITH_LAST_ERROR("ConditionVariable::createEvent failed! ");
+				DBG_LINE_WITH_LAST_ERROR("ConditionVariableImpl","ConditionVariable::createEvent failed! ");
 			}
 			return handle;
 		}
@@ -57,7 +58,7 @@ namespace k3d
 				default:
 					break;
 				}
-				DBG_LINE_WITH_LAST_ERROR("ConditionVariable::waitSingleEvent failed.");
+				DBG_LINE_WITH_LAST_ERROR("ConditionVariableImpl","ConditionVariable::waitSingleEvent failed.");
 			}
 			return result;
 		}

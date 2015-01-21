@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 /*-----------------------------------------------------------------------
   Copyright (c) 2014, NVIDIA. All rights reserved.
 

@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "DDSHelper.h"
 #include <Config/OSHeaders.h>
 #include <GL/gl.h>
@@ -200,7 +201,7 @@ bool DDSHelper::Load(uint8 *dataPtr, uint32 length)
 
   if (strncmp(filecode, "DDS ", 4) != 0)
   {
-    kDebug("DDSHelper::Error, not a dds image!\n");
+    Debug::Out("DDSHelper", "Error, not a dds image!");
     return false;
   }
 
@@ -630,7 +631,7 @@ bool DDSHelper::Load(uint8 *dataPtr, uint32 length)
   else
   {
     // TODO better error?
-    kDebug("! Error decoding DDS file.");
+    Debug::Out("DDSHelper", "! Error decoding DDS file.");
     return false;
   }
 

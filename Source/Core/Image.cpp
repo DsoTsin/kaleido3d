@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "Image.h"
 
 //---------------------------------------------------------------
@@ -63,12 +64,12 @@ namespace k3d {
 		return m_IsCubeMap;
 	}
 
-	void Image::SetName(const k3dString & _Name)
+	void Image::SetName(const string & _Name)
 	{
 		m_ImgName = _Name;
 	}
 
-	k3dString Image::GetName() const
+	Image::string Image::GetName() const
 	{
 		return m_ImgName;
 	}

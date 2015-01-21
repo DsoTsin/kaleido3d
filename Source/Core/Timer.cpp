@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "Timer.h"
 
 #include "LogUtil.h"
@@ -18,18 +19,18 @@ static __inline__ unsigned long long __rdtsc(void)
   return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
-static int64 frequency = 0;
+static int64 Lfrequency = 0;
 static int64 QueryFrequency()
 {
     timespec sp;
-    frequency = ::clock_getres(CLOCK_MONOTONIC,&sp);
+    Lfrequency = ::clock_getres(CLOCK_MONOTONIC,&sp);
 }
 
 #endif
 
 
 #ifdef K3DPLATFORM_OS_WIN 
-static int64 frequency = 0;
+static int64 gFrequency = 0;
 
 static int64 GetPerformanceFrequency()
 {
@@ -46,14 +47,14 @@ static int64 GetPerformanceFrequency()
 
 static inline int64 GetPerformanceCounter()
 {
-  if ( frequency > 0 ) {
+  if ( gFrequency > 0 ) {
     LARGE_INTEGER counter;
 
     if ( QueryPerformanceCounter( &counter ) ) {
       return counter.QuadPart;
     }
     else {
-      k3d::kDebug( "QueryPerformanceCounter failed, although QueryPerformanceFrequency succeeded." );
+      k3d::Debug::Out("Timer", "QueryPerformanceCounter failed, although QueryPerformanceFrequency succeeded." );
       return 0;
     }
   }
@@ -64,10 +65,10 @@ static inline int64 GetPerformanceCounter()
 
 static inline int64 ticksToNanoseconds( int64 ticks )
 {
-  if ( frequency > 0 ) {
+  if ( gFrequency > 0 ) {
     // QueryPerformanceCounter uses an arbitrary frequency
-    int64 seconds = ticks / frequency;
-    int64 nanoSeconds = (ticks - seconds * frequency) * 1000000000 / frequency;
+    int64 seconds = ticks / gFrequency;
+    int64 nanoSeconds = (ticks - seconds * gFrequency) * 1000000000 / gFrequency;
     return seconds * 1000000000 + nanoSeconds;
   }
   else {
@@ -86,7 +87,7 @@ namespace k3d {
 		, m_Enabled(false)
 	{
 #ifdef K3DPLATFORM_OS_WIN
-		frequency = GetPerformanceFrequency();
+		gFrequency = GetPerformanceFrequency();
 #elif defined(K3DPLATFORM_OS_LINUX)
 		frequency = QueryFrequency();
 #endif
@@ -126,7 +127,7 @@ namespace k3d {
 
 	void Timer::Update()
 	{
-		m_FrameRate = 1.0f*m_OffSetTime / frequency;
+		m_FrameRate = 1.0f*m_OffSetTime / gFrequency;
 		//SetTimer( 0, 0, 0, TimerFunction );
 	}
 

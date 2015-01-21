@@ -1,3 +1,5 @@
+#include "Kaleido3D.h"
+
 #include "Looper.h"
 #include <Config/OSHeaders.h>
 

@@ -1,39 +1,32 @@
 #pragma once
 #include <Interface/IRenderMesh.h>
+#include <KTL/NonCopyable.hpp>
 #include <Core/Mesh.h>
 
-#include <memory>
-#include <d3d11.h>
-
+#include "DXCommon.h"
 #include "DXShader.h"
 #include "DirectXRenderer.h"
 
 namespace k3d {
 
-	class DXRenderMesh : public IRenderMesh {
+	class DXRenderMesh : public IRenderMesh /*, public NonCopyable*/ {
 	public:
 
 		DXRenderMesh();
-
 		~DXRenderMesh() override;
 
 		void Render() override;
-
-		typedef std::shared_ptr<ID3D11Buffer*>			SpBuffer;
-		typedef std::shared_ptr<ID3D11InputLayout*>		SpInputLayout;
-
-	private:
-
-		void Render(DXDevice & device, SpMesh const & rawMesh, SpShader const & shader);
-
-		DXRenderMesh(const DXRenderMesh &) = delete;
-		DXRenderMesh & operator=(const DXRenderMesh &) = delete;
+		void Render(DxRef::DevContextPtr & device);
 		
+		void Init(DXDevice & device, SpMesh const & rawMesh, DXVertexShader & shader);
+						
 	private:
 
-		SpInputLayout	   pVertexLayout;
-		SpBuffer           pVertexBuffer;
-		SpBuffer           pIndexBuffer; 
+		DxRef::BufferPtr		pIndexBuffer;
+		DxRef::BufferPtr		pVertexBuffer;
+		DxRef::InputLayoutPtr	pVertexLayout;
+			
+		bool				m_MeshInitialized;
 	};
 
 }

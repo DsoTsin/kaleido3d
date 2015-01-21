@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "Mesh.h"
 #include <assert.h>
 #include <Core/Archive.h>
@@ -20,8 +21,8 @@ namespace k3d {
 		m_IndexData = nullptr;
 		m_P3N3T2Buffer = nullptr;
 
-		m_PrimType = TRIANGLES;
-		m_VtxFmt = PER_INSTANCE;
+		m_PrimType = PrimType::TRIANGLES;
+		m_VtxFmt = VtxFormat::PER_INSTANCE;
 
 		memset(m_MeshName, 0, 96);
 	}
@@ -41,8 +42,8 @@ namespace k3d {
 		m_IndexData = nullptr;
 		m_P3N3T2Buffer = nullptr;
 
-		m_PrimType = TRIANGLES;
-		m_VtxFmt = PER_INSTANCE;
+		m_PrimType = PrimType::TRIANGLES;
+		m_VtxFmt = VtxFormat::PER_INSTANCE;
 	}
 
 	void Mesh::SetMeshName(const char *meshName)
@@ -68,15 +69,15 @@ namespace k3d {
 	void Mesh::SetVertexBuffer(void *dataPtr) {
 		assert(m_NumVertices!=0);
 		switch (m_VtxFmt) {
-		case POS3_F32:
+		case VtxFormat::POS3_F32:
 			m_P3Buffer = new Vertex3F[m_NumVertices];
 			std::memcpy(m_P3Buffer, dataPtr, m_NumVertices*sizeof(Vertex3F));
 			break;
-		case POS3_F32_NOR3_F32:
+		case VtxFormat::POS3_F32_NOR3_F32:
 			m_P3N3Buffer = new Vertex3F3F[m_NumVertices];
 			std::memcpy(m_P3N3Buffer, dataPtr, m_NumVertices*sizeof(Vertex3F3F));
 			break;
-		case POS3_F32_NOR3_F32_UV2_F32:
+		case VtxFormat::POS3_F32_NOR3_F32_UV2_F32:
 			m_P3N3T2Buffer = new Vertex3F3F2F[m_NumVertices];
 			std::memcpy(m_P3N3T2Buffer, dataPtr, m_NumVertices*sizeof(Vertex3F3F2F));
 			break;
@@ -109,19 +110,19 @@ namespace k3d {
 		// VertexBuffer
 		if (mesh.m_NumVertices != 0) {
 			switch (mesh.m_VtxFmt) {
-			case POS3_F32_NOR3_F32_UV2_F32:
+			case VtxFormat::POS3_F32_NOR3_F32_UV2_F32:
 				mesh.m_P3N3T2Buffer = new Vertex3F3F2F[mesh.m_NumVertices];
 				arch.ArrayOut<Vertex3F3F2F>(mesh.m_P3N3T2Buffer, mesh.m_NumVertices);
 				break;
-			case POS3_F32_NOR3_F32:
+			case VtxFormat::POS3_F32_NOR3_F32:
 				mesh.m_P3N3Buffer = new Vertex3F3F[mesh.m_NumVertices];
 				arch.ArrayOut<Vertex3F3F>(mesh.m_P3N3Buffer, mesh.m_NumVertices);			
 				break;
-			case POS3_F32:
+			case VtxFormat::POS3_F32:
 				mesh.m_P3Buffer = new Vertex3F[mesh.m_NumVertices];
 				arch.ArrayOut<Vertex3F>(mesh.m_P3Buffer, mesh.m_NumVertices);
 				break;
-			case POS4_F32:
+			case VtxFormat::POS4_F32:
 				mesh.m_P4Buffer = new Vertex4F[mesh.m_NumVertices];
 				arch.ArrayOut<Vertex4F>(mesh.m_P4Buffer, mesh.m_NumVertices);
 				break;
@@ -155,16 +156,16 @@ namespace k3d {
 		// VertexBuffer
 		if (mesh.m_NumVertices != 0) {
 			switch (mesh.m_VtxFmt) {
-			case POS3_F32_NOR3_F32_UV2_F32:
+			case VtxFormat::POS3_F32_NOR3_F32_UV2_F32:
 				arch.ArrayIn<Vertex3F3F2F>(mesh.m_P3N3T2Buffer, mesh.m_NumVertices);
 				break;
-			case POS3_F32_NOR3_F32:
+			case VtxFormat::POS3_F32_NOR3_F32:
 				arch.ArrayIn<Vertex3F3F>(mesh.m_P3N3Buffer, mesh.m_NumVertices);
 				break;
-			case POS3_F32:
+			case VtxFormat::POS3_F32:
 				arch.ArrayIn<Vertex3F>(mesh.m_P3Buffer, mesh.m_NumVertices);
 				break;
-			case POS4_F32:
+			case VtxFormat::POS4_F32:
 				arch.ArrayIn<Vertex4F>(mesh.m_P4Buffer, mesh.m_NumVertices);
 				break;
 			default:

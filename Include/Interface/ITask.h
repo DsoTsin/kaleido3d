@@ -1,7 +1,6 @@
 #ifndef __ITask_H__
 #define __ITask_H__
 
-#include <Config/Prerequisities.h>
 
 struct ITaskManager;
 /*!

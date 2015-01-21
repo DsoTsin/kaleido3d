@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "OGLRenderer.h"
 #include "CommonGL.hpp"
 #include <Config/OSHeaders.h>

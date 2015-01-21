@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include <Core/TaskManager.h>
 #include <Config/OSHeaders.h>
 #include <Core/LogUtil.h>
@@ -30,9 +31,9 @@ public:
 		while (true) {
 			i++;
 			::Sleep(1000);
-			kDebug(output.c_str());
+			Debug()<<output.c_str();
 			if (i == 10) {
-				kDebug("NamedTask::Game Thread Finished..\n");
+				Debug::Out("NamedTask","Game Thread Finished..");
 				break;
 			}
 		}
@@ -55,12 +56,12 @@ public:
 			i++;
 			::Sleep(1000);
 			if (i == 5) {
-				kDebug("ATask::What does the fox say ?\n");
+				Debug::Out("ATask","What does the fox say ?\n");
 				gEvent->Signal();
 			}
 			if (i == 11) {
 				gAEvent->Signal();
-				kDebug("ATask:: MainThread Wake up!!\n");
+				Debug::Out("ATask","MainThread Wake up!!\n");
 			}
 		}
 	}
@@ -74,10 +75,10 @@ public:
 
 	void OnRun() {
 		ConditionVariable::WaitFor(gEvent, 80000);
-		kDebug("BTask:: Fuck you!!!\n");
+		Debug::Out("BTask","\tFuck you!!!");
 		while (true) {
 			::Sleep(1000);
-			kDebug("BTask:: Fox say Nothing\n");
+			Debug::Out("BTask","\tFox say Nothing");
 		}
 	}
 
@@ -101,11 +102,11 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 
 	WThread::Wait(gameTask);
 
-	kDebug("MainThread::BThread Wake Up!!\n");
+	Debug::Out("MainThread", "BThread Wake Up!!");
 	gEvent->Signal();
 
 	ConditionVariable::WaitFor(gAEvent);
-	kDebug("MainThread::Release gEvent\n");
+	Debug::Out("MainThread","Release gEvent");
 	gEvent->Release();
 	gameTask->Join();
 

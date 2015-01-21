@@ -1,5 +1,4 @@
 #pragma once
-#include <Config/Prerequisities.h>
 
 namespace k3d {
 

@@ -2,6 +2,8 @@
 
 #pragma warning(disable:4267) // size_t->int
 
+using namespace k3d;
+
 int Triangulation(
 	MFnMesh &mfnMesh,
 	MIntArray &triangleCount, MIntArray &triangleList, MIntArray &triangleNList, MIntArray &triangleUVList,
@@ -59,15 +61,15 @@ void RemapToOGLFmt(
 	bool hasUV = (uArray.length() > 0);
 	bool hasNormal = (normal.length() > 0);
 	
-	k3d::VtxFormat defaultVtxFmt = k3d::POS3_F32;
+	k3d::VtxFormat defaultVtxFmt = VtxFormat::POS3_F32;
 	if (hasNormal && hasUV) {
-		defaultVtxFmt = k3d::POS3_F32_NOR3_F32_UV2_F32;
+		defaultVtxFmt = VtxFormat::POS3_F32_NOR3_F32_UV2_F32;
 	}
 	else if (hasNormal && !hasUV) {
-		defaultVtxFmt = k3d::POS3_F32_NOR3_F32;
+		defaultVtxFmt = VtxFormat::POS3_F32_NOR3_F32;
 	}
 	else if (hasUV && !hasNormal) {
-		defaultVtxFmt = k3d::POS3_F32_UV2_F32;
+		defaultVtxFmt = VtxFormat::POS3_F32_UV2_F32;
 	}
 	outputMesh.SetVertexFormat(defaultVtxFmt);
 
@@ -92,20 +94,20 @@ void RemapToOGLFmt(
 			indexBuffer.push_back(idx++);
 			int vid = std::get<0>(p); int nid = std::get<1>(p); int tid = std::get<2>(p);
 			
-			if (defaultVtxFmt == k3d::POS3_F32_NOR3_F32_UV2_F32) {
+			if (defaultVtxFmt == VtxFormat::POS3_F32_NOR3_F32_UV2_F32) {
 				vertex332List.push_back({
 					vertex[vid].x, vertex[vid].y, vertex[vid].z,
 					normal[nid].x, normal[nid].y, normal[nid].z,
 					uArray[tid], vArray[tid]
 				});
 			}
-			else if (defaultVtxFmt == k3d::POS3_F32_NOR3_F32) {
+			else if (defaultVtxFmt == VtxFormat::POS3_F32_NOR3_F32) {
 				vertex33List.push_back({
 					vertex[vid].x, vertex[vid].y, vertex[vid].z,
 					normal[nid].x, normal[nid].y, normal[nid].z
 				});
 			}
-			else if (defaultVtxFmt == k3d::POS3_F32) {
+			else if (defaultVtxFmt == VtxFormat::POS3_F32) {
 				vertex3List.push_back({
 					vertex[vid].x, vertex[vid].y, vertex[vid].z,
 				});
@@ -114,15 +116,15 @@ void RemapToOGLFmt(
 	}
 
 	outputMesh.SetIndexBuffer(indexBuffer);
-	if (defaultVtxFmt == k3d::POS3_F32_NOR3_F32_UV2_F32) {
+	if (defaultVtxFmt == VtxFormat::POS3_F32_NOR3_F32_UV2_F32) {
 		outputMesh.SetVertexNum(vertex332List.size());
 		outputMesh.SetVertexBuffer(&vertex332List[0]);
 	}
-	else if (defaultVtxFmt == k3d::POS3_F32_NOR3_F32) {
+	else if (defaultVtxFmt == VtxFormat::POS3_F32_NOR3_F32) {
 		outputMesh.SetVertexNum(vertex33List.size());
 		outputMesh.SetVertexBuffer(&vertex33List[0]);
 	}
-	else if (defaultVtxFmt == k3d::POS3_F32) {
+	else if (defaultVtxFmt == VtxFormat::POS3_F32) {
 		outputMesh.SetVertexNum(vertex3List.size());
 		outputMesh.SetVertexBuffer(&vertex3List[0]);
 	}

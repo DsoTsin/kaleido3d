@@ -1,3 +1,5 @@
+#include "Kaleido3D.h"
+#include "DirectXRenderer.h"
 #include <assert.h>
 #include <Config/OSHeaders.h>
 #include <Core/Window.h>
@@ -37,19 +39,19 @@ DriverPreference GetDriverPreference(DXFeature feature) {
 	return preference;
 }
 
-DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
-	assert(window!=nullptr && window->GetHandle()!=nullptr && "window is not initialized!");
-
+void DXDevice::Init(Window *window, DXFeature feature)
+{
+	assert(window != nullptr && window->GetHandle() != nullptr && "window is not initialized!");
 	HWND hWnd = reinterpret_cast<HWND>(window->GetHandle());
-
 	RECT rc;
 	GetClientRect(hWnd, &rc);
 	UINT width = rc.right - rc.left;
 	UINT height = rc.bottom - rc.top;
-
 	UINT createDeviceFlags = 0;
+#if (_WIN32_WINNT <= _WIN32_WINNT_WIN8)
 #ifdef _DEBUG
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 #endif
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory(&sd, sizeof(sd));
@@ -65,7 +67,6 @@ DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
 
-	DXDevice * context = new DXDevice(window);
 	DriverPreference preference = GetDriverPreference(feature);
 
 	static D3D_FEATURE_LEVEL featureLevels[] =
@@ -77,26 +78,39 @@ DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
 	UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 
 	HRESULT	hr = D3D11CreateDeviceAndSwapChain(
-		NULL, preference.driverType, NULL, createDeviceFlags, 
-		featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
-		&sd, &(context->pSwapChain), &(context->pDevice), &preference.featureLevel, &(context->pImmediateContext));
+		NULL, preference.driverType, NULL, createDeviceFlags,
+		featureLevels, numFeatureLevels, D3D11_SDK_VERSION, &sd,
+		pSwapChain.GetInitReference(),
+		pDevice.GetInitReference(), &preference.featureLevel,
+		pImmediateContext.GetInitReference());
 
 	if (FAILED(hr)) {
-		return nullptr;
+		Log::Error("DXDevice::Init D3D11CreateDeviceAndSwapChain failed. in file(%s), line(%d).", __FILE__, __LINE__);
+		Debug::Out("DXDevice","Init: D3D11CreateDeviceAndSwapChain failed.");
+		return;
 	}
-	kDebug("D3D11CreateDeviceAndSwapChain successful!!\n");
 
-	// Create a render target view
-	ID3D11Texture2D* pBackBuffer;
-	hr = context->pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
-	if (FAILED(hr))
-		return nullptr;
+	Debug::Out("DXDevice","Init: D3D11CreateDeviceAndSwapChain successful!!");
 
-	hr = context->pDevice->CreateRenderTargetView(pBackBuffer, NULL, &(context->pRenderTargetView));
-	pBackBuffer->Release();
+	// check for multithread support
+
+
+	hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)pBackBuffer.GetInitReference());
 	if (FAILED(hr))
-		return nullptr;
-	kDebug("CreateRenderTargetView successful!!\n");
+	{
+		Log::Error("DXDevice::Init pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)pBackBuffer.GetInitReference()) failed. in file(%s), line(%d).", __FILE__, __LINE__);
+		return;
+	}
+
+	hr = pDevice->CreateRenderTargetView(pBackBuffer, nullptr, pRenderTargetView.GetInitReference());
+
+	if (FAILED(hr))
+	{
+		Log::Error("DXDevice::Init pDevice->CreateRenderTargetView failed. in file(%s), line(%d).", __FILE__, __LINE__);
+		return;
+	}
+
+	Debug::Out("DXDevice","%s CreateRenderTargetView successful!!", __func__);
 
 	// Create depth stencil texture
 	D3D11_TEXTURE2D_DESC descDepth;
@@ -112,9 +126,13 @@ DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
 	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
-	hr = context->pDevice->CreateTexture2D(&descDepth, NULL, &(context->pDepthStencil));
+
+	hr = pDevice->CreateTexture2D(&descDepth, nullptr, pDepthStencil.GetInitReference());
 	if (FAILED(hr))
-		return nullptr;
+	{
+		Log::Error("DXDevice::Init pDevice->CreateTexture2D failed. in file(%s), line(%d) function(%s).", __FILE__, __LINE__, __func__);
+		return;
+	}
 
 	// Create the depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
@@ -122,12 +140,16 @@ DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
 	descDSV.Format = descDepth.Format;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
-	hr = context->pDevice->CreateDepthStencilView(context->pDepthStencil, &descDSV, &(context->pDepthStencilView));
-	if (FAILED(hr))
-		return nullptr;
-	kDebug("CreateDepthStencilView successful!!\n");
 
-	context->pImmediateContext->OMSetRenderTargets(1, &(context->pRenderTargetView), context->pDepthStencilView);
+	hr = pDevice->CreateDepthStencilView(pDepthStencil, &descDSV, pDepthStencilView.GetInitReference());
+	if (FAILED(hr))
+	{
+		Log::Error("DXDevice::Init pDevice->CreateDepthStencilView failed. in file(%s), line(%d).", __FILE__, __LINE__);
+		return;
+	}
+	Debug::Out("DXDevice","Init: CreateDepthStencilView successful!!");
+	ID3D11RenderTargetView* rtView = pRenderTargetView.GetReference();
+	pImmediateContext->OMSetRenderTargets(1, &rtView, pDepthStencilView);
 
 	// Setup the viewport
 	D3D11_VIEWPORT vp;
@@ -137,12 +159,12 @@ DXDevice * DXDevice::CreateContext(Window * window, DXFeature feature) {
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
-	context->pImmediateContext->RSSetViewports(1, &vp);
+	pImmediateContext->RSSetViewports(1, &vp);
 
-	return context;
+	Debug::Out("DXDevice","Init: Succeed to Init DXDevice.");
 }
 
-DXDevice::DXDevice(Window *)
+DXDevice::DXDevice()
 : pDevice(nullptr)
 , pSwapChain(nullptr)
 , pRenderTargetView(nullptr)
@@ -152,11 +174,4 @@ DXDevice::DXDevice(Window *)
 {}
 
 void DXDevice::Destroy() {
-	if (pImmediateContext)	pImmediateContext->ClearState();
-	if (pDepthStencil)		pDepthStencil->Release();
-	if (pDepthStencilView)	pDepthStencilView->Release();
-	if (pRenderTargetView)	pRenderTargetView->Release();
-	if (pSwapChain)			pSwapChain->Release();
-	if (pImmediateContext)	pImmediateContext->Release();
-	if (pDevice)			pDevice->Release();
 }

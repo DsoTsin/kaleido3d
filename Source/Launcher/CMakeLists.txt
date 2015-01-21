@@ -17,4 +17,6 @@ target_link_libraries(Launcher
 	winmm
 	comctl32
 )
+
+set_target_properties(Launcher PROPERTIES FOLDER "Launcher")
 endif()

@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "AssetManager.h"
 #include <Core/File.h>
 #include <Core/LogUtil.h>
@@ -8,14 +9,19 @@
 #include <fstream>
 #include <algorithm>
 
+#if K3DPLATFORM_OS_WIN
+#include <strsafe.h>
+#endif
+
 namespace k3d {
+
+	std::string AssetManager::s_envAssetPath;
 
 	AssetManager::AssetManager() : m_pThreadPool(nullptr)
 	{
 		m_IsLoading = false;
 		m_HasPendingObject = false;
 		m_NumPendingObject.store(0, std::memory_order_release);
-		0;
 	}
 
 	void AssetManager::Init()
@@ -30,6 +36,7 @@ namespace k3d {
 		DWORD _len = GetEnvironmentVariableA("Kaleido3D_Dir", _path, 2048);
 		if (_len > 0) {
 			Log::Message("Kaleido3D_Dir Found. \"%s\"", _path);
+			s_envAssetPath = _path;
 			m_SearchPaths.push_back(_path);
 		}
 		else {
@@ -62,11 +69,11 @@ namespace k3d {
 
 	void AssetManager::AddSearchPath(const char *path)
 	{
-		typedef std::vector<k3dString>::const_iterator VSCIter;
-		VSCIter pos = std::find(m_SearchPaths.begin(), m_SearchPaths.end(), k3dString(path));
+		typedef std::vector<string>::const_iterator VSCIter;
+		VSCIter pos = std::find(m_SearchPaths.begin(), m_SearchPaths.end(), string(path));
 		if (pos == m_SearchPaths.end())
 		{
-			m_SearchPaths.push_back(k3dString(path));
+			m_SearchPaths.push_back(string(path));
 		}
 	}
 
@@ -180,7 +187,8 @@ namespace k3d {
 
 	void AssetManager::AppendMesh(SpMesh meshPtr)
 	{
-		kDebug("AssetManager::Mesh (%s) Appended.\n", meshPtr->MeshName());
+		Debug::Out("AssetManager","Mesh (%s) Appended.", meshPtr->MeshName());
+		Debug::Out("AssetManager", meshPtr->DumpMeshInfo());
 		m_MeshMap[meshPtr->MeshName()] = meshPtr;
 	}
 
@@ -191,7 +199,7 @@ namespace k3d {
 
 	std::shared_ptr<Mesh> AssetManager::FindMesh(const char *meshName)
 	{
-		MapMeshIter iter = m_MeshMap.find(k3dString(meshName));
+		MapMeshIter iter = m_MeshMap.find(string(meshName));
 		if (iter == m_MeshMap.end())
 			return std::shared_ptr<Mesh>();
 		return (iter->second);
@@ -199,10 +207,39 @@ namespace k3d {
 
 	std::shared_ptr<Image> AssetManager::FindImage(const char *imgName)
 	{
-		MapImageIter iter = m_ImageMap.find(k3dString(imgName));
+		MapImageIter iter = m_ImageMap.find(string(imgName));
 		if (iter == m_ImageMap.end())
 			return std::shared_ptr<Image>();
 		return (iter->second);
 	}
 
+
+	AssetManager::SpIODevice  AssetManager::OpenAsset(const char *assetPath, IOFlag flag, bool fastMode)
+	{
+		std::string rawPath = AssetPath(assetPath);
+		SpIODevice fileObj = nullptr;
+		if (fastMode) 
+		{
+			fileObj = SpIODevice(new MemMapFile);
+		}
+		else 
+		{
+			fileObj = SpIODevice(new File);
+		}
+		
+		if(fileObj->Open(rawPath.c_str(), flag))
+			return fileObj;
+		Debug::Out("AssetManager","Cann't find file (%s).", rawPath.c_str());
+		fileObj->Close();
+		return nullptr;
+	}
+
+	std::string AssetManager::AssetPath(const char * assetRelativePath)
+	{
+		if(s_envAssetPath.empty()) {
+			Log::Error("Kaleido3D_Dir Not Found.");
+			return "";
+		}
+		return s_envAssetPath + assetRelativePath;
+	}
 }

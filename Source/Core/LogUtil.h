@@ -1,7 +1,6 @@
 #pragma once
 #ifndef __k3dDbg_h__
 #define __k3dDbg_h__
-#include <Config/Prerequisities.h>
 #include "Utils/StringUtils.h"
 
 namespace k3d {
@@ -11,10 +10,16 @@ namespace k3d {
 	public:
 		Debug();
 		Debug & operator << (const char *);
+		Debug & operator << (std::string const & str);
+
+		static void Out(const char * tag, const char *fmt, ...);
+		static void Out(const char * tag, std::string const & log);
+        
+        typedef void (*OutPutCallBack)(const char *);
+        
+        static void SetDebugOutFunction(OutPutCallBack callBack);
 	};
-
-	void kDebug(const char *fmt, ...);
-
+	
 	class Log
 	{
 		Log();
@@ -34,8 +39,8 @@ namespace k3d {
 #define LOG_MESSAGE(message) \
     Log::Message(message);
 
-#define DBG_LINE_WITH_LAST_ERROR(message) \
-	kDebug("%s in file(%s) line(%d) %s\n", (message), __FILE__, __LINE__, GetLastWin32Error().c_str());
+#define DBG_LINE_WITH_LAST_ERROR(tag, message) \
+	Debug::Out((tag), "%s in file(%s) line(%d) %s", (message), __FILE__, __LINE__, GetLastWin32Error().c_str());
 }
 
 #endif

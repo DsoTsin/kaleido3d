@@ -26,12 +26,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR lpCmdLine, int)
 	window.Resize(1900, 700);
 
 	window.Show();
-
+	/*
 	IRenderer * renderer = RendererFactory::SetUpRenderer(cmdLine.c_str(), &window);
 	
 	Engine engine = Singleton<Engine>::Get();
 	engine.SetRenderer(renderer);
-
+	*/
 
 
 	Log::CloseLog();

@@ -1,3 +1,11 @@
-add_subdirectory(MOGL)
+if(WIN32)
+	add_subdirectory(MOGL)
+endif()
 
-add_subdirectory(DirectX)
+if(WIN32)
+	add_subdirectory(DirectX)
+endif()
+
+if(IOS)
+	add_subdirectory(Metal)
+endif()

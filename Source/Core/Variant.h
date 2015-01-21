@@ -4,7 +4,6 @@ Variant is for Streamable Class
 #pragma once
 #ifndef __k3dVariant_h__
 #define __k3dVariant_h__
-#include <Config/Prerequisities.h>
 #include <Config/OSHeaders.h>
 #include "Archive.h"
 

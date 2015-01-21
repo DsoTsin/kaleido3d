@@ -1,23 +1,4 @@
 #pragma once
-#ifndef __Prerequisities_H__
-#define __Prerequisities_H__
-
-#include "Config.h"
-
-#include "Types.h"
-#include <iostream>
-#include <vector>
-#include <list>
-#include <thread>
-#include <string>
-#include <memory>
-#include <map>
-#include <unordered_map>
-#include <initializer_list>
-#include <functional>
-#include <cassert>
-
-typedef std::string k3dString;
 
 #define KOBJECT_PROPERTY_GET(Property, Type) \
   Type Get##Property() const
@@ -34,4 +15,3 @@ typedef std::string k3dString;
     static const char * name = #className ;\
     return name;\
   }
-#endif

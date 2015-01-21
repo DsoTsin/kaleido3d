@@ -1,5 +1,4 @@
 #pragma once
-#include <Config/Prerequisities.h>
 #include <Math/kGeometry.hpp>
 
 #include "SceneObject.h"

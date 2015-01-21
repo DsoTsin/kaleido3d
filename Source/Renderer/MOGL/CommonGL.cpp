@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "CommonGL.hpp"
 
 #ifdef _WIN32
@@ -33,11 +34,11 @@ void GLInitializer::InitAndCheck() {
     const char *glVersion = (const char*) glGetString(GL_VERSION);
     const char *glRenderer = (const char*) glGetString(GL_RENDERER);
 
-	kDebug("GL Info:\n\t%s\n\t%s\nogl_LoadFunctions=%d\n", glVersion, glRenderer, code);
+	Debug::Out("GLInitializer","GL Info:\n\t%s\n\t%s\nogl_LoadFunctions=%d\n", glVersion, glRenderer, code);
 
 	int nv_support_code = init_NV_command_list(getGLFunction);
 	nv_command_list_feature = (nv_support_code != 0);
-	kDebug("Nvidia Command List Feature: %d\n", nv_support_code);
+	Debug::Out("GLInitializer","Nvidia Command List Feature: %d\n", nv_support_code);
 
 	Log::Warning("OpenGL Renderer=%s, Version=%s, Nvidia Command-List=%s", glRenderer, glVersion, nv_command_list_feature?"On":"Off");
 }

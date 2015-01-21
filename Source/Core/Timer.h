@@ -2,7 +2,6 @@
 #define __k3dTimer_h__
 #pragma once
 
-#include <Config/Prerequisities.h>
 namespace k3d {
 	class Timer {
 	public:

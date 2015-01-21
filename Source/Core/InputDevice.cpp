@@ -1,4 +1,4 @@
-#include <Config/Config.h>
+#include "Kaleido3D.h"
 #include "InputDevice.h"
 
 #if K3DPLATFORM_OS_WIN

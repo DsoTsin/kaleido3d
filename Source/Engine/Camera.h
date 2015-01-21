@@ -1,8 +1,6 @@
 #ifndef __k3dCamera_h__
 #define __k3dCamera_h__
 #pragma once
-
-#include <Config/Prerequisities.h>
 #include <Math/kMath.hpp>
 #include <Math/kGeometry.hpp>
 #include "Controller.h"

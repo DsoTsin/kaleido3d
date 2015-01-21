@@ -5,6 +5,7 @@
 #include <Math/kMath.hpp>
 #include <Math/kGeometry.hpp>
 #include <Interface/IReflectable.h>
+#include <sstream>
 
 namespace kMath {
 	typedef tVectorN<float, 2> Vec2f;
@@ -18,72 +19,14 @@ namespace k3d {
 		VERSION_1_0 = 201402u,
 		VERSION_1_1 = 201501u
 	};
-
-	enum Atrrib {
-		NONE = 0x0,
-		HAS_TRANSFORM = 0x1,
-		HAS_BBOX = 0x1 << 1,
-		HAS_TANGENT = 0x1 << 2,
-		HAS_TRISTRIP = 0x1 << 3
-	};
-
+	
 	/**
 	*  Mesh Header <<POD>>
 	*/
 	struct MeshHeader {
 		MVersion     Version;
 	};
-
-	enum ChunkTag
-	{
-		META_DATA,
-		POSITION_DATA,
-		NORMAL_DATA,
-		TEXCOORD_DATA,
-		BINORMAL_DATA,
-		TANGENT_DATA,
-		BINTANGENT_DATA,
-		PARTICLE_DATA,
-		ELEMENTINDEX_DATA,
-		TRISTRIP_INDEX_DATA,
-		UNKNOWN
-	};
-
-	enum ChunkDataType
-	{
-		FLOAT32,
-		UINT8,
-		INT32,
-		UINT32,
-		DOUBLE,
-		OTHER
-	};
-
-	// FixChunk
-	// Members : Tag, DataType, NumOfEle, Offset
-	struct FixChunk
-	{
-		uint32    Tag;
-		uint32    DataType;
-		uint32    NumOfElement;
-		uint64    SzNextChunk;
-	};
-
-	// MeshChunk
-	// Members: MeshName[64], Lod[int], Attrib[uint8], MaterialName[64]...
-	//          BBox[float6], NumTri[uint32], NumVerts[u32], NumNors[u32], NumUVs[u32]
-	struct MetaChunk {
-		char            Name[64];
-		int             Lod;
-		uint8_t         Attrib;
-		char            MaterialName[64];
-		float           BBox[6];
-		uint32_t        NumTriangles;
-		uint32_t        NumVertices;
-		uint32_t        NumNormals;
-		uint32_t        NumUVs;
-	};
-
+	
 	struct KALIGN(4) Vertex4F
 	{
 		float PosX, PosY, PosZ, PosW;
@@ -123,8 +66,8 @@ namespace k3d {
 		float u, v;
 	};
 
-	enum VtxFormat {
-		POS3_F32,
+	enum class VtxFormat : uint32 {
+		POS3_F32 = 0,
 		POS4_F32,
 		POS3_F32_UV2_F32,
 		POS3_F32_NOR3_F32,
@@ -134,8 +77,8 @@ namespace k3d {
 		PER_INSTANCE // all components are seperated
 	};
 
-	enum PrimType {
-		POINTS,
+	enum class PrimType : uint32 {
+		POINTS = 0,
 		TRIANGLES,
 		TRIANGLE_STRIPS
 	};
@@ -178,12 +121,79 @@ namespace k3d {
 
 		Mesh *		Reflect() override { return new Mesh; }
 
+		std::string DumpMeshInfo() 
+		{
+			std::ostringstream meshInfo;
+			meshInfo << "[Mesh]\n"
+				<< "\tName:" << this->MeshName()
+				<< "\n\tFormat:" << VtxFormatToString(this->GetVertexFormat())
+				<< "\n\tPrimitiveType:" << PrimTypeToString(this->GetPrimType())
+				<< "\n\tNumVertices:" << this->GetVertexNum()
+				<< "\n\tNumIndices:" << this->GetIndexNum()
+				<< "\n";
+			return meshInfo.str();
+		}
+
 		KOBJECT_CLASSNAME(Mesh)
 
 		friend class AssetManager;
 
 		friend class Archive& operator << (class Archive & arch, const Mesh & mesh);
 		friend class Archive& operator >> (class Archive & arch, Mesh & mesh);
+
+	public:
+
+		static uint32	GetVertexByteWidth(VtxFormat format, uint32 vertexNum)
+		{
+			static uint32 elementByteWidth[] = {
+				sizeof(Vertex3F),
+				sizeof(Vertex4F),
+				sizeof(Vertex3F2F),
+				sizeof(Vertex3F3F),
+				sizeof(Vertex3F3F2F)
+			};
+			if (format > VtxFormat::POS3_F32_NOR3_F32_UV2_F32)
+				return 0;
+			return elementByteWidth[(uint32)format] * vertexNum;
+		}
+
+		static uint32	GetVertexStride(VtxFormat format)
+		{
+			static uint32 elementByteStride[] = {
+				sizeof(Vertex3F),
+				sizeof(Vertex4F),
+				sizeof(Vertex3F2F),
+				sizeof(Vertex3F3F),
+				sizeof(Vertex3F3F2F)
+			};
+			if (format > VtxFormat::POS3_F32_NOR3_F32_UV2_F32)
+				return 0;
+			return elementByteStride[(uint32)format];
+		}
+
+		static std::string VtxFormatToString(VtxFormat format)
+		{
+			static std::string vtxFormatStr[] = {
+				"Vertex3F",
+				"Vertex4F",
+				"Vertex3F2F",
+				"Vertex3F3F",
+				"Vertex3F3F2F"
+			};
+			if (format > VtxFormat::POS3_F32_NOR3_F32_UV2_F32)
+				return "Unknown";
+			return vtxFormatStr[(uint32)format];
+		}
+
+		static std::string PrimTypeToString(PrimType primType)
+		{
+			static std::string primTypeStr[] = {
+				"POINTS",
+				"TRIANGLES",
+				"TRIANGLE_STRIPS"
+			};
+			return primTypeStr[(uint32)primType];
+		}
 
 	private:
 		Mesh(const Mesh &) = delete;

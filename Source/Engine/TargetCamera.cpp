@@ -1,3 +1,4 @@
+#include "Kaleido3D.h"
 #include "TargetCamera.h"
 
 namespace k3d {

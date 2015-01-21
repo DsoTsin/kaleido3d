@@ -1,8 +1,10 @@
+#include "Kaleido3D.h"
 #include "Window.h"
-#include <Config/Prerequisities.h>
 
 #if K3DPLATFORM_OS_WIN
 #include "Windows/WindowImpl.h"
+#elif K3DPLATFORM_OS_IOS
+#include "iOS/WindowImpl.h"
 #endif
 
 using namespace k3d;
@@ -49,6 +51,11 @@ void Window::Resize(int width, int height) {
 void Window::Move(int x, int y) {
 	assert(pipl != nullptr);
 	pipl->Move(x, y);
+}
+
+bool Window::IsOpen()
+{
+	return true;
 }
 
 bool Window::PollMessage(Message & message)

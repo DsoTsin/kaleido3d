@@ -11,7 +11,7 @@ namespace k3d {
 		
 		~RendererFactory();
 
-		static IRenderer * SetUpRenderer(const char *, Window *);
+		/*static IRenderer * SetUpRenderer(const char *, Window *);*/
 
 	private:
 		RendererFactory();
