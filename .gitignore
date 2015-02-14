@@ -49,3 +49,5 @@ ThirdParty/
 Shader/GLSL/*
 Shader/Metal/*
 Source/.idea/*
+Lib*
+Lib/*

@@ -45,7 +45,7 @@ namespace k3d {
 		TaskQueue	* m_ThreadQueue;
 	};
 
-	static void __stdcall _createTask(IBaseThread * task) {
+	static void STD_CALL _createTask(IBaseThread * task) {
 		if (task) {
 			task->OnRun();
 		}

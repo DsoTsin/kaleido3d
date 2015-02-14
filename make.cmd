@@ -23,15 +23,27 @@ exit
 echo Now build by CMake
 if not exist BuildCMakeProj mkdir BuildCMakeProj
 cd BuildCMakeProj
-cmake -G"Visual Studio 12 Win64" ..\Source
-if errorlevel 0 echo MSVC project files generated...
 
+if defined VS140COMNTOOLS (goto MS2015Build)
+if defined VS120COMNTOOLS (goto MS2013Build) else (goto NotSupport)
 
-if exist "%VS140COMNTOOLS%\..\IDE\devenv.exe" goto MSBuild
-
-:MSBuild 
+:MS2015Build 
+echo Build By Visual Studio 2015
+cmake -G"Visual Studio 14 2015 Win64" ..\Source
 call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
 msbuild Kaleido3D.sln
+goto End
 
+:MS2013Build
+echo Build By Visual Studio 2013
+cmake -G"Visual Studio 12 2013 Win64" ..\Source
+call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
+msbuild Kaleido3D.sln
+goto End
+
+:NotSupport
+echo Visual Studio Version not supported!
+
+:End
 pause
 exit

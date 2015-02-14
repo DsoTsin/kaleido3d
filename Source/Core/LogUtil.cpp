@@ -209,4 +209,41 @@ namespace k3d {
 		std::string line = "<h4>" + Txt2Html(data) + "</h4>\n\t\t\t\t";
 		OutputStr2IODevice(g_LogFile, line.c_str());
 	}
+
+///=======================================================================================
+	
+	LogUtil::LogCall LogUtil::s_UsrDefCall = nullptr;
+
+	void LogUtil::Out(LogLevel && lev, const char * tag, const char *fmt, ...)
+	{
+		va_list va;
+		static char logBuffer[2048] = { 0 };
+		va_start(va, fmt);
+		::vsprintf(logBuffer, fmt, va); //!to fix: printf %d first argument error
+		va_end(va);
+
+		if (s_UsrDefCall != nullptr)
+		{
+			s_UsrDefCall(lev, tag, logBuffer);
+			return;
+		}
+
+		switch (lev)
+		{
+		case LogLevel::Debug:
+			Debug::Out(tag, logBuffer);
+			break;
+		case LogLevel::Info:
+			break;
+		case LogLevel::Warn:
+			break;
+		case LogLevel::Error:
+			break;
+		case LogLevel::Fatal:
+			break;
+		default:
+			break;
+		}
+	}
+
 }

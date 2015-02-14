@@ -110,7 +110,7 @@ void DXDevice::Init(Window *window, DXFeature feature)
 		return;
 	}
 
-	Debug::Out("DXDevice","%s CreateRenderTargetView successful!!", __func__);
+	Debug::Out("DXDevice","Init CreateRenderTargetView successful!!");
 
 	// Create depth stencil texture
 	D3D11_TEXTURE2D_DESC descDepth;
@@ -130,7 +130,7 @@ void DXDevice::Init(Window *window, DXFeature feature)
 	hr = pDevice->CreateTexture2D(&descDepth, nullptr, pDepthStencil.GetInitReference());
 	if (FAILED(hr))
 	{
-		Log::Error("DXDevice::Init pDevice->CreateTexture2D failed. in file(%s), line(%d) function(%s).", __FILE__, __LINE__, __func__);
+		Log::Error("DXDevice::Init pDevice->CreateTexture2D failed. in file(%s), line(%d).", __FILE__, __LINE__);
 		return;
 	}
 

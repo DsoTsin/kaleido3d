@@ -4,13 +4,22 @@
 #include "Config.h"
 #if K3DPLATFORM_OS_WIN
     #include <Windows.h>
-#elif K3DPLATFORM_OS_LINUX
+#else
     #include <unistd.h>
     #include <cstring>
     #include <cmath>
     #include <sys/types.h>
     #include <sys/stat.h>
-    #include <fcntl.h>
+/** Socket **/
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+    #include <arpa/inet.h>
+/******/
+    #if K3DPLATFORM_OS_IOS
+        #include <sys/fcntl.h>
+    #else
+        #include <fcntl.h>
+    #endif
     #include <sys/mman.h>
 #endif
 

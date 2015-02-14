@@ -97,7 +97,7 @@ namespace k3d {
 #ifdef K3DPLATFORM_OS_WIN
 		HANDLE    m_FileHandle;
 		HANDLE    m_FileMappingHandle;
-#elif defined(K3DPLATFORM_OS_LINUX) || defined(K3DPLATFORM_OS_MAC)
+#else
 		int       m_Fd;
 #endif
 		size_t    m_szFile;

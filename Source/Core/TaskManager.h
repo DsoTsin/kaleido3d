@@ -9,7 +9,7 @@
 namespace k3d {
 
 	struct WThread {
-		typedef unsigned long(__stdcall *ThreadFunctionPtr)(void*);
+		typedef unsigned long(STD_CALL *ThreadFunctionPtr)(void*);
 		typedef void *				ThreadHandle;
 		ThreadHandle				m_Handle;
 		void						Join() { Wait(this); }

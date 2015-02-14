@@ -42,7 +42,8 @@ set(CONCURR_SRCS
 )
 
 if(WIN32 OR LINUX)
-list(CONCURR_SRCS APPEND
+set(CONCURR_SRCS 
+${CONCURR_SRCS}
 ConditionVariable.h
 ConditionVariable.cpp
 )
@@ -107,7 +108,7 @@ ${APP_SRCS}
 
 ####################Platform Specified###################
 if(WIN32 OR LINUX)
-list(CORE_SRCS APPEND ${APP_SRCS} ${MSG_SRCS} ${IO_SRCS} ${COMMON_SRCS})
+set(CORE_SRCS ${CORE_SRCS} ${APP_SRCS} ${MSG_SRCS} ${IO_SRCS} ${COMMON_SRCS})
 endif()
 
 if(WIN32)
@@ -116,8 +117,7 @@ source_group(
 Windows FILES
 ${WINDOWS_IMPL_SRCS}
 )
-list(CORE_SRCS APPEND ${WINDOWS_IMPL_SRCS})
-list(CORE_SRCS APPEND Win32Res/resource.h)
+set(CORE_SRCS ${CORE_SRCS} ${WINDOWS_IMPL_SRCS} Win32Res/resource.h)
 endif()
 
 if(IOS)
@@ -127,7 +127,7 @@ source_group(
 iOS FILES
 ${IOS_IMPL_SRCS}
 )
-set(CORE_SRCS ${CORE_SRCS} ${IOS_IMPL_SRCS})
+set(CORE_SRCS ${CORE_SRCS} ${IOS_IMPL_SRCS} ${IO_SRCS})
 endif()
 
 

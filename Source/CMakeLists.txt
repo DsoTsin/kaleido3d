@@ -1,9 +1,13 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.0)
 project (Kaleido3D)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kaleido3D_SOURCE_DIR}/../Project")
 set(Kaleido3D_ROOT_DIR "${Kaleido3D_SOURCE_DIR}/..")
 set(K3D_THIRD_PARTY "${Kaleido3D_ROOT_DIR}/ThirdParty")
+
+if(IOS)
+set(LIBRARY_OUTPUT_PATH ${Kaleido3D_ROOT_DIR}/Lib)
+endif()
 
 option(BUILD_SHARED on)
 set(LIB_TYPE STATIC)
@@ -77,6 +81,7 @@ endif()
 add_subdirectory(Core)
 add_subdirectory(Renderer)
 add_subdirectory(Engine)
+add_subdirectory(Network)
 add_subdirectory(Launcher)
 
 if(MAYA_FOUND)

@@ -33,6 +33,27 @@ namespace k3d {
 		static void   Fatal(const char *format, ...);
 	};
 
+	enum class LogLevel
+	{
+		Debug,
+		Info, /** [Message] */
+		Warn, /** [Warning] */
+		Error,/** [Error]*/
+		Fatal /** [Fatal]*/
+	};
+
+	/**
+	  * Prefer to use LogUtil to print logs
+	  */
+	struct LogUtil
+	{
+		static void Out(LogLevel && log, const char * tag, const char *fmt, ...);
+		typedef void(*LogCall)(LogLevel & log, const char * tag, const char *);
+		static void SetLogCallBack(LogCall call);
+	private:
+		static LogCall s_UsrDefCall;
+	};
+
 #define LOG_WARN(expression, message) \
     if(!(expression)) Log::Warning(message);
 

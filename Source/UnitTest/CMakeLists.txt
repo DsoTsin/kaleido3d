@@ -45,10 +45,19 @@ target_link_libraries(
 	Core
 )
 
+add_executable(UTSocket
+	UTSocket.cpp
+	../Core/Win32Res/win32icon.rc
+)
+
+target_link_libraries(
+	UTSocket
+	Core
+	Network
+)
+
 set_target_properties(UTAssetLoader PROPERTIES FOLDER "Unit Test")
-
 set_target_properties(UTReflectFactory PROPERTIES FOLDER "Unit Test")
-
 set_target_properties(UTTaskManager PROPERTIES FOLDER "Unit Test")
-
 set_target_properties(UTDXRenderer PROPERTIES FOLDER "Unit Test")
+set_target_properties(UTSocket PROPERTIES FOLDER "Unit Test")

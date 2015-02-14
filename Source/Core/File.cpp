@@ -7,15 +7,16 @@
 #endif
 #include <algorithm>
 
+#include <Config/OSHeaders.h>
 #include "Utils/StringUtils.h"
 
 namespace k3d {
 
 	File::File(const char *fileName)
 		:
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		m_hFile(NULL),
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		m_fd(-1),
 #endif
 		 m_EOF(false)
@@ -25,9 +26,9 @@ namespace k3d {
 
 	File::File()
 		:
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		m_hFile(NULL),
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		m_fd(-1),
 #endif
 		 m_EOF(false)
@@ -44,7 +45,7 @@ namespace k3d {
 
 	bool File::Open(const char *fileName, IOFlag flag)
 	{
-#if defined(K3DPLATFORM_OS_WIN)
+#if K3DPLATFORM_OS_WIN
 		wchar_t name_buf[1024];
 		StringUtil::CharToWchar(fileName, name_buf, sizeof(name_buf));
 
@@ -69,8 +70,8 @@ namespace k3d {
 			NULL);
 		if (m_hFile == INVALID_HANDLE_VALUE)
 			return false;
-#elif K3DPLATFORM_OS_LINUX
-		m_fd = open(fileName, flag == IORead ? O_RDONLY : O_WRONLY);
+#else
+        m_fd = ::open(fileName, flag == IORead ? O_RDONLY : O_WRONLY);
 		if (m_fd < 0) return false;
 #endif
 		return true;
@@ -110,9 +111,9 @@ namespace k3d {
 
 	int64 File::GetSize() {
 		int64 len = 0;
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		len = ::GetFileSize(m_hFile, NULL);
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		struct stat st;
 		if (fstat(m_fd, &st) != 0) return -1;
 		len = st.st_size;
@@ -127,7 +128,7 @@ namespace k3d {
 
 	size_t File::Read(char *data, size_t len)
 	{
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		if (m_hFile == INVALID_HANDLE_VALUE)
 			return size_t(-1);
 		DWORD bytesToRead = (DWORD)len;
@@ -150,7 +151,7 @@ namespace k3d {
 		} while (totalRead < (int64)len);
 
 		return totalRead;
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		size_t _read = 0;
 		_read = ::read(m_fd, data, len);
 		return _read;
@@ -162,7 +163,7 @@ namespace k3d {
 		size_t written = 0;
 #ifdef K3DPLATFORM_OS_WIN
 		WriteFile(m_hFile, data, (DWORD)len, (LPDWORD)&written, NULL);
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		written = ::write(m_fd, data, len);
 #endif
 
@@ -172,9 +173,9 @@ namespace k3d {
 
 	bool File::Seek(size_t offset)
 	{
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		m_CurOffset = ::SetFilePointer(m_hFile, (LONG)offset, NULL, 0);
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		m_CurOffset = ::lseek(m_fd, offset, SEEK_SET);
 #endif
 		return m_CurOffset >= 0;
@@ -182,9 +183,9 @@ namespace k3d {
 
 	bool File::Skip(size_t offset)
 	{
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		m_CurOffset = ::SetFilePointer(m_hFile, (LONG)offset, NULL, 1);
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		m_CurOffset = ::lseek(m_fd, offset, SEEK_CUR);
 #endif
 		return m_CurOffset >= 0;
@@ -201,7 +202,7 @@ namespace k3d {
 			::CloseHandle(m_hFile);
 			m_hFile = INVALID_HANDLE_VALUE;
 		}
-#elif defined(K3DPLATFORM_OS_LINUX)
+#else
 		if (m_fd) ::close(m_fd);
 #endif
 	}
@@ -213,9 +214,9 @@ namespace k3d {
 	//--------------------------------------------------------------------------------------------
 
 	MemMapFile::MemMapFile() :
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		m_FileHandle(NULL), m_FileMappingHandle(NULL),
-#elif K3DPLATFORM_OS_LINUX
+#else
 		m_Fd(-1),
 #endif
 		m_szFile(0), m_pData(NULL)
@@ -236,7 +237,7 @@ namespace k3d {
 	{
 		assert(mode == IORead);
 
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		wchar_t name_buf[1024];
 		StringUtil::CharToWchar(fileName, name_buf, sizeof(name_buf));
 		m_FileHandle = ::CreateFileW(name_buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
@@ -250,7 +251,7 @@ namespace k3d {
 
 		m_pData = (unsigned char*)MapViewOfFile(m_FileMappingHandle, FILE_MAP_READ, 0, 0, 0);
 		if (m_pData == NULL) return false;
-#elif defined(K3DPLATFORM_OS_MAC) || defined(K3DPLATFORM_OS_LINUX)
+#else
 		m_Fd = open(fileName, O_RDONLY);
 		if (m_Fd == -1) return false;
 
@@ -310,11 +311,11 @@ namespace k3d {
 
 	void MemMapFile::Close()
 	{
-#ifdef K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN
 		UnmapViewOfFile(m_pData);
 		CloseHandle(m_FileMappingHandle);
 		//CloseHandle( m_FileHandle );
-#elif K3DPLATFORM_OS_LINUX
+#else
 		munmap(m_pData, m_szFile);
 		close(m_Fd);
 #endif
