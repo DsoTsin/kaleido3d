@@ -46,4 +46,8 @@ namespace k3d
 	{
 		m_Addr.sin_port = htons((u_short)port);
 	}
+    IPv4Address * IPv4Address::Clone() const
+    {
+        return new IPv4Address(*this);
+    }
 }

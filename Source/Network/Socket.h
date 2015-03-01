@@ -58,6 +58,8 @@ namespace k3d
 		void Close();
 		SocketHandle Accept(IPv4Address & ipAddr);
 
+        SocketHandle GetHandle() { return m_SockFd; }
+        
 	private:
 
 		SocketHandle	m_SockFd;

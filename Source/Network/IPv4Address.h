@@ -9,6 +9,7 @@ namespace k3d
 		explicit IPv4Address(const char* ip);
 		void SetIpPort(uint32 port);
 
+        IPv4Address * Clone() const;
 	private:
 
 		friend class Socket;

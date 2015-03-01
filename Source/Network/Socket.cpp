@@ -40,7 +40,7 @@ namespace k3d
 			SO_RCVTIMEO,
 			SO_SNDTIMEO,
 		};
-		int ret = ::setsockopt(m_SockFd, SOL_SOCKET, opts[(uint32)opt], (const char*)&timeo, sizeof(timeo));
+        int ret = ::setsockopt(m_SockFd, SOL_SOCKET, opts[(uint32)opt], (const char*)&timeo, sizeof(timeo));
 		if (ret == -1)
 		{
 
@@ -56,9 +56,9 @@ namespace k3d
 		unsigned long ul = block ? 0 : 1;
 		ioctlsocket(m_SockFd, FIONBIO, &ul);
 #else
-		int flag = fcntl(handle, F_GETFL, 0);
+		int flag = fcntl(m_SockFd, F_GETFL, 0);
 		flag = block ? (flag & ~O_NONBLOCK) : (flag | O_NONBLOCK);
-		fcntl(handle, F_SETFL, flag);
+		fcntl(m_SockFd, F_SETFL, flag);
 #endif
 	}
 
@@ -82,7 +82,7 @@ namespace k3d
 
 	SocketHandle Socket::Accept(IPv4Address & ipAddr)
 	{
-		int  len = 0;
+		uint32 len = 0;
 		return ::accept(m_SockFd, (sockaddr*)&ipAddr.m_Addr, &len);
 	}
 
@@ -101,8 +101,8 @@ namespace k3d
 			::closesocket(m_SockFd);
 			m_SockFd = INVALID_SOCKET;
 #else
-			close(handle);
-			handle = -1;
+			close(m_SockFd);
+			m_SockFd = -1;
 #endif
 		}
 	}
