@@ -14,23 +14,34 @@
 		9A0561891AB3BCAF003A85EB /* SceneObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0561881AB3BCAF003A85EB /* SceneObject.swift */; };
 		9A05618B1AB3BCC7003A85EB /* StaticMesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A05618A1AB3BCC7003A85EB /* StaticMesh.swift */; };
 		9A05618D1AB3BD0E003A85EB /* Material.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A05618C1AB3BD0E003A85EB /* Material.swift */; };
+		9A87BB851AB461F700DD7DBC /* GameLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A87BB841AB461F700DD7DBC /* GameLoginController.swift */; };
 		9A8D12801AAC45230024464F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8D127F1AAC45230024464F /* AppDelegate.swift */; };
 		9A8D12821AAC45230024464F /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8D12811AAC45230024464F /* GameViewController.swift */; };
 		9A8D12841AAC45230024464F /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 9A8D12831AAC45230024464F /* Shaders.metal */; };
 		9A8D12871AAC45230024464F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9A8D12851AAC45230024464F /* Main.storyboard */; };
 		9A8D12891AAC45230024464F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A8D12881AAC45230024464F /* Images.xcassets */; };
 		9A8D128C1AAC45230024464F /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9A8D128A1AAC45230024464F /* LaunchScreen.xib */; };
+		9A9B79AF1AB537E900ECE5CE /* ActiveSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79A71AB537E900ECE5CE /* ActiveSocket.swift */; };
+		9A9B79B01AB537E900ECE5CE /* DNS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79A91AB537E900ECE5CE /* DNS.swift */; };
+		9A9B79B11AB537E900ECE5CE /* PassiveSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79AA1AB537E900ECE5CE /* PassiveSocket.swift */; };
+		9A9B79B21AB537E900ECE5CE /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79AB1AB537E900ECE5CE /* Socket.swift */; };
+		9A9B79B31AB537E900ECE5CE /* SocketAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79AC1AB537E900ECE5CE /* SocketAddress.swift */; };
+		9A9B79B41AB537E900ECE5CE /* UnixBridge.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79AD1AB537E900ECE5CE /* UnixBridge.c */; };
+		9A9B79B51AB537E900ECE5CE /* UnixUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79AE1AB537E900ECE5CE /* UnixUtils.swift */; };
+		9A9B79B81AB53A6500ECE5CE /* ARISockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A9B79A81AB537E900ECE5CE /* ARISockets.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9A9B79BF1AB53B6B00ECE5CE /* req_register.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79B91AB53B6B00ECE5CE /* req_register.pb.cc */; };
+		9A9B79C01AB53B6B00ECE5CE /* req_register.pb.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A9B79BA1AB53B6B00ECE5CE /* req_register.pb.h */; };
+		9A9B79C11AB53B6B00ECE5CE /* req_statistic.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79BB1AB53B6B00ECE5CE /* req_statistic.pb.cc */; };
+		9A9B79C21AB53B6B00ECE5CE /* req_statistic.pb.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A9B79BC1AB53B6B00ECE5CE /* req_statistic.pb.h */; };
+		9A9B79C31AB53B6B00ECE5CE /* request.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9A9B79BD1AB53B6B00ECE5CE /* request.pb.cc */; };
+		9A9B79C41AB53B6B00ECE5CE /* request.pb.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A9B79BE1AB53B6B00ECE5CE /* request.pb.h */; };
+		9A9B79C91AB547DC00ECE5CE /* libprotobuf.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A9B79C81AB547DC00ECE5CE /* libprotobuf.a */; };
+		9AC02F3E1AB4495600B151B6 /* AssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC02F3D1AB4495600B151B6 /* AssetManager.swift */; };
+		9AC02F411AB4498800B151B6 /* IManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC02F401AB4498800B151B6 /* IManager.swift */; };
+		9AD9AEBE1AB46BFB00EA26E4 /* GameRegisterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD9AEBD1AB46BFB00EA26E4 /* GameRegisterController.swift */; };
+		9AD9AEC01AB46F9800EA26E4 /* LoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD9AEBF1AB46F9800EA26E4 /* LoginService.swift */; };
+		9AD9AEC31AB46FC900EA26E4 /* RegisterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD9AEC21AB46FC900EA26E4 /* RegisterService.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		9A8D12921AAC45230024464F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9A8D12721AAC45230024464F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 9A8D12791AAC45230024464F;
-			remoteInfo = kaleido3d;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		9A05617D1AB3B6D8003A85EB /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
@@ -40,7 +51,7 @@
 		9A0561881AB3BCAF003A85EB /* SceneObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneObject.swift; sourceTree = "<group>"; };
 		9A05618A1AB3BCC7003A85EB /* StaticMesh.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StaticMesh.swift; sourceTree = "<group>"; };
 		9A05618C1AB3BD0E003A85EB /* Material.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Material.swift; sourceTree = "<group>"; };
-		9A8D127A1AAC45230024464F /* kaleido3d.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kaleido3d.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A87BB841AB461F700DD7DBC /* GameLoginController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameLoginController.swift; sourceTree = "<group>"; };
 		9A8D127E1AAC45230024464F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A8D127F1AAC45230024464F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9A8D12811AAC45230024464F /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
@@ -48,7 +59,27 @@
 		9A8D12861AAC45230024464F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		9A8D12881AAC45230024464F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		9A8D128B1AAC45230024464F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		9A8D12911AAC45230024464F /* kaleido3dTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kaleido3dTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A9B79A71AB537E900ECE5CE /* ActiveSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ActiveSocket.swift; path = Socket/ActiveSocket.swift; sourceTree = "<group>"; };
+		9A9B79A81AB537E900ECE5CE /* ARISockets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ARISockets.h; path = Socket/ARISockets.h; sourceTree = "<group>"; };
+		9A9B79A91AB537E900ECE5CE /* DNS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DNS.swift; path = Socket/DNS.swift; sourceTree = "<group>"; };
+		9A9B79AA1AB537E900ECE5CE /* PassiveSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PassiveSocket.swift; path = Socket/PassiveSocket.swift; sourceTree = "<group>"; };
+		9A9B79AB1AB537E900ECE5CE /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Socket.swift; path = Socket/Socket.swift; sourceTree = "<group>"; };
+		9A9B79AC1AB537E900ECE5CE /* SocketAddress.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketAddress.swift; path = Socket/SocketAddress.swift; sourceTree = "<group>"; };
+		9A9B79AD1AB537E900ECE5CE /* UnixBridge.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = UnixBridge.c; path = Socket/UnixBridge.c; sourceTree = "<group>"; };
+		9A9B79AE1AB537E900ECE5CE /* UnixUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UnixUtils.swift; path = Socket/UnixUtils.swift; sourceTree = "<group>"; };
+		9A9B79B91AB53B6B00ECE5CE /* req_register.pb.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = req_register.pb.cc; path = Protocol/req_register.pb.cc; sourceTree = "<group>"; };
+		9A9B79BA1AB53B6B00ECE5CE /* req_register.pb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = req_register.pb.h; path = Protocol/req_register.pb.h; sourceTree = "<group>"; };
+		9A9B79BB1AB53B6B00ECE5CE /* req_statistic.pb.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = req_statistic.pb.cc; path = Protocol/req_statistic.pb.cc; sourceTree = "<group>"; };
+		9A9B79BC1AB53B6B00ECE5CE /* req_statistic.pb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = req_statistic.pb.h; path = Protocol/req_statistic.pb.h; sourceTree = "<group>"; };
+		9A9B79BD1AB53B6B00ECE5CE /* request.pb.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = request.pb.cc; path = Protocol/request.pb.cc; sourceTree = "<group>"; };
+		9A9B79BE1AB53B6B00ECE5CE /* request.pb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = request.pb.h; path = Protocol/request.pb.h; sourceTree = "<group>"; };
+		9A9B79C81AB547DC00ECE5CE /* libprotobuf.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libprotobuf.a; sourceTree = "<group>"; };
+		9AC02F3C1AB447DB00B151B6 /* kaleido3d.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kaleido3d.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AC02F3D1AB4495600B151B6 /* AssetManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AssetManager.swift; sourceTree = "<group>"; };
+		9AC02F401AB4498800B151B6 /* IManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IManager.swift; sourceTree = "<group>"; };
+		9AD9AEBD1AB46BFB00EA26E4 /* GameRegisterController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameRegisterController.swift; sourceTree = "<group>"; };
+		9AD9AEBF1AB46F9800EA26E4 /* LoginService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginService.swift; sourceTree = "<group>"; };
+		9AD9AEC21AB46FC900EA26E4 /* RegisterService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,13 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9A8D128E1AAC45230024464F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				9A9B79C91AB547DC00ECE5CE /* libprotobuf.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,7 +97,6 @@
 		9A0561831AB3BB85003A85EB /* Renderer */ = {
 			isa = PBXGroup;
 			children = (
-				9A0561811AB3B9A3003A85EB /* IRenderable.swift */,
 				9A05617D1AB3B6D8003A85EB /* Renderer.swift */,
 				9A05617F1AB3B8F6003A85EB /* RenderGroup.swift */,
 			);
@@ -90,39 +114,45 @@
 		9A0561851AB3BBD8003A85EB /* Asset */ = {
 			isa = PBXGroup;
 			children = (
-				9A0561861AB3BC0E003A85EB /* IAsset.swift */,
 				9A05618A1AB3BCC7003A85EB /* StaticMesh.swift */,
 				9A05618C1AB3BD0E003A85EB /* Material.swift */,
+				9AC02F3D1AB4495600B151B6 /* AssetManager.swift */,
 			);
 			name = Asset;
+			sourceTree = "<group>";
+		};
+		9A87BB861AB4635300DD7DBC /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				9AD9AEBD1AB46BFB00EA26E4 /* GameRegisterController.swift */,
+				9A87BB841AB461F700DD7DBC /* GameLoginController.swift */,
+				9A8D12811AAC45230024464F /* GameViewController.swift */,
+			);
+			name = ViewController;
 			sourceTree = "<group>";
 		};
 		9A8D12711AAC45230024464F = {
 			isa = PBXGroup;
 			children = (
 				9A8D127C1AAC45230024464F /* kaleido3d */,
-				9A8D127B1AAC45230024464F /* Products */,
+				9AC02F3C1AB447DB00B151B6 /* kaleido3d.app */,
+				9A9B79C81AB547DC00ECE5CE /* libprotobuf.a */,
 			);
-			sourceTree = "<group>";
-		};
-		9A8D127B1AAC45230024464F /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				9A8D127A1AAC45230024464F /* kaleido3d.app */,
-				9A8D12911AAC45230024464F /* kaleido3dTests.xctest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		9A8D127C1AAC45230024464F /* kaleido3d */ = {
 			isa = PBXGroup;
 			children = (
+				9A9B79C51AB53B7200ECE5CE /* Protocol */,
+				9A9B79B61AB537FC00ECE5CE /* Socket */,
+				9AD9AEC11AB46F9D00EA26E4 /* Services */,
+				9A87BB861AB4635300DD7DBC /* ViewController */,
+				9AC02F3F1AB4497700B151B6 /* Interface */,
 				9A0561851AB3BBD8003A85EB /* Asset */,
 				9A0561841AB3BB9C003A85EB /* Scene */,
 				9A0561831AB3BB85003A85EB /* Renderer */,
 				9A8D12A11AAC845E0024464F /* Shader */,
 				9A8D127F1AAC45230024464F /* AppDelegate.swift */,
-				9A8D12811AAC45230024464F /* GameViewController.swift */,
 				9A8D12851AAC45230024464F /* Main.storyboard */,
 				9A8D12881AAC45230024464F /* Images.xcassets */,
 				9A8D128A1AAC45230024464F /* LaunchScreen.xib */,
@@ -147,7 +177,76 @@
 			name = Shader;
 			sourceTree = "<group>";
 		};
+		9A9B79B61AB537FC00ECE5CE /* Socket */ = {
+			isa = PBXGroup;
+			children = (
+				9A9B79A71AB537E900ECE5CE /* ActiveSocket.swift */,
+				9A9B79A81AB537E900ECE5CE /* ARISockets.h */,
+				9A9B79A91AB537E900ECE5CE /* DNS.swift */,
+				9A9B79AA1AB537E900ECE5CE /* PassiveSocket.swift */,
+				9A9B79AB1AB537E900ECE5CE /* Socket.swift */,
+				9A9B79AC1AB537E900ECE5CE /* SocketAddress.swift */,
+				9A9B79AD1AB537E900ECE5CE /* UnixBridge.c */,
+				9A9B79AE1AB537E900ECE5CE /* UnixUtils.swift */,
+			);
+			name = Socket;
+			sourceTree = "<group>";
+		};
+		9A9B79C51AB53B7200ECE5CE /* Protocol */ = {
+			isa = PBXGroup;
+			children = (
+				9A9B79CA1AB54B7E00ECE5CE /* Service */,
+				9A9B79B91AB53B6B00ECE5CE /* req_register.pb.cc */,
+				9A9B79BA1AB53B6B00ECE5CE /* req_register.pb.h */,
+				9A9B79BB1AB53B6B00ECE5CE /* req_statistic.pb.cc */,
+				9A9B79BC1AB53B6B00ECE5CE /* req_statistic.pb.h */,
+				9A9B79BD1AB53B6B00ECE5CE /* request.pb.cc */,
+				9A9B79BE1AB53B6B00ECE5CE /* request.pb.h */,
+			);
+			name = Protocol;
+			sourceTree = "<group>";
+		};
+		9A9B79CA1AB54B7E00ECE5CE /* Service */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Service;
+			sourceTree = "<group>";
+		};
+		9AC02F3F1AB4497700B151B6 /* Interface */ = {
+			isa = PBXGroup;
+			children = (
+				9A0561861AB3BC0E003A85EB /* IAsset.swift */,
+				9A0561811AB3B9A3003A85EB /* IRenderable.swift */,
+				9AC02F401AB4498800B151B6 /* IManager.swift */,
+			);
+			name = Interface;
+			sourceTree = "<group>";
+		};
+		9AD9AEC11AB46F9D00EA26E4 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				9AD9AEBF1AB46F9800EA26E4 /* LoginService.swift */,
+				9AD9AEC21AB46FC900EA26E4 /* RegisterService.swift */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		9A9B79B71AB53A5C00ECE5CE /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A9B79B81AB53A6500ECE5CE /* ARISockets.h in Headers */,
+				9A9B79C01AB53B6B00ECE5CE /* req_register.pb.h in Headers */,
+				9A9B79C21AB53B6B00ECE5CE /* req_statistic.pb.h in Headers */,
+				9A9B79C41AB53B6B00ECE5CE /* request.pb.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		9A8D12791AAC45230024464F /* kaleido3d */ = {
@@ -157,6 +256,7 @@
 				9A8D12761AAC45230024464F /* Sources */,
 				9A8D12771AAC45230024464F /* Frameworks */,
 				9A8D12781AAC45230024464F /* Resources */,
+				9A9B79B71AB53A5C00ECE5CE /* Headers */,
 			);
 			buildRules = (
 			);
@@ -164,26 +264,8 @@
 			);
 			name = kaleido3d;
 			productName = kaleido3d;
-			productReference = 9A8D127A1AAC45230024464F /* kaleido3d.app */;
+			productReference = 9AC02F3C1AB447DB00B151B6 /* kaleido3d.app */;
 			productType = "com.apple.product-type.application";
-		};
-		9A8D12901AAC45230024464F /* kaleido3dTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 9A8D129E1AAC45230024464F /* Build configuration list for PBXNativeTarget "kaleido3dTests" */;
-			buildPhases = (
-				9A8D128D1AAC45230024464F /* Sources */,
-				9A8D128E1AAC45230024464F /* Frameworks */,
-				9A8D128F1AAC45230024464F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				9A8D12931AAC45230024464F /* PBXTargetDependency */,
-			);
-			name = kaleido3dTests;
-			productName = kaleido3dTests;
-			productReference = 9A8D12911AAC45230024464F /* kaleido3dTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -198,10 +280,6 @@
 						CreatedOnToolsVersion = 6.1.1;
 						DevelopmentTeam = 8HY898Y2MS;
 					};
-					9A8D12901AAC45230024464F = {
-						CreatedOnToolsVersion = 6.1.1;
-						TestTargetID = 9A8D12791AAC45230024464F;
-					};
 				};
 			};
 			buildConfigurationList = 9A8D12751AAC45230024464F /* Build configuration list for PBXProject "kaleido3d" */;
@@ -213,12 +291,11 @@
 				Base,
 			);
 			mainGroup = 9A8D12711AAC45230024464F;
-			productRefGroup = 9A8D127B1AAC45230024464F /* Products */;
+			productRefGroup = 9A8D12711AAC45230024464F;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				9A8D12791AAC45230024464F /* kaleido3d */,
-				9A8D12901AAC45230024464F /* kaleido3dTests */,
 			);
 		};
 /* End PBXProject section */
@@ -234,13 +311,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9A8D128F1AAC45230024464F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -248,35 +318,36 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A87BB851AB461F700DD7DBC /* GameLoginController.swift in Sources */,
 				9A05618D1AB3BD0E003A85EB /* Material.swift in Sources */,
+				9AD9AEC01AB46F9800EA26E4 /* LoginService.swift in Sources */,
+				9A9B79B01AB537E900ECE5CE /* DNS.swift in Sources */,
+				9A9B79C11AB53B6B00ECE5CE /* req_statistic.pb.cc in Sources */,
+				9A9B79B41AB537E900ECE5CE /* UnixBridge.c in Sources */,
 				9A05618B1AB3BCC7003A85EB /* StaticMesh.swift in Sources */,
 				9A05617E1AB3B6D8003A85EB /* Renderer.swift in Sources */,
 				9A0561891AB3BCAF003A85EB /* SceneObject.swift in Sources */,
+				9A9B79B11AB537E900ECE5CE /* PassiveSocket.swift in Sources */,
+				9A9B79B51AB537E900ECE5CE /* UnixUtils.swift in Sources */,
+				9AD9AEC31AB46FC900EA26E4 /* RegisterService.swift in Sources */,
 				9A0561871AB3BC0E003A85EB /* IAsset.swift in Sources */,
 				9A0561821AB3B9A3003A85EB /* IRenderable.swift in Sources */,
 				9A0561801AB3B8F6003A85EB /* RenderGroup.swift in Sources */,
+				9A9B79B21AB537E900ECE5CE /* Socket.swift in Sources */,
+				9AD9AEBE1AB46BFB00EA26E4 /* GameRegisterController.swift in Sources */,
+				9AC02F411AB4498800B151B6 /* IManager.swift in Sources */,
 				9A8D12841AAC45230024464F /* Shaders.metal in Sources */,
+				9A9B79BF1AB53B6B00ECE5CE /* req_register.pb.cc in Sources */,
 				9A8D12821AAC45230024464F /* GameViewController.swift in Sources */,
+				9A9B79AF1AB537E900ECE5CE /* ActiveSocket.swift in Sources */,
+				9A9B79C31AB53B6B00ECE5CE /* request.pb.cc in Sources */,
+				9AC02F3E1AB4495600B151B6 /* AssetManager.swift in Sources */,
 				9A8D12801AAC45230024464F /* AppDelegate.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9A8D128D1AAC45230024464F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				9A9B79B31AB537E900ECE5CE /* SocketAddress.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		9A8D12931AAC45230024464F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 9A8D12791AAC45230024464F /* kaleido3d */;
-			targetProxy = 9A8D12921AAC45230024464F /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		9A8D12851AAC45230024464F /* Main.storyboard */ = {
@@ -382,9 +453,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"../ThirdParty/protobuf-2.5/include",
+				);
 				INFOPLIST_FILE = kaleido3d/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = kaleido3d/Socket/ARISockets.h;
 			};
 			name = Debug;
 		};
@@ -393,43 +474,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"../ThirdParty/protobuf-2.5/include",
+				);
 				INFOPLIST_FILE = kaleido3d/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		9A8D129F1AAC45230024464F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
+				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)",
 				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = kaleido3dTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/kaleido3d.app/kaleido3d";
-			};
-			name = Debug;
-		};
-		9A8D12A01AAC45230024464F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = kaleido3dTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/kaleido3d.app/kaleido3d";
+				SWIFT_OBJC_BRIDGING_HEADER = kaleido3d/Socket/ARISockets.h;
 			};
 			name = Release;
 		};
@@ -450,15 +507,6 @@
 			buildConfigurations = (
 				9A8D129C1AAC45230024464F /* Debug */,
 				9A8D129D1AAC45230024464F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		9A8D129E1AAC45230024464F /* Build configuration list for PBXNativeTarget "kaleido3dTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				9A8D129F1AAC45230024464F /* Debug */,
-				9A8D12A01AAC45230024464F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

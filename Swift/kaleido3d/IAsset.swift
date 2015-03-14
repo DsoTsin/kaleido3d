@@ -7,5 +7,5 @@
 //
 
 protocol IAsset {
-    func load(name : String) -> Bool
+    func load(fileName : String, fileType : String) -> Bool
 }

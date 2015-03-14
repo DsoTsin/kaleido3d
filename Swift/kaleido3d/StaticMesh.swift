@@ -9,7 +9,13 @@
 import Foundation
 
 public class StaticMesh : IAsset {
-    func load(name: String) -> Bool {
-        return true;
+    
+    private var mVertexBuffer : UnsafeMutableBufferPointer<Byte>?
+    private var mIndexBuffer : UnsafeMutableBufferPointer<Byte>?
+    
+    func load(fileName : String, fileType : String) -> Bool {
+        var fileRoot = NSBundle.mainBundle().pathForResource( fileType, ofType: fileType)
+        var contents: AnyObject? = NSData.dataWithContentsOfMappedFile(fileRoot!)
+        return true
     }
 }

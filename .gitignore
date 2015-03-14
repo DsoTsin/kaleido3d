@@ -21,6 +21,8 @@ Makefile*
 *.ini
 BinTmp
 
+DedicatedServer/protocol/cpp/
+
 # Compiled Dynamic libraries
 *.so
 *.dylib
@@ -52,3 +54,9 @@ Source/.idea/*
 Lib*
 Lib/*
 DedicatedServer/src/Server
+
+Swift/kaleido3d.xcodeproj/project.xcworkspace/xcuserdata/
+Swift/kaleido3d.xcodeproj/xcuserdata/
+.DS_Store
+xcshareddata
+

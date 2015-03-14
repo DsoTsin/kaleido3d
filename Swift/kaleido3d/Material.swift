@@ -9,7 +9,7 @@
 import Foundation
 
 public class Material : IAsset {
-    func load(name: String) -> Bool {
+    func load( fileName : String, fileType : String ) -> Bool {
         return false
     }
 }
