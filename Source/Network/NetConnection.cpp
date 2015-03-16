@@ -45,7 +45,9 @@ namespace k3d {
     {
         char * bytes = new char[len+1];
         ::recv(m_SideSockFd, bytes, len, 0);
-        return std::string((const char*)bytes);
+        std::string buffer((const char*)bytes, len);
+        delete [] bytes;
+        return buffer;
     }
     
     uint32 NetConnection::Send(std::string const & buffer)

@@ -46,6 +46,16 @@ source_group(
 	OGLShader.h OGLShader.cpp
 )
 
+source_group(
+	Texture FILES
+	OGLTexture.h OGLTexture.cpp
+)
+
+source_group(
+	Buffer FILES
+	OGLBuffer.h OGLBuffer.cpp
+)
+
 add_definitions(-DGLEW_STATIC)
 
 add_library(

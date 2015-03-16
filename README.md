@@ -30,7 +30,7 @@ Introduction
 > 
 >* `Next Generation Graphics Library` 
 >* Modern C++ Code (**`C++ 11`**)
->* Modern Graphics Renderer (`DirectX 11+` and **`OpenGL NG`**)
+>* Modern Graphics Renderer (`Metal`, `Vulkan`, `DirectX 11+` and **`AZDO OpenGL`**)
 >* **`Maya`** Digital Content Creation Tools
 
 ----------
@@ -44,6 +44,7 @@ Build Required
 >* Visual Studio **2013** Update 3 +
 >* Clang 3.4 +
 >* G++ 4.8 +
+>* [ThirdParty][4]
 
 ----------
 
@@ -60,7 +61,7 @@ Directories:
 > **Source:**
 > 
 >* ***Core***   *A Cross Platform Implementation Of `IO`, `SIMD` Math, Image And Thread*  
->* ***Renderer***   Implement Include OpenGL (`With NV Extensions`) And DirectX 3D 11
+>* ***Renderer***   Implement Include OpenGL (`With NV Extensions: glCommandList..`), DirectX 3D 11 And `iOS` Metal
 >*  **Engine**
 >* **Launcher**
 >* **Physics**
@@ -71,6 +72,7 @@ Directories:
 >*  [PhysX 3.3.1][2]
 >*  SDL2.0.3
 >*  [rapidJson][3]
+>*  [ProtoBuf][5]
 
 > **Include**
 >
@@ -95,3 +97,5 @@ Contact
 [1]: http://www.cmake.org
 [2]: https://developer.nvidia.com/gameworksdownload
 [3]: https://github.com/miloyip/rapidjson
+[4]: http://pan.baidu.com/s/1o8yZk
+[5]: https://github.com/google/protobuf

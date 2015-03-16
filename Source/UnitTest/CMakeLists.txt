@@ -1,8 +1,16 @@
+include_directories(
+	${K3D_THIRD_PARTY}/protobuf-2.6-win/include
+)
+
 add_executable(UTAssetLoader
 	UTAssetLoader.cpp
 	../Core/Win32Res/win32icon.rc
 )
 
+
+if(WIN64) 
+	link_directories(${K3D_THIRD_PARTY}/protobuf-2.6.0-win/x64/Debug)
+endif()
 
 target_link_libraries(
 	UTAssetLoader
