@@ -27,6 +27,7 @@ source_group(
 source_group(
 	Nvidia FILES
 	Nvidia/NVCommandList.h Nvidia/NVCommandList.cpp
+	Nvidia/NVToken.h Nvidia/NVToken.cpp
 )
 
 source_group(
@@ -54,6 +55,11 @@ source_group(
 source_group(
 	Buffer FILES
 	OGLBuffer.h OGLBuffer.cpp
+)
+
+source_group(
+	CmdList FILES
+	OGLCmdList.h OGLCmdList.cpp
 )
 
 add_definitions(-DGLEW_STATIC)

@@ -71,22 +71,60 @@
 
 #pragma pack(push,1)
 
+#ifndef GL_UNIFORM_BUFFER_UNIFIED_NV
+#define GL_UNIFORM_BUFFER_UNIFIED_NV                        0x936E
+#endif
+#ifndef GL_UNIFORM_BUFFER_ADDRESS_NV
+#define GL_UNIFORM_BUFFER_ADDRESS_NV                        0x936F
+#endif
+#ifndef GL_UNIFORM_BUFFER_LENGTH_NV
+#define GL_UNIFORM_BUFFER_LENGTH_NV                         0x9370
+#endif
+
+#define GL_TERMINATE_SEQUENCE_COMMAND_NV                    0x0000
+#define GL_NOP_COMMAND_NV                                   0x0001
+#define GL_DRAW_ELEMENTS_COMMAND_NV                         0x0002
+#define GL_DRAW_ARRAYS_COMMAND_NV                           0x0003
+#define GL_DRAW_ELEMENTS_STRIP_COMMAND_NV                   0x0004
+#define GL_DRAW_ARRAYS_STRIP_COMMAND_NV                     0x0005
+#define GL_DRAW_ELEMENTS_INSTANCED_COMMAND_NV               0x0006
+#define GL_DRAW_ARRAYS_INSTANCED_COMMAND_NV                 0x0007
+#define GL_ELEMENT_ADDRESS_COMMAND_NV                       0x0008
+#define GL_ATTRIBUTE_ADDRESS_COMMAND_NV                     0x0009
+#define GL_UNIFORM_ADDRESS_COMMAND_NV                       0x000a
+#define GL_BLEND_COLOR_COMMAND_NV                           0x000b
+#define GL_STENCIL_REF_COMMAND_NV                           0x000c
+#define GL_LINE_WIDTH_COMMAND_NV                            0x000d
+#define GL_POLYGON_OFFSET_COMMAND_NV                        0x000e
+#define GL_ALPHA_REF_COMMAND_NV                             0x000f
+#define GL_VIEWPORT_COMMAND_NV                              0x0010
+#define GL_SCISSOR_COMMAND_NV                               0x0011
+#define GL_FRONTFACE_COMMAND_NV                             0x0012
+
+
   typedef struct {
-    GLuint      encoded;
-  } CommandHeaderNV;
+    GLuint  header;
+  } TerminateSequenceCommandNV;
+
+  typedef struct {
+    GLuint  header;
+  } NOPCommandNV;
 
   typedef  struct {
+    GLuint  header;
     GLuint  count;
     GLuint  firstIndex;
     GLuint  baseVertex;
   } DrawElementsCommandNV;
 
   typedef  struct {
+    GLuint  header;
     GLuint  count;
     GLuint  first;
   } DrawArraysCommandNV;
 
   typedef  struct {
+    GLuint  header;
     GLenum  mode;
     GLuint  count;
     GLuint  instanceCount;
@@ -96,6 +134,7 @@
   } DrawElementsInstancedCommandNV;
 
   typedef  struct {
+    GLuint  header;
     GLenum  mode;
     GLuint  count;
     GLuint  instanceCount;
@@ -104,62 +143,76 @@
   } DrawArraysInstancedCommandNV;
 
   typedef struct {
-    GLuint64 address;
-    GLuint   typeSizeInByte;
+    GLuint  header;
+    GLuint  addressLo;
+    GLuint  addressHi;
+    GLuint  typeSizeInByte;
   } ElementAddressCommandNV;
 
   typedef struct {
-    GLuint   index;
-    GLuint64 address;
+    GLuint  header;
+    GLuint  index;
+    GLuint  addressLo;
+    GLuint  addressHi;
   } AttributeAddressCommandNV;
 
   typedef struct {
-    GLushort index;
-    GLushort stage;
-    GLuint64 address;
+    GLuint    header;
+    GLushort  index;
+    GLushort  stage;
+    GLuint    addressLo;
+    GLuint    addressHi;
   } UniformAddressCommandNV;
 
   typedef struct {
-    float red;
-    float green;
-    float blue;
-    float alpha;
+    GLuint  header;
+    float   red;
+    float   green;
+    float   blue;
+    float   alpha;
   } BlendColorCommandNV;
 
   typedef struct {
-    GLuint frontStencilRef;
-    GLuint backStencilRef;
+    GLuint  header;
+    GLuint  frontStencilRef;
+    GLuint  backStencilRef;
   } StencilRefCommandNV;
 
   typedef struct {
-    float lineWidth;
+    GLuint  header;
+    float   lineWidth;
   } LineWidthCommandNV;
 
   typedef struct {
-    float scale;
-    float bias;
+    GLuint  header;
+    float   scale;
+    float   bias;
   } PolygonOffsetCommandNV;
 
   typedef struct {
-    float alphaRef;
+    GLuint  header;
+    float   alphaRef;
   } AlphaRefCommandNV;
 
   typedef struct {
-    GLuint x;
-    GLuint y;
-    GLuint width;
-    GLuint height;
-  } ViewportCommandNV;
+    GLuint  header;
+    GLuint  x;
+    GLuint  y;
+    GLuint  width;
+    GLuint  height;
+  } ViewportCommandNV;  // only ViewportIndex 0
 
   typedef struct {
-    GLuint x;
-    GLuint y;
-    GLuint width;
-    GLuint height;
-  } ScissorCommandNV;
+    GLuint  header;
+    GLuint  x;
+    GLuint  y;
+    GLuint  width;
+    GLuint  height;
+  } ScissorCommandNV;   // only ViewportIndex 0
 
   typedef struct {
-    GLuint frontFace; // 0 for CW, 1 for CCW
+    GLuint  header;
+    GLuint  frontFace;  // 0 for CW, 1 for CCW
   } FrontFaceCommandNV;
 
 

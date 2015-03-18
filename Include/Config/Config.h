@@ -26,6 +26,7 @@
     #define K3DCOMPILER_MSVC 1
     #define _CRT_SECURE_NO_WARNINGS 1
   #endif
+	#define KRESTRICT __restrict
   #define KFORCE_INLINE __forceinline
 #endif
 #endif
@@ -37,6 +38,7 @@
 	#define K3DCOMPILER_GCC 1
   #endif
   #define KFORCE_INLINE inline
+  #define KRESTRICT __restrict__
 #endif
 /*** End Compiler Detection ***/
 
