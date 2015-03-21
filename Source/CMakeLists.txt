@@ -76,6 +76,8 @@ if(WIN32)
 	find_package(SDL2)
 	find_package(OpenGL)
 	find_package(Maya)
+	set(PROTOBUF_SRC_ROOT_FOLDER "${K3D_THIRD_PARTY}/protobuf-2.6-win")
+	find_package(Protobuf REQUIRED)
 endif()
 
 add_subdirectory(Core)

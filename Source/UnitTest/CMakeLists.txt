@@ -1,6 +1,3 @@
-include_directories(
-	${K3D_THIRD_PARTY}/protobuf-2.6-win/include
-)
 
 add_executable(UTAssetLoader
 	UTAssetLoader.cpp
@@ -53,12 +50,14 @@ target_link_libraries(
 	Core
 )
 
+file(GLOB ProtoFiles "${Kaleido3D_ROOT_DIR}/DedicatedServer/protocol/*.proto")
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${ProtoFiles})
+
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_executable(UTSocket
 	UTSocket.cpp
-	request.pb.cc
-	request.pb.h
-	req_register.pb.h
-	req_register.pb.cc
+	${PROTO_SRCS} ${PROTO_HDRS}
 	../Core/Win32Res/win32icon.rc
 )
 
@@ -66,6 +65,7 @@ target_link_libraries(
 	UTSocket
 	Core
 	Network
+	${PROTOBUF_LIBRARIES}
 )
 
 set_target_properties(UTAssetLoader PROPERTIES FOLDER "Unit Test")

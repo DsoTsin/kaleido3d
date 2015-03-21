@@ -1,8 +1,8 @@
 #include "Kaleido3D.h"
 #include <Network/TCPClient.h>
 
-#include "request.pb.h"
-#include "req_register.pb.h"
+#include <request.pb.h>
+#include <req_register.pb.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 using namespace k3d;
