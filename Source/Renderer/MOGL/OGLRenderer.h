@@ -14,6 +14,13 @@ namespace k3d {
 		int			colorBits;
 		int			depthBits;
 		int			stencilBits;
+
+    GLDeviceFormat() {
+      colorBits = 8;
+      depthBits = 8;
+      stencilBits = 8;
+      pixelType = RGBA;
+    }
 	};
 
 	class OGLDevice {

@@ -6,7 +6,10 @@ namespace k3d {
     uint32 Target;
     uint32 Size;
     void * Data;
-    uint32 Usage;
+    union {
+      uint32 Usage;
+      uint32 Flags;
+    };
   };
   class OGLBuffer
   {
@@ -15,6 +18,7 @@ namespace k3d {
     virtual ~OGLBuffer();
 
     void Allocate(OGLBufferDescriptor const & decriptor);
+    void Release();
     void MakeResident();
   private:
     uint32 m_BufId;

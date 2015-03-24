@@ -4,16 +4,10 @@ add_executable(UTAssetLoader
 	../Core/Win32Res/win32icon.rc
 )
 
-
-if(WIN64) 
-	link_directories(${K3D_THIRD_PARTY}/protobuf-2.6.0-win/x64/Debug)
-endif()
-
 target_link_libraries(
 	UTAssetLoader
 	Core Engine
 )
-
 
 add_executable(UTDXRenderer
 	UTDXRenderer.cpp
@@ -50,6 +44,7 @@ target_link_libraries(
 	Core
 )
 
+############################ Unit Test For Socket Module(Network) ###############################
 file(GLOB ProtoFiles "${Kaleido3D_ROOT_DIR}/DedicatedServer/protocol/*.proto")
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${ProtoFiles})
 
@@ -67,9 +62,27 @@ target_link_libraries(
 	Network
 	${PROTOBUF_LIBRARIES}
 )
+## ===============================================================================================
+
+################################## Unit Test For AZDO OpenGL #####################################
+add_executable(
+	UTAZDOOpenGL
+	UTAZDOOpenGL.cpp
+	../Core/Win32Res/win32icon.rc
+)
+target_link_libraries(
+	UTAZDOOpenGL
+	Core
+	Engine
+	Network
+	Renderer_MOGL
+)
+## ===============================================================================================
+
 
 set_target_properties(UTAssetLoader PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTReflectFactory PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTTaskManager PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTDXRenderer PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTSocket PROPERTIES FOLDER "Unit Test")
+set_target_properties(UTAZDOOpenGL PROPERTIES FOLDER "Unit Test")

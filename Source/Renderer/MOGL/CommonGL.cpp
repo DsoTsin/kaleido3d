@@ -46,3 +46,7 @@ void GLInitializer::InitAndCheck() {
 bool GLInitializer::NVCommandListSupported() {
 	return nv_command_list_feature;
 }
+
+bool GLInitializer::BindlessSupported() {
+  return true;
+}

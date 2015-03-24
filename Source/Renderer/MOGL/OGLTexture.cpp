@@ -54,4 +54,16 @@ namespace k3d {
       }
     }
   }
+
+  void OGLTexture::Release() {
+    if ( ::glIsTexture( m_TexId ) ) {
+      if ( ::glIsTextureHandleResidentARB( m_TexAddr ) )
+      {
+        glMakeTextureHandleNonResidentARB( m_TexAddr );
+        m_TexAddr = 0;
+      }
+      glDeleteTextures( 1, &m_TexId );
+      m_TexId = GL_INVALID_INDEX;
+    }
+  }
 }

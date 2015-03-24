@@ -20,6 +20,7 @@ namespace k3d {
     virtual ~OGLTexture();
 
     void Allocate( OGLTextureDescriptor const & descriptor );
+    void Release();
     void MakeResident();
 
   private:

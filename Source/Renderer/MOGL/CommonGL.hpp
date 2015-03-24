@@ -5,4 +5,5 @@ public:
 	// @see GLDevice
 	static void InitAndCheck();
 	static bool NVCommandListSupported();
+  static bool BindlessSupported();
 };
