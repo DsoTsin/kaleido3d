@@ -1,13 +1,12 @@
 #include "Kaleido3D.h"
-#include "DXShaderManager.h"
+#include "ShaderManager.h"
 
 #include <Core/Utils/StringUtils.h>
 #include <Core/AssetManager.h>
-
-
+/*
 namespace k3d {
 
-	SpShader DXShaderManager::LoadShader(const char * shaderPath, const char * entryName, const char * shaderModel)
+	SpShader ShaderManager::LoadShader(const char * shaderPath, const char * entryName, const char * shaderModel)
 	{
 		AssetManager::SpIODevice shaderFile = nullptr;
 		SpShader	shader;
@@ -31,3 +30,4 @@ namespace k3d {
 		return shader;
 	}
 }
+*/

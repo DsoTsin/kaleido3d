@@ -6,9 +6,9 @@ struct ITaskManager;
 /*!
 	\class ITask
 */
-struct ITask
+struct IRunnable
 {
-	virtual			~ITask() {}
+	virtual			~IRunnable () {}
 	virtual void    OnRun() = 0;
 
 	virtual void	OnFinish() {}

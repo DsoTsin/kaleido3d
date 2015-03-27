@@ -43,7 +43,7 @@ set(CONCURR_SRCS
 
 if(WIN32 OR LINUX)
 set(CONCURR_SRCS 
-${CONCURR_SRCS}
+#${CONCURR_SRCS}
 ConditionVariable.h
 ConditionVariable.cpp
 )

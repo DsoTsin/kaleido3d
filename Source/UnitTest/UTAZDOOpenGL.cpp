@@ -66,11 +66,12 @@ public:
       OGLBuffer *ibo = new OGLBuffer;
       ibo->Allocate( descriptor );
       ibo->MakeResident();
-
+      /*
       NVTokenIbo ibo;
       ibo.setType( GL_UNSIGNED_INT );
       ibo.setBuffer( obj.ibo, obj.iboADDR );
       nvtokenEnqueue( stream, ibo );
+      */
     }
   }
 
@@ -80,7 +81,7 @@ private:
 };
 
 
-int WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR, int )
+int main( int, const char** )
 {
   Window window( "UTAZDOOpenGL", 1700, 680 );
   window.Show();

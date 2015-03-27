@@ -30,7 +30,7 @@ Introduction
 > 
 >* `Next Generation Graphics Library` 
 >* Modern C++ Code (**`C++ 11`**)
->* Modern Graphics Renderer (`Metal`, `Vulkan`, `DirectX 11+` and **`AZDO OpenGL`**)
+>* Modern Graphics Renderer (`Metal`, `Vulkan`, `DirectX 12` and **`AZDO OpenGL`**)
 >* **`Maya`** Digital Content Creation Tools
 
 ----------
@@ -61,7 +61,7 @@ Directories:
 > **Source:**
 > 
 >* ***Core***   *A Cross Platform Implementation Of `IO`, `SIMD` Math, Image And Thread*  
->* ***Renderer***   Implement Include OpenGL (`With NV Extensions: glCommandList..`), DirectX 3D 11 And `iOS` Metal
+>* ***Renderer***   Implement Include OpenGL (`With NV Extensions: glCommandList..`), D3D12 And `iOS` Metal
 >*  **Engine**
 >* **Launcher**
 >* **Physics**
@@ -97,5 +97,5 @@ Contact
 [1]: http://www.cmake.org
 [2]: https://developer.nvidia.com/gameworksdownload
 [3]: https://github.com/miloyip/rapidjson
-[4]: http://pan.baidu.com/s/1o8yZk
+[4]: http://pan.baidu.com/s/1hqCdXFu
 [5]: https://github.com/google/protobuf

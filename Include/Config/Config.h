@@ -63,6 +63,7 @@
 
 #if defined(K3DPLATFORM_OS_WIN)
 #define K3D_APPLICATION_NAME L"kaleido3d app"
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 #endif
 
 #endif

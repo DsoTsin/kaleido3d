@@ -4,7 +4,7 @@
 
 #if K3DPLATFORM_OS_WIN
     #include <Renderer/MOGL/OGLRenderer.h>
-    #include <Renderer/DirectX/DirectXRenderer.h>
+    #include <Renderer/DirectX/Renderer.h>
 #endif
 
 using namespace std;
