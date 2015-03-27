@@ -2,18 +2,14 @@
 #include <Interface/IRenderer.h>
 #include <Interface/IRenderMesh.h>
 
-#include <Core/LogUtil.h>
-#include <Core/Window.h>
-#include <Core/Message.h>
-#include <Core/AsynMeshTask.h>
-#include <Core/ConditionVariable.h>
-#include <Core/AssetManager.h>
+#include <Core>
 
 #include <Engine/Engine.h>
 #include <Engine/RendererFactory.h>
 
 #include <Renderer/DirectX/DXRenderMesh.h>
-#include <Renderer/DirectX/DirectXRenderer.h>
+#include <Renderer/DirectX/Device.h>
+#include <Renderer/DirectX/Renderer.h>
 
 using namespace k3d;
 
@@ -49,18 +45,9 @@ int WINAPI wWinMain(HINSTANCE,HINSTANCE,LPWSTR,int)
 	Window window("UTDXRenderer", 1700, 700);
 	window.Show();
 
-	DXDevice::Get().Init(&window, DXFeature::Level_11_2);
+	d3d12::Device::Get().Init(&window);
 	
 	DirectXRenderer & renderer = DirectXRenderer::Get();
-
-	std::shared_ptr<DXVertexShader>				gVertexShader;
-	std::shared_ptr<DXPixelShader>				gPixelShader;
-
-	gVertexShader = std::shared_ptr<DXVertexShader>(new DXVertexShader("Test/ForwardLight.hlsl", "RenderSceneVS", "vs_5_0"));
-	gVertexShader->Init();
-
-	gPixelShader = std::shared_ptr<DXPixelShader>(new DXPixelShader("Test/ForwardLight.hlsl", "AmbientLightPS", "ps_5_0"));
-	gPixelShader->Init();
 
 	Message msg;
 	while (window.IsOpen())
@@ -82,24 +69,6 @@ int WINAPI wWinMain(HINSTANCE,HINSTANCE,LPWSTR,int)
 		renderer.PrepareFrame();
 			renderer.DrawOneFrame();
 
-			if (gTestRenderMeshes.empty()) 
-			{
-				ConditionVariable::WaitFor(gTestMeshReady);
-				Debug::Out("wWinMain","TestMesh(%d) is Ready\n", gTestMeshes.size());
-				for (auto mesh : gTestMeshes)
-				{
-					DXRenderMesh * rMesh = new DXRenderMesh;
-					rMesh->Init(DXDevice::Get(), mesh, *gVertexShader);
-					gTestRenderMeshes.push_back(rMesh);
-				}
-			} 
-			else
-			{
-				for (auto mesh : gTestRenderMeshes) 
-				{
-					renderer.DrawMesh(mesh, nullptr, Matrix4f());
-				}
-			}
 			//
 			//
 			//

@@ -30,7 +30,7 @@ Introduction
 > 
 >* `Next Generation Graphics Library` 
 >* Modern C++ Code (**`C++ 11`**)
->* Modern Graphics Renderer (`Metal`, `Vulkan`, `DirectX 11+` and **`AZDO OpenGL`**)
+>* Modern Graphics Renderer (`Metal`, `Vulkan`, `DirectX 12` and **`AZDO OpenGL`**)
 >* **`Maya`** Digital Content Creation Tools
 
 ----------
@@ -61,7 +61,7 @@ Directories:
 > **Source:**
 > 
 >* ***Core***   *A Cross Platform Implementation Of `IO`, `SIMD` Math, Image And Thread*  
->* ***Renderer***   Implement Include OpenGL (`With NV Extensions: glCommandList..`), DirectX 3D 11 And `iOS` Metal
+>* ***Renderer***   Implement Include OpenGL (`With NV Extensions: glCommandList..`), D3D12 And `iOS` Metal
 >*  **Engine**
 >* **Launcher**
 >* **Physics**

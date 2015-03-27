@@ -1,12 +1,14 @@
 #include "Kaleido3D.h"
-#include "DXUtil.h"
+#include "Helper.h"
 
 #include <d3d9.h>
 #include <d3d11.h>
 
 namespace k3d
 {
-	void DxUtil::ConvertVertexFormatToInputElementDesc(VtxFormat const & format, std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc)
+namespace d3d11
+{
+	void Helper::ConvertVertexFormatToInputElementDesc(VtxFormat const & format, std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc)
 	{
 		switch (format) {
 		case VtxFormat::POS3_F32_NOR3_F32_UV2_F32:
@@ -608,7 +610,7 @@ namespace k3d
 		return D3DFMT_UNKNOWN;
 	}
 
-	HRESULT DxUtil::CreateTextureFromDDS(ID3D11Device* pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData, UINT BitSize, __out ID3D11ShaderResourceView** ppSRV, bool bSRGB)
+	HRESULT Helper::CreateTextureFromDDS(ID3D11Device* pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData, UINT BitSize, __out ID3D11ShaderResourceView** ppSRV, bool bSRGB)
 	{
 		HRESULT hr = S_OK;
 
@@ -750,7 +752,7 @@ namespace k3d
 		return hr;
 	}
 
-	HRESULT DxUtil::CreateDDSTextureFromFile(ID3D11Device * pDev, const WCHAR * szFileName, ID3D11ShaderResourceView ** ppSRV, bool sRGB)
+	HRESULT Helper::CreateDDSTextureFromFile(ID3D11Device * pDev, const WCHAR * szFileName, ID3D11ShaderResourceView ** ppSRV, bool sRGB)
 	{
 		if (!pDev || !szFileName || !ppSRV)
 			return E_INVALIDARG;
@@ -787,4 +789,5 @@ namespace k3d
 
 		return hr;
 	}
+}
 }

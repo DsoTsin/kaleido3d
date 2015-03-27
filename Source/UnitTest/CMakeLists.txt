@@ -17,7 +17,8 @@ add_executable(UTDXRenderer
 target_link_libraries(
 	UTDXRenderer
 	Core Engine Renderer_DX
-	d3d11
+	d3d12
+	dxgi
 	d3dcompiler
 	dxguid
 	winmm

@@ -1,37 +1,42 @@
-file(GLOB_RECURSE DX_RENDERER_SRC_LIST "*.cpp" "*.h")
+file(GLOB DX_RENDERER_SRC_LIST "*.cpp" "*.h")
 include_directories(../.. ../../../Include)
 
 # add_definitions(-DWIN10_PREVIEWBUILD)
 
 source_group(
 	Renderer FILES
-	DirectXRenderer.h
-	DirectXRenderer.cpp
-	DXDevice.cpp
-	DXPipeLine.h
-	DXPipeLine.cpp
+	Renderer.h
+	Renderer.cpp
+	PipeLine.h
+	PipeLine.cpp
+)
+
+source_group(
+	Device FILES
+	Device.h
+	Device.cpp
+	DeviceManager.h
+	DeviceManager.cpp
 )
 
 source_group(
 	Shader FILES
-	DXShaderDefs.h
-	DXShader.h
-	DXShader.cpp
-	DXShaderManager.h
-	DXShaderManager.cpp
+	ShaderManager.h ShaderManager.cpp
+	ShaderCompileWorker.h ShaderCompileWorker.cpp
 )
 
 source_group(
 	Mesh FILES
-	DXRenderMesh.h
-	DXRenderMesh.cpp
+	RenderMesh.h
+	RenderMesh.cpp
 )
 
 source_group(
 	Utils FILES
 	DDSUtil/DDS.h
-	DXUtil.h
-	DXUtil.cpp
+	Helper11.cpp
+	Helper.h
+	Helper.cpp
 )
 
 source_group(
@@ -46,5 +51,5 @@ source_group(
 )
 
 add_library(Renderer_DX STATIC ${DX_RENDERER_SRC_LIST})
-add_precompiled_header(Renderer_DX "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Renderer/DirectX/DXRenderMesh.cpp")
+add_precompiled_header(Renderer_DX "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Renderer/DirectX/RenderMesh.cpp")
 set_target_properties(Renderer_DX PROPERTIES FOLDER "Runtime")
