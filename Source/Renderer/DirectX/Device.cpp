@@ -1,11 +1,13 @@
 #include "Kaleido3D.h"
 #include "Renderer.h"
+#include "Device.h"
+#include "Helper.h"
+
 #include <assert.h>
 #include <Config/OSHeaders.h>
 #include <Core/Window.h>
 #include <Core/LogUtil.h>
 
-#include "Device.h"
 
 namespace k3d
 {
@@ -58,6 +60,7 @@ namespace k3d
 			else
 			{
 				Debug::Out ("Device", "Init: D3D12CreateDevice successful!!");
+        Helper::CheckHWFeatures(mDevice);
 			}
 			return hr;
 		}

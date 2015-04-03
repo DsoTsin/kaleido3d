@@ -1,5 +1,6 @@
 #pragma once 
 #include "DXCommon.h"
+#include "Interface/ITask.h"
 
 namespace k3d
 {

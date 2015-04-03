@@ -7,7 +7,7 @@
 #include <Engine/Engine.h>
 #include <Engine/RendererFactory.h>
 
-#include <Renderer/DirectX/DXRenderMesh.h>
+#include <Renderer/DirectX/RenderMesh.h>
 #include <Renderer/DirectX/Device.h>
 #include <Renderer/DirectX/Renderer.h>
 

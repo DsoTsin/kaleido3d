@@ -12,6 +12,7 @@ namespace k3d
     public:
       static void SetResourceBarrier (ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource, UINT StateBefore, UINT StateAfter);
       static void	ConvertVertexFormatToInputElementDesc (VtxFormat const & format, std::vector<D3D12_INPUT_ELEMENT_DESC> & inputDesc);
+      static void CheckHWFeatures(PtrDevice device);
     };
   }
 

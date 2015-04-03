@@ -1,5 +1,6 @@
 #include "Kaleido3D.h"
 #include "Helper.h"
+#include <Core/LogUtil.h>
 
 namespace k3d 
 {
@@ -31,6 +32,19 @@ namespace k3d
         break;
       default:
         break;
+      }
+    }
+    void Helper::CheckHWFeatures (PtrDevice device)
+    {
+      assert(device != nullptr);
+      D3D12_FEATURE_DATA_D3D12_OPTIONS options;
+      if (FAILED (device->CheckFeatureSupport (D3D12_FEATURE_D3D12_OPTIONS, reinterpret_cast<void*>(&options), sizeof (options))))
+      {
+      }
+      else
+      {
+        Debug::Out ("d3d12", "Resource Binding Tier = %d, Conservative Rasterization Tier = %d, Tiled Resource Tier = %d, Cross Sharing Tier = %d.",
+                    options.ResourceBindingTier, options.ConservativeRasterizationTier, options.TiledResourcesTier, options.CrossNodeSharingTier);
       }
     }
   }
