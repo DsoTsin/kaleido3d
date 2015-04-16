@@ -7,17 +7,15 @@
 #elif K3DPLATFORM_OS_IOS
 #include "iOS/ThreadImpl.h"
 #endif
-
 #include <functional>
-
 
 namespace k3d {
 
 	class NameThreadTask : public IBaseThread {
 	public:
-		using TaskQueue = TaskManager::TaskQueue;
+		using ThreadQueue = TaskManager::ThreadQueue;
 
-		NameThreadTask(TaskQueue * queue)
+		NameThreadTask(ThreadQueue * queue)
 			: m_ThreadQueue(nullptr)
 		{
 			m_ThreadQueue = queue;
@@ -42,7 +40,7 @@ namespace k3d {
 		}
 
 	private:
-		TaskQueue	* m_ThreadQueue;
+		ThreadQueue	* m_ThreadQueue;
 	};
 
 	static void STD_CALL _createTask(IBaseThread * task) {
@@ -92,7 +90,7 @@ namespace k3d {
 		ThreadImpl::terminateThread(*task);
 	}
 
-	void TaskManager::Post(IBaseThread * task, NamedThread thread)
+	void TaskManager::Post(IRunnable * task, NamedThread thread)
 	{
 		m_NamedQueue[(uint32)thread].push(task);	
 	}

@@ -1,12 +1,13 @@
 #pragma once 
 #include "DXCommon.h"
-#include "Interface/ITask.h"
+#include "Interface/IRunnable.h"
+#include "Shader.h"
 
 namespace k3d
 {
   namespace d3d12
   {
-    class ShaderCompileWorker : public ITask
+    class ShaderCompileWorker : public IRunnable
     {
     public:
       ShaderCompileWorker(const char * File, const char * Level, const char * entryPoint)

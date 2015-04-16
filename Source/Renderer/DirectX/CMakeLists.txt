@@ -5,10 +5,9 @@ include_directories(../.. ../../../Include)
 
 source_group(
 	Renderer FILES
-	Renderer.h
-	Renderer.cpp
-	PipeLine.h
-	PipeLine.cpp
+	Renderer.h Renderer.cpp
+	PipeLine.h PipeLine.cpp
+	PipelineState.h PipelineState.cpp
 )
 
 source_group(
@@ -21,6 +20,7 @@ source_group(
 
 source_group(
 	Shader FILES
+	Shader.h
 	ShaderManager.h ShaderManager.cpp
 	ShaderCompileWorker.h ShaderCompileWorker.cpp
 )

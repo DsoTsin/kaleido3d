@@ -3,27 +3,47 @@
 #include "Looper.h"
 #include <Config/OSHeaders.h>
 
-namespace k3d {
+namespace k3d
+{
 
-	Looper::Looper() {
-	}
+  Looper::Looper ()
+    : mStopped (true)
+  {
+  }
 
-	Looper::~Looper() {
-	}
+  Looper::Looper (NamedThread Thr)
+    : mStopped (true)
+  {
+    if (sNamedThreads[(uint32)Thr]==nullptr)
+    {
+      mStopped = false;
+      sNamedThreads[(uint32)Thr] = std::shared_ptr<std::thread> (
+        new std::thread ([this]()
+      {
+        while (!mStopped)
+        {
+          while (!mTaskQueue.empty ())
+          {
+            spHandler handle = mTaskQueue.front ();
+            handle->HandleMessage ();
+            mTaskQueue.pop ();
+          }
+          ::Sleep (0);
+        }
+      }
+      ));
+    }
+  }
 
-	void Looper::StartLooper() {
-#if K3DPLATFORM_OS_WIN
-		// Main message loop
-		MSG msg = { 0 };
-		while (WM_QUIT != msg.message) {
-			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			else {
-				;
-			}
-		}
-#endif
-	}
+  Looper::~Looper ()
+  {
+  }
+
+  void Looper::StartLooper ()
+  {
+  }
+
+  void Looper::Loop ()
+  {
+  }
 }

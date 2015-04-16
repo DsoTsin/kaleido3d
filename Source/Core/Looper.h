@@ -3,6 +3,8 @@
 #define __Looper_h__
 #include <queue>
 #include <memory>
+#include <thread>
+#include "TaskManager.h"
 
 namespace k3d {
 
@@ -12,21 +14,32 @@ namespace k3d {
   {
   public:
     Handler ();
-     virtual bool HandleMessage () = 0;
+    virtual bool HandleMessage () = 0;
   };
 
 	class Looper {
 	public:
 		Looper();
+    explicit Looper(NamedThread Thr);
 
 		virtual ~Looper();
 
 		void StartLooper();
 
-    typedef std::shared_ptr<Handler> PtrHandler;
+    static void Loop();
+
+
+    typedef std::shared_ptr<Handler> spHandler;
+    typedef std::shared_ptr<std::thread> spThread;
   
+  protected:
+    static thread_local Looper sMyLooper;
+    static thread_local std::queue<spHandler> mTaskQueue;
+
+    static spThread sNamedThreads[4];
+
   private:
-    std::queue<PtrHandler> mTaskQueue;
+    bool mStopped;
 	};
 }
 

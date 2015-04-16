@@ -97,5 +97,5 @@ Contact
 [1]: http://www.cmake.org
 [2]: https://developer.nvidia.com/gameworksdownload
 [3]: https://github.com/miloyip/rapidjson
-[4]: http://pan.baidu.com/s/1o8yZk
+[4]: http://pan.baidu.com/s/1hqCdXFu
 [5]: https://github.com/google/protobuf

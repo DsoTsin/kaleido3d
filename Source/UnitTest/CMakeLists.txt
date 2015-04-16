@@ -45,6 +45,17 @@ target_link_libraries(
 	Core
 )
 
+add_executable(UTLooperHandlerMessage
+	UTLooperHandlerMessage.cpp
+	../Core/Win32Res/win32icon.rc
+)
+
+target_link_libraries(
+	UTLooperHandlerMessage
+	Core
+)
+
+
 ############################ Unit Test For Socket Module(Network) ###############################
 file(GLOB ProtoFiles "${Kaleido3D_ROOT_DIR}/DedicatedServer/protocol/*.proto")
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${ProtoFiles})
@@ -87,3 +98,4 @@ set_target_properties(UTTaskManager PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTDXRenderer PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTSocket PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTAZDOOpenGL PROPERTIES FOLDER "Unit Test")
+set_target_properties(UTLooperHandlerMessage PROPERTIES FOLDER "Unit Test")

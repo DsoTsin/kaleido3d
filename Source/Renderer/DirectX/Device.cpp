@@ -91,7 +91,7 @@ namespace k3d
 			swapChainDesc.SampleDesc.Count = 1;
 			swapChainDesc.Windowed = TRUE;
 			swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
 			IDXGIFactory2 *dxgiFactory = nullptr;
 			HRESULT hr = ::CreateDXGIFactory2 (0, IID_PPV_ARGS (&dxgiFactory));
 			if (FAILED (hr))
