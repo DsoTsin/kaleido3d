@@ -25,27 +25,32 @@
     errproc; \
   }
 
+#define ThrowIfFailed(expr) \
+	do { \
+		if (FAILED(expr)) throw; \
+	} while (0);
 
 namespace k3d
 {
-  using Vector3f = DirectX::XMFLOAT3;
-  using Vector4f = DirectX::XMVECTOR;
-  using Matrix4f = DirectX::XMMATRIX;
+	using Vector3f = DirectX::XMFLOAT3;
+	using Vector4f = DirectX::XMVECTOR;
+	using Matrix4f = DirectX::XMMATRIX;
 
-  namespace d3d12
-  {
-    using PtrDevice = Ref < ID3D12Device >;
-    using PtrDevice11 = Ref < ID3D11Device >;
-    using PtrDXGIDevice = Ref < IDXGIDevice3 >;
-    using PtrSwapChain = Ref < IDXGISwapChain >;
-    using PtrGfxCmdList = Ref < ID3D12GraphicsCommandList >;
-    using PtrCmdList = Ref < ID3D12CommandList >;
-    using PtrCmdQueue = Ref < ID3D12CommandQueue >;
-    using PtrCmdAllocator = Ref < ID3D12CommandAllocator >;
-    using PtrPipeLineState = Ref < ID3D12PipelineState >;
-    using PtrResource = Ref < ID3D12Resource >;
-    using PtrDescHeap = Ref < ID3D12DescriptorHeap >;
-    using PtrBlob = Ref < ID3DBlob >;
-    using PtrFence = Ref< ID3D12Fence >;
-  }
+	namespace d3d12
+	{
+		using PtrDevice = Ref < ID3D12Device >;
+		using PtrDevice11 = Ref < ID3D11Device >;
+		using PtrDXGIDevice = Ref < IDXGIDevice3 >;
+		using PtrSwapChain = Ref < IDXGISwapChain3 >;
+		using PtrGfxCmdList = Ref < ID3D12GraphicsCommandList >;
+		using PtrCmdList = Ref < ID3D12CommandList >;
+		using PtrCmdQueue = Ref < ID3D12CommandQueue >;
+		using PtrCmdAllocator = Ref < ID3D12CommandAllocator >;
+		using PtrPipeLineState = Ref < ID3D12PipelineState >;
+		using PtrResource = Ref < ID3D12Resource >;
+		using PtrDescHeap = Ref < ID3D12DescriptorHeap >;
+		using PtrBlob = Ref < ID3DBlob >;
+		using PtrFence = Ref< ID3D12Fence >;
+		using PtrRootSignature = Ref<ID3D12RootSignature>;
+	}
 }

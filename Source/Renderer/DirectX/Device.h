@@ -1,6 +1,7 @@
 #pragma once
 #include <KTL/Singleton.hpp>
 #include "DXCommon.h"
+#include "Helper.h"
 
 namespace k3d
 {
@@ -21,35 +22,52 @@ namespace k3d
       void Init (Window *);
       void Destroy ();
 
-      PtrDevice GetDevice ();
+      PtrDevice GetD3DDevice ();
 
-      Device ();
+      PtrSwapChain GetSwapChain ()
+      {
+        return mSwapChain;
+      }
+
+      PtrCmdQueue GetDefaultCommandQueue ()
+      {
+        return mCommandQueue;
+      }
+
+      PtrCmdAllocator GetDefaultCommandAllocator ()
+      {
+        return mCommandAllocator;
+      }
+
+      PtrGfxCmdList GetDefaultGraphicsCommandList ()
+      {
+        return mGfxCmdList;
+      }
 
     protected:
+      Device ();
+      friend class Singleton<Device>;
+
       void WaitForCommandQueueFence ();
 
     private:
       /** First Step : create directx12 device **/
       HRESULT CreateDevice ();
       /** Second Step : create directx12 cmd allocator **/
-      HRESULT CreateCmdAllocator ();
+      HRESULT CreateCmdAllocatorAndQueue ();
       /** Third Step : create swap chain **/
       HRESULT CreateSwapChain (Window * window);
-      /****/
       HRESULT CreateDescHeap ();
-      /** In Direct3D 12, required pipeline state is attached to a command list via a pipeline state object (PSO) **/
       HRESULT CreatePSO ();
-      /**create graphics command list*/
+      /** Create graphics command list*/
       HRESULT CreateGfxCmdList ();
       /** Create Render Target **/
-      HRESULT CreateRTV ();
+      HRESULT CreateRenderTargets (Window * window);
 
       HRESULT CreateFence ();
 
-      friend class DirectXRenderer;
-
     private:
-
+	  static const uint32 sBufferCount = 4;
       PtrDevice  mDevice;
       PtrSwapChain mSwapChain;
       PtrDXGIDevice  mDXGIDevice;
@@ -58,11 +76,14 @@ namespace k3d
       PtrDescHeap  mDescriptorHeap;
       PtrPipeLineState mPSO;
       PtrGfxCmdList  mGfxCmdList;
-      PtrResource  mRenderTarget[2];
+      PtrResource  mRenderTarget[sBufferCount];
       PtrFence mFence;
       HANDLE  mHandle;
       D3D12_VIEWPORT  mViewPort;
-      D3D12_CPU_DESCRIPTOR_HANDLE mRenderTargetView[2];
+	  DescriptorHeapWrapper mRTVDescriptorHeap;
+
+      Window * mWindow;
+
     };
   }
 }

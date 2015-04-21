@@ -8,7 +8,6 @@ namespace k3d
 {
   namespace d3d12
   {
-
     class Shader
     {
     public:
@@ -47,9 +46,9 @@ namespace k3d
       }
 
       /**
-      * Return ShaderByteCode
-      */
-      PtrBlob GetBlob ()
+       * Return ShaderByteCode
+	   */
+      PtrBlob GetBlob () const
       {
         return mBlob;
       }

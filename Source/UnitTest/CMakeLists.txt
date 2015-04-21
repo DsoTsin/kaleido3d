@@ -1,14 +1,3 @@
-
-add_executable(UTAssetLoader
-	UTAssetLoader.cpp
-	../Core/Win32Res/win32icon.rc
-)
-
-target_link_libraries(
-	UTAssetLoader
-	Core Engine
-)
-
 add_executable(UTDXRenderer
 	UTDXRenderer.cpp
 	../Core/Win32Res/win32icon.rc
@@ -24,37 +13,6 @@ target_link_libraries(
 	winmm
 	comctl32
 )
-
-add_executable(UTTaskManager
-	UTTaskManager.cpp
-	../Core/Win32Res/win32icon.rc
-)
-
-target_link_libraries(
-	UTTaskManager
-	Core
-)
-
-add_executable(UTReflectFactory
-	UTReflectFactory.cpp
-	../Core/Win32Res/win32icon.rc
-)
-
-target_link_libraries(
-	UTReflectFactory
-	Core
-)
-
-add_executable(UTLooperHandlerMessage
-	UTLooperHandlerMessage.cpp
-	../Core/Win32Res/win32icon.rc
-)
-
-target_link_libraries(
-	UTLooperHandlerMessage
-	Core
-)
-
 
 ############################ Unit Test For Socket Module(Network) ###############################
 file(GLOB ProtoFiles "${Kaleido3D_ROOT_DIR}/DedicatedServer/protocol/*.proto")
@@ -92,10 +50,6 @@ target_link_libraries(
 ## ===============================================================================================
 
 
-set_target_properties(UTAssetLoader PROPERTIES FOLDER "Unit Test")
-set_target_properties(UTReflectFactory PROPERTIES FOLDER "Unit Test")
-set_target_properties(UTTaskManager PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTDXRenderer PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTSocket PROPERTIES FOLDER "Unit Test")
 set_target_properties(UTAZDOOpenGL PROPERTIES FOLDER "Unit Test")
-set_target_properties(UTLooperHandlerMessage PROPERTIES FOLDER "Unit Test")

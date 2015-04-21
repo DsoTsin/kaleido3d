@@ -25,7 +25,7 @@ namespace k3d
       std::string mShaderFilePath;
       std::string mShaderEntryPoint;
       std::string mShaderModel;
-      d3d12::PtrBlob mShaderByteCode;
+      PtrBlob mShaderByteCode;
     };
   }
 }

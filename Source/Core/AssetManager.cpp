@@ -4,7 +4,6 @@
 #include <Core/LogUtil.h>
 #include <Core/Image.h>
 #include <Core/Variant.h>
-#include <Core/TaskManager.h>
 
 #include <fstream>
 #include <algorithm>
@@ -182,7 +181,7 @@ namespace k3d {
 	void AssetManager::CommitAsynMeshTask(AsynMeshTask * task)
 	{
 		assert(task != nullptr);
-		TaskManager::Get().Post(task);
+		//TaskManager::Get().Post(task);
 	}
 
 	void AssetManager::AppendMesh(SpMesh meshPtr)

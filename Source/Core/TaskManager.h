@@ -36,7 +36,7 @@ namespace k3d
   };
 
   class NameThreadTask;
-
+/*
   class TaskManager : public Singleton<TaskManager>
   {
   public:
@@ -78,27 +78,7 @@ namespace k3d
     TaskQueue m_NamedQueue[MaxNamedThreadNum];
     NameThreadTask *  m_NamedTask[MaxNamedThreadNum];
   };
-
-  //const int TaskManager::MaxNamedThreadNum = 3;
-  /*
-  class TaskManager : public ITaskManager
-  {
-  private:
-    int     m_Capacity;
-  public:
-    TaskManager();
-    TaskManager(int capacity);
-    ~TaskManager();
-
-    void    AddTask(ITask *task);
-    void    LaunchTask(ITask * task);
-    size_t  GetRunningTasks();
-
-  private:
-    K3DDISCOPY(TaskManager);
-    std::thread_pool  *m_pThreadPool;
-  };
-  */
+*/
 }
 
 #endif

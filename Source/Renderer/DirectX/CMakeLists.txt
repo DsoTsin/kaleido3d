@@ -6,8 +6,9 @@ include_directories(../.. ../../../Include)
 source_group(
 	Renderer FILES
 	Renderer.h Renderer.cpp
-	PipeLine.h PipeLine.cpp
+	RootSignature.h RootSignature.cpp
 	PipelineState.h PipelineState.cpp
+	RenderManager.h RenderManager.cpp
 )
 
 source_group(
@@ -50,6 +51,34 @@ source_group(
 	DXRenderParameters.cpp
 )
 
-add_library(Renderer_DX STATIC ${DX_RENDERER_SRC_LIST})
+set(INFRAS_SRCS
+	Infrastructure/IndexBuffer.h
+	Infrastructure/IndexBuffer.cpp
+	Infrastructure/VertexBuffer.h
+	Infrastructure/VertexBuffer.cpp
+	Infrastructure/UAV.h
+	Infrastructure/UAV.cpp
+	Infrastructure/UniformBuffer.h
+	Infrastructure/UniformBuffer.cpp
+	Infrastructure/StructuredBuffer.h
+	Infrastructure/StructuredBuffer.cpp
+	Infrastructure/Texture.h
+	Infrastructure/Texture.cpp
+	Resource.h
+	Resource.cpp
+	Wrapper.h
+	Wrapper.cpp
+)
+
+source_group(
+	Infrastructure FILES
+	${INFRAS_SRCS}
+)
+
+add_library(Renderer_DX STATIC
+	${DX_RENDERER_SRC_LIST} 
+	${INFRAS_SRCS}
+)
+
 add_precompiled_header(Renderer_DX "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Renderer/DirectX/RenderMesh.cpp")
 set_target_properties(Renderer_DX PROPERTIES FOLDER "Runtime")

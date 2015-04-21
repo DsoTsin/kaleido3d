@@ -18,29 +18,12 @@ SpConditionVariable			gTestMeshReady;
 std::vector<IRenderMesh*>	gTestRenderMeshes;
 std::vector<SpMesh>			gTestMeshes;
 
-class TestMesh : public AsynMeshTask {
-public:
-
-	TestMesh(const char * meshPath) : AsynMeshTask(meshPath)
-	{
-
-	}
-
-	void OnFinish() override
-	{
-		gTestMeshReady = SpConditionVariable(new ConditionVariable());
-		gTestMeshReady->Signal();
-		gTestMeshes = m_MeshPtrList;
-	}
-};
-
-
 int WINAPI wWinMain(HINSTANCE,HINSTANCE,LPWSTR,int)
 {
 	Log::InitLogFile("UTDXRenderer.html");
 	AssetManager::Get().Init();
-	TaskManager::Get().Init();
-	TaskManager::Get().Post(new TestMesh("Test/TestDCC_1.kspack"));
+//	TaskManager::Get().Init();
+//	TaskManager::Get().Post(new TestMesh("Test/TestDCC_1.kspack"));
 
 	Window window("UTDXRenderer", 1700, 700);
 	window.Show();
