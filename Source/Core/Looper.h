@@ -22,7 +22,7 @@ namespace k3d {
 	class Looper {
 	public:
 		Looper();
-    explicit Looper(NamedThread Thr);
+
 
 		virtual ~Looper();
 

@@ -6,6 +6,7 @@
 #include <KTL/Singleton.hpp>
 #include <KTL/RefCount.hpp>
 #include <Interface/IRenderer.h>
+#include <Core/TaskWrapper.h>
 
 #include <memory>
 
@@ -18,6 +19,7 @@ namespace k3d {
 
     class DirectXRenderer : public IRenderer, 
 		public Singleton<DirectXRenderer>, 
+		public Concurrency::TaskWrapper,
 		public std::enable_shared_from_this< DirectXRenderer >
 	{
       public:
@@ -55,6 +57,10 @@ namespace k3d {
 
         d3d12::PtrGfxCmdList	m_CmdList;
         d3d12::PtrRootSignature	m_RootSignature;
+		d3d12::PtrPipeLineState m_PipeLineState;
+
+		d3d12::Shader			m_VS;
+		d3d12::Shader			m_PS;
 
     };
 }

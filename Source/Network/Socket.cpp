@@ -7,12 +7,12 @@ namespace k3d
 {
 	Socket::Socket(SockType const & type)
 #if K3DPLATFORM_OS_WIN
-		: m_SockFd(INVALID_SOCKET)
+    : m_SockFd(INVALID_SOCKET)
+    , m_IsBlocking(true)
 #else
-		: m_SockFd(-1)
+    : m_SockFd(-1)
 #endif
-		, m_SockType(type)
-		, m_IsBlocking(true)
+    , m_SockType(type)
 	{
 	}
 

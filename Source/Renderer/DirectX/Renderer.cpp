@@ -15,6 +15,7 @@ namespace k3d {
 
 	void DirectXRenderer::Initialize()
 	{
+		Init();
 		auto d3dDevice = Device::Get().GetD3DDevice();
 		ThrowIfFailed(d3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(m_BundleAllocator.GetInitReference())));
 
@@ -42,10 +43,43 @@ namespace k3d {
 			ThrowIfFailed(d3dDevice->CreateRootSignature(0, pSignature->GetBufferPointer(), pSignature->GetBufferSize(), IID_PPV_ARGS(m_RootSignature.GetInitReference())));
 		}
 
-		/* Create PipeLine Object */
 		{
+			Enqueue([this, &d3dDevice]() {
+				m_VS.Load("Test.vso");
+				m_PS.Load("Test.pso");
 
+				static const D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+				{
+					{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+					{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				};
+
+				D3D12_GRAPHICS_PIPELINE_STATE_DESC state = {};
+				state.InputLayout = { inputLayout, _countof(inputLayout) };
+				state.pRootSignature = m_RootSignature;
+				state.VS = { m_VS.GetBlob()->GetBufferPointer(), m_VS.GetBlob()->GetBufferSize() };
+				state.PS = { m_PS.GetBlob()->GetBufferPointer(), m_PS.GetBlob()->GetBufferSize() };
+				state.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+				state.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+				state.DepthStencilState.DepthEnable = FALSE;
+				state.DepthStencilState.StencilEnable = FALSE;
+				state.SampleMask = UINT_MAX;
+				state.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+				state.NumRenderTargets = 1;
+				state.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+				state.SampleDesc.Count = 1;
+
+				ThrowIfFailed(d3dDevice->CreateGraphicsPipelineState(&state, IID_PPV_ARGS(m_PipeLineState.GetInitReference())));
+
+			});
+
+			Enqueue([this, &d3dDevice]() {
+			
+			
+			});
 		}
+
+
 	}
 
 	void DirectXRenderer::PrepareFrame() {

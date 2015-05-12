@@ -30,5 +30,8 @@ namespace k3d
 		  PtrPipeLineState mPSO;
 	  };
 
+	  class GraphicsPipeLineState {
+
+	  };
   }
 }

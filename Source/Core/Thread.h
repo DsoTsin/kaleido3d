@@ -1,4 +1,5 @@
 #pragma once 
+#include "ThreadCommon.h"
 #include "ThreadLauncher.h"
 #include <thread>
 
@@ -6,22 +7,11 @@ namespace Concurrency {
 
 	class Thread {
 	public:
-		enum Priority {
-			Normal, 
-			High
-		};
-
-		enum Status {
-			Ready,
-			Running,
-			Finish
-		};
-
-		Thread(std::string const & name, Priority priority = Normal);
+		Thread(std::string const & name, ThreadPriority priority = ThreadPriority::Normal);
 		Thread();
 		virtual ~Thread();
 
-		void SetPriority(Priority prio);
+		void SetPriority(ThreadPriority prio);
 
 
 		template<class TFunction,
@@ -39,20 +29,22 @@ namespace Concurrency {
 		void Join();
 		void Terminate();
 
-		Status GetThreadStatus();
+		ThreadStatus GetThreadStatus();
 
 	private:
 		
-		std::string m_ThreadName;
-		Priority	m_ThreadPriority;
-		Status		m_ThreadStatus;
+		std::string         m_ThreadName;
+		ThreadPriority	    m_ThreadPriority;
+		ThreadStatus		m_ThreadStatus;
+		ThreadInternal *    m_ThreadInternal;
 
 	private:
 		template<class FunctionUniPtr> inline
 			void Launch(FunctionUniPtr&& _Tg)
 		{	
 			ThreadLauncher<FunctionUniPtr> launcher(std::forward<FunctionUniPtr>(_Tg));
-			launcher.Launch(this);
+			launcher.Launch(m_ThreadInternal, m_ThreadPriority);
 		}
+
 	};
 }

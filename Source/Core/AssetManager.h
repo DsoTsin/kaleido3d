@@ -63,10 +63,6 @@ namespace k3d {
 			BytesPackage & bp
 			);
 
-		void CommitAsynMeshTask(
-			AsynMeshTask * task
-			);
-		
 		void AppendMesh(SpMesh meshPtr);
 
 		//  template <class T>
@@ -95,8 +91,6 @@ namespace k3d {
 		typedef std::unordered_map<string, std::shared_ptr<Image> > MapImage;
 		typedef MapImage::iterator MapImageIter;
 
-		//  typedef std::unordered_map<k3dString, std::shared_ptr<k3dShader> > MapShader;
-		//  typedef MapShader::iterator MeshMapIter;
 
 		AssetManager();
 

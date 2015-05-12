@@ -589,6 +589,12 @@ namespace k3d
 					break;
 				}
 			}
+			default:
+				if (message >= WM_USER) 
+				{
+					//....
+					break;
+				}
 			}
 		}
 	}

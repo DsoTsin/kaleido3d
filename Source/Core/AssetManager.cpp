@@ -178,12 +178,6 @@ namespace k3d {
 		}
 	}
 
-	void AssetManager::CommitAsynMeshTask(AsynMeshTask * task)
-	{
-		assert(task != nullptr);
-		//TaskManager::Get().Post(task);
-	}
-
 	void AssetManager::AppendMesh(SpMesh meshPtr)
 	{
 		Debug::Out("AssetManager","Mesh (%s) Appended.", meshPtr->MeshName());

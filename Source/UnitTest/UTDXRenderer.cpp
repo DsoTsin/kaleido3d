@@ -40,8 +40,14 @@ int main(int argc, const char ** argv)
 
 	d3d12::Device::Get().Init(&window);
 	
+	/**
 	Concurrency::Thread thread;
-	thread.Bind([]() {});
+	thread.Bind([]() {
+		Debug::Out("sdasdsa", "fdsfds");
+	});
+	thread.Start();
+	thread.Join();
+	**/
 
 	DirectXRenderer & renderer = DirectXRenderer::Get();
 

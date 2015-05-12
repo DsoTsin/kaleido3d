@@ -16,9 +16,10 @@ namespace std {
 class thread_pool {
 public:
   thread_pool( size_t );
+  
   template<class F, class... Args>
-  auto enqueue( F&& f, Args&&... args )
-    ->future<typename result_of<F( Args... )>::type>;
+  auto enqueue( F&& f, Args&&... args )->future<typename result_of<F( Args... )>::type>;
+
   ~thread_pool();
 
   size_t  size();
@@ -33,6 +34,22 @@ private:
   condition_variable condition;
   bool stop;
 };
+
+class single_thread_pool : public thread_pool {
+public:
+	single_thread_pool() : thread_pool(1)
+	{
+	}
+
+	explicit single_thread_pool(string const &name) : thread_pool(1), thread_name(name) 
+	{
+	}
+
+	string & name() { return thread_name; }
+private:
+	string thread_name;
+};
+
 
 // the constructor just launches some amount of workers
 inline thread_pool::thread_pool( size_t threads )

@@ -64,6 +64,8 @@ namespace k3d
 
 		SocketHandle	m_SockFd;
 		SockType		m_SockType;
+#if K3DPLATFORM_OS_WIN
 		bool			m_IsBlocking;
+#endif
 	};
 }

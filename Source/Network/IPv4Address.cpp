@@ -29,7 +29,7 @@ namespace k3d
 		{*/
 			char ipbuff[256] = { 0 };
 			std::string ipStr = ip;
-			int pos = ipStr.find_last_of(":");
+			size_t pos = ipStr.find_last_of(":");
 			std::string host = ipStr.substr(0, pos);
 			std::string port = ipStr.substr(pos + 1, ipStr.length());
 			m_Addr.sin_port = htons((u_short)(::atoi(port.c_str())));

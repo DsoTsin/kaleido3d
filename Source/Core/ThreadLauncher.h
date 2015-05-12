@@ -3,16 +3,29 @@
 #include <type_traits>
 #include <memory>
 #include <utility>
+#include <thread>
+
+#include "ThreadCommon.h"
 
 namespace Concurrency {
 
-	class Thread;
+	class ThreadInternal {
+	public:
+		ThreadInternal() : handle(nullptr)
+		{}
 
-	struct ThreadLauncherBase {
+		bool IsValid() { return handle != nullptr; }
+#if defined(K3DPLATFORM_OS_WIN)
+		void* handle;
+#endif
+	};
+
+	class ThreadLauncherBase {
+	public:
 		ThreadLauncherBase();
-		~ThreadLauncherBase();
+		~ThreadLauncherBase()noexcept;
 
-		void Launch(Thread * thr);
+		void Launch( ThreadInternal * thr,  ThreadPriority priority );
 
 		void Release();
 
@@ -20,12 +33,7 @@ namespace Concurrency {
 
 	private:
 
-		static uint32 _STDCALL CallFunc(void *data)
-		{
-			static_cast<ThreadLauncherBase *>(data)->Go();
-			_Cnd_do_broadcast_at_thread_exit();
-			return (0);
-		}
+		static uint32 _STDCALL CallFunc(void *data);
 
 		_Cnd_t m_Cond;
 		_Mtx_t m_Mtx;
@@ -45,7 +53,12 @@ namespace Concurrency {
 
 		virtual void Go()
 		{
+			try {
 			Run(this);
+			}
+			catch (...) {
+
+			}
 		}
 
 	private:

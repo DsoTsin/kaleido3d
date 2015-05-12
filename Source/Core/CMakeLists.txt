@@ -39,6 +39,7 @@ source_group(
 set(CONCURR_SRCS
     TaskWrapper.h
     TaskWrapper.cpp
+	ThreadCommon.h
     Thread.h
     Thread.cpp
 	ThreadLauncher.h
@@ -62,7 +63,7 @@ ${CONCURR_SRCS}
 
 set(CORE_SRCS
 ${ASSET_SRCS}
-${CONCURR_SRCS} 
+${CONCURR_SRCS}
 ${UTIL_SRCS}
 )
 

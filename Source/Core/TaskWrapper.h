@@ -3,69 +3,42 @@
 #define __TaskManager_h__
 #include <Interface/IRunnable.h>
 #include <KTL/Singleton.hpp>
-#include <queue>
-//#include <KTL/threadpool.h>
+#include <KTL/ThreadPool.hpp>
 
 namespace Concurrency {
-    struct WThread {
-        typedef unsigned long(STD_CALL *ThreadFunctionPtr)(void *);
-        typedef void   *ThreadHandle;
-        ThreadHandle      m_Handle;
-        void  Join () {
-            Wait (this);
-        }
-        static void Wait (WThread *thread);
-    };
 
-    struct IBaseThread : public virtual IRunnable, public WThread {
-        virtual void OnRun () override {
-        }
-    };
+	using ThreadPool = std::thread_pool;
+	using ThreadSinglePool = std::single_thread_pool;
 
-    enum class NamedThread : uint32 {
-        GamePlayThread = 0,
-        AssetLoadingThread = 1,
-        MainRenderingThread = 2,
-        ShaderCompileThread = 3
-    };
-
-    class NameThreadTask;
-
-    class TaskWrapper : public Singleton<TaskWrapper> {
+    class TaskWrapper {
       public:
-        static const int MaxNamedThreadNum = 4;
-        TaskWrapper ();
-
-        void Post (IBaseThread *task, TaskPriority priority = TaskPriority::Normal);
-        void Post (IRunnable *task, NamedThread thread);
-        void Suspend (IBaseThread *task);
-        void Remove (IBaseThread *task);
-
-        void RemoveAllTask () {
-            while (!        m_ThreadQueue.empty ()) {
-                Remove (      m_ThreadQueue.front ());
-                m_ThreadQueue.pop ();
-            }
-        }
+        
+		static const int MaxNamedThreadNum = 4;
+        
+		TaskWrapper ();
+		~TaskWrapper();
 
         void Init () {
-            initNamedThreadQueue ();
+			if(m_TouchThreadPool==nullptr)	
+				m_TouchThreadPool = new ThreadPool(MaxNamedThreadNum);
         }
 
         void ShutDown () {
+			if (m_TouchThreadPool != nullptr) {
+				delete m_TouchThreadPool;
+				m_TouchThreadPool = nullptr;
+			}
         }
 
-        typedef std::queue<IRunnable *> TaskQueue;
-        typedef std::queue<IBaseThread *> ThreadQueue;
-
-      protected:
-
-        void initNamedThreadQueue ();
+		template<class F, class... Args>
+		auto Enqueue(F&& f, Args&&... args)->std::future<typename std::result_of<F(Args...)>::type> {
+			return m_TouchThreadPool->enqueue(f, args...);
+		}
 
       private:
-        ThreadQueue       m_ThreadQueue;
-        TaskQueue         m_NamedQueue[MaxNamedThreadNum];
-        NameThreadTask   *m_NamedTask[MaxNamedThreadNum];
+
+		 static ThreadPool *m_TouchThreadPool;
+
     };
 
 }
