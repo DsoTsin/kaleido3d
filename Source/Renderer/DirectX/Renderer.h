@@ -8,42 +8,55 @@
 #include <Interface/IRenderer.h>
 
 #include <memory>
+
 #include "DXCommon.h"
+#include "Infrastructure/Shader.h"
 
 namespace k3d {
 
-  class Shader;
-  class Window;
+    class Window;
 
-  class DirectXRenderer : public IRenderer, public Singleton<DirectXRenderer>, public std::enable_shared_from_this < DirectXRenderer >
-  {
-  public:
+    class DirectXRenderer : public IRenderer, 
+		public Singleton<DirectXRenderer>, 
+		public std::enable_shared_from_this< DirectXRenderer >
+	{
+      public:
 
-    ~DirectXRenderer() override;
+        ~DirectXRenderer() override;
 
-    void PrepareFrame() override;
+        void Initialize();
 
-    // traverse the scene tree and render the elements
-    void DrawOneFrame() override;
+        void PrepareFrame() override;
 
-    // do postprocessing and swap buffers
-    void EndOneFrame() override;
+        // traverse the scene tree and render the elements
+        void DrawOneFrame() override;
 
-    void DrawMesh( IRenderMesh * ) override;
-    void DrawMesh( IRenderMesh*, Shader* );
-    void DrawMesh( IRenderMesh*, Shader*, Matrix4f const & matrix );
+        // do postprocessing and swap buffers
+        void EndOneFrame() override;
 
-    void OnResize( int width, int height ) override;
+        void DrawMesh( IRenderMesh *) override;
+        void DrawMesh( IRenderMesh *, d3d12::Shader *);
+        void DrawMesh( IRenderMesh *, d3d12::Shader *, Matrix4f const &matrix );
 
-    DirectXRenderer() = default;
+        void OnResize( int width, int height ) override;
 
-  protected:
+        DirectXRenderer() = default;
 
-    void SwapBuffers();
+      protected:
 
-    bool isInitialized;
+        void SwapBuffers();
 
-  };
+        bool isInitialized;
+
+      private:
+
+        d3d12::PtrCmdAllocator	m_BundleAllocator;
+		d3d12::PtrGfxCmdList	m_BundleCmdList;
+
+        d3d12::PtrGfxCmdList	m_CmdList;
+        d3d12::PtrRootSignature	m_RootSignature;
+
+    };
 }
 
 

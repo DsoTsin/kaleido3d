@@ -38,7 +38,7 @@ namespace k3d {
 					&bufferDesc,
 					D3D12_RESOURCE_STATE_GENERIC_READ,
 					nullptr,
-					IID_PPV_ARGS(mResource.GetInitReference()))
+					IID_PPV_ARGS(m_Resource.GetInitReference()))
 				);
 
 			if (data)
@@ -49,9 +49,9 @@ namespace k3d {
 
 		void CommittedResource::UploadData(const void* data, int64_t size) {
 			UINT8* dataBegin;
-			ThrowIfFailed(mResource->Map(0, nullptr, reinterpret_cast<void**>(&dataBegin)));
+			ThrowIfFailed(m_Resource->Map(0, nullptr, reinterpret_cast<void**>(&dataBegin)));
 			memcpy(dataBegin, data, static_cast<size_t>(size));
-			mResource->Unmap(0, nullptr);
+			m_Resource->Unmap(0, nullptr);
 		}
 
 	}

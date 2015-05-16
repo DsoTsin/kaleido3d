@@ -11,3 +11,4 @@
 #include "../Source/Core/Mesh.h"
 #include "../Source/Core/Message.h"
 #include "../Source/Core/Looper.h"
+#include "../Source/Core/Thread.h"

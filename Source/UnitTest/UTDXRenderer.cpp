@@ -40,6 +40,9 @@ int main(int argc, const char ** argv)
 
 	d3d12::Device::Get().Init(&window);
 	
+	Concurrency::Thread thread;
+	thread.Bind([]() {});
+
 	DirectXRenderer & renderer = DirectXRenderer::Get();
 
 	Init();
@@ -62,6 +65,7 @@ int main(int argc, const char ** argv)
 		}
 
 		Render();
+		Device::Get().Present();
 
 		if (isQuit)
 			break;
@@ -95,5 +99,4 @@ void Render() {
 	if ((angle > XM_PI * 0.5f) && (angle < XM_PI * 1.5f)) angle = XM_PI * 1.5f;
 	if (angle > XM_2PI) angle = 0.0f;
 
-	Device::Get().Clear();
 }

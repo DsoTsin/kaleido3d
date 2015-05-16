@@ -3,11 +3,10 @@
 
 #include <strsafe.h>
 
-namespace k3d
-{
+namespace Concurrency {
 	namespace ThreadImpl
 	{
-
+		/**
 		void createThread(IBaseThread & task, TaskPriority priority, WThread::ThreadFunctionPtr functionPtr)
 		{
 			createThread(task, priority, false, functionPtr);
@@ -20,7 +19,7 @@ namespace k3d
 				NULL,
 				functionPtr,
 				&task,
-				deferred ? CREATE_SUSPENDED : 0, /* 0,CREATE_SUSPENDED,STACK_SIZE_PARAM_IS_A_RESERVATION */
+				deferred ? CREATE_SUSPENDED : 0, // 0,CREATE_SUSPENDED,STACK_SIZE_PARAM_IS_A_RESERVATION 
 				NULL);
 
 			if (task.m_Handle != nullptr) {
@@ -70,7 +69,7 @@ namespace k3d
 				::CloseHandle(task.m_Handle);
 			}
 		}
-
+		**/
 		void sleep(uint32 milliSeconds) {
 			::Sleep(milliSeconds);
 		}

@@ -29,12 +29,12 @@ namespace k3d
 	   */
       PtrBlob GetBlob () const
       {
-        return mBlob;
+        return m_Blob;
       }
 
     private:
-      PtrBlob mBlob;
-      PtrBlob mErrBlob;
+      PtrBlob m_Blob;
+      PtrBlob m_ErrBlob;
     };
   }
 }

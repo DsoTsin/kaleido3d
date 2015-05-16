@@ -1,5 +1,5 @@
 #include "Kaleido3D.h"
-#include "TaskManager.h"
+#include "TaskWrapper.h"
 
 #if K3DPLATFORM_OS_WIN
 #include "Windows/ConditionVariableImpl.h"
@@ -9,11 +9,11 @@
 #endif
 #include <functional>
 
-namespace k3d {
+namespace Concurrency {
 
 	class NameThreadTask : public IBaseThread {
 	public:
-		using ThreadQueue = TaskManager::ThreadQueue;
+		using ThreadQueue = TaskWrapper::ThreadQueue;
 
 		NameThreadTask(ThreadQueue * queue)
 			: m_ThreadQueue(nullptr)
@@ -53,44 +53,44 @@ namespace k3d {
 	{
 		assert(thread);
 #if K3DPLATFORM_OS_WIN
-		ConditionVariableImpl::waitSingleEvent(thread->m_Handle, INFINITE);
+		k3d::ConditionVariableImpl::waitSingleEvent(thread->m_Handle, INFINITE);
 #endif
 	}
 
-	TaskManager::TaskManager()
+	TaskWrapper::TaskWrapper()
 	{
 		ThreadImpl::getSysInfo();
 	}
 
 
-	void TaskManager::initNamedThreadQueue()
+	void TaskWrapper::initNamedThreadQueue()
 	{
 		for (int i = 0; i < MaxNamedThreadNum; ++i)
 		{
-			m_NamedTask[i] = new NameThreadTask(&m_NamedQueue[i]);
-			ThreadImpl::createThread(*(m_NamedTask[i]), TaskPriority::Normal, true, (WThread::ThreadFunctionPtr)&_createTask);
-			ThreadImpl::resumeThread(*(m_NamedTask[i]));
+//			m_NamedTask[i] = new NameThreadTask(&m_NamedQueue[i]);
+			//ThreadImpl::createThread(*(m_NamedTask[i]), TaskPriority::Normal, true, (WThread::ThreadFunctionPtr)&_createTask);
+			//ThreadImpl::resumeThread(*(m_NamedTask[i]));
 		}
 	}
 
-	void TaskManager::Post(IBaseThread * task, TaskPriority priority)
+	void TaskWrapper::Post(IBaseThread * task, TaskPriority priority)
 	{
-		ThreadImpl::createThread(*task, priority, (WThread::ThreadFunctionPtr)&_createTask);
+		//ThreadImpl::createThread(*task, priority, (WThread::ThreadFunctionPtr)&_createTask);
 	}
 
 
-	void TaskManager::Suspend(IBaseThread * task)
+	void TaskWrapper::Suspend(IBaseThread * task)
 	{
-		ThreadImpl::suspendThread(*task);
+		//ThreadImpl::suspendThread(*task);
 	}
 
 
-	void TaskManager::Remove(IBaseThread * task)
+	void TaskWrapper::Remove(IBaseThread * task)
 	{
-		ThreadImpl::terminateThread(*task);
+		//ThreadImpl::terminateThread(*task);
 	}
 
-	void TaskManager::Post(IRunnable * task, NamedThread thread)
+	void TaskWrapper::Post(IRunnable * task, NamedThread thread)
 	{
 		m_NamedQueue[(uint32)thread].push(task);	
 	}

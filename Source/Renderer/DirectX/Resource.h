@@ -6,7 +6,7 @@ namespace k3d {
 
 		class Resource {
 		protected:
-			PtrResource mResource;
+			PtrResource m_Resource;
 		};
 
 		class CommittedResource : public Resource
@@ -20,7 +20,7 @@ namespace k3d {
 		public:
 			void UploadData(const void* data, int64_t size);
 
-			auto Get() const { return mResource; }
+			auto Get() const { return m_Resource; }
 			auto GetSize() const { return m_Size; }
 
 		protected:

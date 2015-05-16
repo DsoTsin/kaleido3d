@@ -1,5 +1,8 @@
 file(GLOB DX_RENDERER_SRC_LIST "*.cpp" "*.h")
-include_directories(../.. ../../../Include)
+include_directories(
+../.. ../../../Include
+Utils
+)
 
 # add_definitions(-DWIN10_PREVIEWBUILD)
 

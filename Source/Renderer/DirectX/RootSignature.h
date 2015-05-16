@@ -16,14 +16,14 @@ namespace k3d
 	  public:
 		  void Create(ID3D12Device* device);
 
-		  auto Get() const { return mRootSignature; }
-		  auto GetBlob() const { return mBlob; }
-		  auto GetErrorBlob() const { return mErrorBlob; }
+		  auto Get() const { return          m_RootSignature; }
+		  auto GetBlob() const { return      m_Blob; }
+		  auto GetErrorBlob() const { return m_ErrorBlob; }
 
 	  private:
-		  PtrRootSignature mRootSignature;
-		  PtrBlob mBlob;
-		  PtrBlob mErrorBlob;
+		  PtrRootSignature                   m_RootSignature;
+		  PtrBlob                            m_Blob;
+		  PtrBlob                            m_ErrorBlob;
 	  };
 
   }

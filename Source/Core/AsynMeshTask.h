@@ -1,12 +1,14 @@
 #pragma once 
 
-#include "TaskManager.h"
+#include "TaskWrapper.h"
 #include "Mesh.h"
 #include <string>
 
 
 namespace k3d {
 	
+	using namespace Concurrency;
+
 	class AsynMeshTask : public IBaseThread {
 	public:
 

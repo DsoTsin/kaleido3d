@@ -4,9 +4,11 @@
 #include <queue>
 #include <memory>
 #include <thread>
-#include "TaskManager.h"
+#include "TaskWrapper.h"
 
 namespace k3d {
+
+	using namespace Concurrency;
 
   class Looper;
 

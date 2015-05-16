@@ -62,12 +62,12 @@ namespace k3d
 		  ThrowIfFailed(
 			  D3D12SerializeRootSignature(
 				  &descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1,
-				  mBlob.GetInitReference(), mErrorBlob.GetInitReference())
+				  m_Blob.GetInitReference(), m_ErrorBlob.GetInitReference())
 			  );
 		  ThrowIfFailed(
 			  device->CreateRootSignature(
-				  1, mBlob->GetBufferPointer(), mBlob->GetBufferSize(),
-				  IID_PPV_ARGS(mRootSignature.GetInitReference()))
+				  1, m_Blob->GetBufferPointer(), m_Blob->GetBufferSize(),
+				  IID_PPV_ARGS(m_RootSignature.GetInitReference()))
 			  );
 	  }
   }

@@ -13,11 +13,11 @@ namespace k3d {
 		  HRESULT hr = ::D3DCompileFromFile(
 			  wFileName, nullptr, nullptr,
 			  entryPoint, target, D3DCOMPILE_WARNINGS_ARE_ERRORS, 0,
-			  mBlob.GetInitReference(), mErrBlob.GetInitReference());
+			  m_Blob.GetInitReference(), m_ErrBlob.GetInitReference());
 
-		  if (mErrBlob)
+		  if (m_ErrBlob)
 		  {
-			  Debug::Out("Shader", "Load Error : %s", reinterpret_cast<LPCSTR>(mErrBlob->GetBufferPointer()));
+			  Debug::Out("Shader", "Load Error : %s", reinterpret_cast<LPCSTR>(m_ErrBlob->GetBufferPointer()));
 		  }
 
 		  return hr;
@@ -27,7 +27,7 @@ namespace k3d {
 	  {
 		  wchar_t wFileName[1024] = { 0 };
 		  StringUtil::CharToWchar(CacheFileName, wFileName, 1024);
-		  HRESULT hr = ::D3DReadFileToBlob(wFileName, mBlob.GetInitReference());
+		  HRESULT hr = ::D3DReadFileToBlob(wFileName, m_Blob.GetInitReference());
 		  return hr;
 	  }
   }

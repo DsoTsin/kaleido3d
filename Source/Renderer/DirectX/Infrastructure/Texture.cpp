@@ -20,7 +20,7 @@ namespace k3d
 			  cmdList,
 			  &texUploadWrapper,
 			  fileName,
-			  mResource.GetInitReference());
+			  m_Resource.GetInitReference());
 	  }
   }
 }

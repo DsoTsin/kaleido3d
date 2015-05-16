@@ -12,7 +12,7 @@ namespace k3d
 		  const void * data)
 	  {
 		  _Create(device, sizeInBytes, data);
-		  m_View.BufferLocation = mResource->GetGPUVirtualAddress();
+		  m_View.BufferLocation = m_Resource->GetGPUVirtualAddress();
 		  m_View.SizeInBytes = sizeInBytes;
 		  m_View.Format = format;
 	  }
