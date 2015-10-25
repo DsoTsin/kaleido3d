@@ -54,6 +54,8 @@ set(UTRHID3D12_SRCS
 	RHI_D3D12/Main.cpp
 	RHI_D3D12/UnitTestRHIDevice.h
 	RHI_D3D12/UnitTestRHIDevice.cpp
+	RHI_D3D12/UnitTestRHICommandContext.h
+	RHI_D3D12/UnitTestRHICommandContext.cpp
 )
 
 add_executable(
@@ -63,9 +65,25 @@ add_executable(
 )
 target_link_libraries(
 	UnitTestRHIDevice
-	Core
+	Core RHI_D3D12
+)
+
+add_executable(
+	UnitTestRHICommandContext
+	../Core/Win32Res/win32icon.rc
+	${UTRHID3D12_SRCS}
+)
+target_link_libraries(
+	UnitTestRHICommandContext
+	Core RHI_D3D12
 )
 
 ## set_target_properties(UTDXRenderer PROPERTIES FOLDER "Unit Test")
+
+set_target_properties(UnitTestRHIDevice PROPERTIES COMPILE_DEFINITIONS "__TESTRHIDEVICE__")
 set_target_properties(UnitTestRHIDevice PROPERTIES FOLDER "Unit Test")
+
+set_target_properties(UnitTestRHICommandContext PROPERTIES COMPILE_DEFINITIONS "__TESTRHICOMMANDCONTEXT__")
+set_target_properties(UnitTestRHICommandContext PROPERTIES FOLDER "Unit Test")
+
 ## set_target_properties(UTAZDOOpenGL PROPERTIES FOLDER "Unit Test")

@@ -42,7 +42,7 @@
 #define ThrowIfFailed(expr) \
 	do { \
 		if (FAILED(expr)) { \
-		Log::Out ("RDX_ERR", "failed "## #expr ##" %s %d", __FILE__, __LINE__); \
+		Log::Out (LogLevel::Fatal, "RDX_ERR", "failed "## #expr ##" %s %d", __FILE__, __LINE__); \
 		throw; \
 		}\
 	} while (0);

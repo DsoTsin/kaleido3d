@@ -1,64 +1,71 @@
 #include "DXCommon.h"
 #include "Public/D3D12RHI.h"
 
-NS_K3D_D3D12_BEGIN
+namespace rhi
+{
+	using namespace k3d;
+	using namespace k3d::d3d12;
 
-GpuVendor MapIdToVendor(uint32 id) {
-	GpuVendor vendor = GpuVendor::UnKnown;
-	switch (id)
-	{
-	case 0x8086:
-		vendor = GpuVendor::Intel;
-		break;
-	case 0x10DE:
-		vendor = GpuVendor::NVIDIA;
-		break;
-	case 0x1002:
-		vendor = GpuVendor::AMD;
-		break;
-	default:
-		break;
+	GpuVendor MapIdToVendor(uint32 id) {
+		GpuVendor vendor = GpuVendor::UnKnown;
+		switch (id)
+		{
+		case 0x8086:
+			vendor = GpuVendor::Intel;
+			break;
+		case 0x10DE:
+			vendor = GpuVendor::NVIDIA;
+			break;
+		case 0x1002:
+			vendor = GpuVendor::AMD;
+			break;
+		default:
+			break;
+		}
+		return vendor;
 	}
-	return vendor;
+
+	rhi::PFNEnumAllDevice EnumAllDeviceAdapter = [](rhi::IDeviceAdapter ** & adapterList, uint32 * num)->void
+	{
+		PtrGIFactory factory;
+		HRESULT hr = ::CreateDXGIFactory1(IID_PPV_ARGS(factory.GetAddressOf()));
+		K3D_ASSERT(hr==S_OK, "create dx factory failed.");
+		vector<IDXGIAdapter1*> adapters;
+		IDXGIAdapter1* pAdapter = nullptr;
+		for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(adapterIndex, &pAdapter); ++adapterIndex) {
+			DXGI_ADAPTER_DESC1 desc;
+			pAdapter->GetDesc1(&desc);
+			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+				continue;
+			}
+			if (SUCCEEDED(D3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr))) {
+				adapters.push_back(pAdapter);
+			}
+		}
+
+		*num = (uint32)adapters.size();
+		if (adapters.empty())
+		{
+			return;
+		}
+
+		adapterList = new rhi::IDeviceAdapter*[adapters.size()];
+		for (uint32 index = 0; index < adapters.size(); index++)
+		{
+			DXGI_ADAPTER_DESC1 desc;
+			adapters[index]->GetDesc1(&desc);
+			GpuVendor vendor = MapIdToVendor(desc.VendorId);
+			char VendorName[256] = { 0 };
+			StringUtil::WCharToChar(desc.Description, VendorName, 256);
+			Log::Out(LogLevel::Info, "Device", "Vendor is %s, Id is %d.", VendorName, desc.VendorId);
+			adapterList[index] = new DeviceAdapter(adapters[index], vendor);
+		}
+	};
+
 }
 
-rhi::PFNEnumAllDevice EnumAllDeviceAdapter = [](rhi::IDeviceAdapter ** & adapterList, uint32 * num)->void
-{
-	PtrGIFactory factory;
-	HRESULT hr = ::CreateDXGIFactory1(IID_PPV_ARGS(factory.GetAddressOf()));
-	K3D_ASSERT(hr, "create dx factory failed.");
-	vector<IDXGIAdapter1*> adapters;
-	IDXGIAdapter1* pAdapter = nullptr;
-	for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(adapterIndex, &pAdapter); ++adapterIndex) {
-		DXGI_ADAPTER_DESC1 desc;
-		pAdapter->GetDesc1(&desc);
-		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
-			continue;
-		}
-		if (SUCCEEDED(D3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr))) {
-			adapters.push_back(pAdapter);
-		}
-	}
 
-	*num = (uint32)adapters.size();
-	if (adapters.empty())
-	{
-		return;
-	}
-
-	adapterList = new rhi::IDeviceAdapter*[adapters.size()];
-	for (uint32 index = 0; index < adapters.size(); index++)
-	{
-		DXGI_ADAPTER_DESC1 desc;
-		adapters[index]->GetDesc1(&desc);
-		GpuVendor vendor = MapIdToVendor(desc.VendorId);
-		char VendorName[256] = { 0 };
-		StringUtil::WCharToChar(desc.Description, VendorName, 256);
-		Log::Out(LogLevel::Info, "Device", "Vendor is %s, Id is %d.", VendorName, desc.VendorId);
-		adapterList[index] = new DeviceAdapter(adapters[index], vendor);
-	}
-};
-
+NS_K3D_D3D12_BEGIN
 
 D3D_FEATURE_LEVEL TestFLs[] = {
 	D3D_FEATURE_LEVEL_12_1,
@@ -124,7 +131,7 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 	return rhi::IDevice::DeviceNotFound;
 }
 
-rhi::ICommandContext*	Device::NewCommandContext()
+rhi::ICommandContext*	Device::NewCommandContext(rhi::ECommandType Type)
 {
 	return nullptr;
 }

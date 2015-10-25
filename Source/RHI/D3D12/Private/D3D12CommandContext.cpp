@@ -68,10 +68,6 @@ void CommandContext::DrawIndexedInstanced(rhi::DrawIndexedInstancedParam Param)
 		Param.StartIndexLocation, Param.BaseVertexLocation, Param.StartInstanceLocation);
 }
 
-void CommandContext::Execute(bool Wait)
-{
-}
-
 void CommandContext::SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type, ID3D12DescriptorHeap* HeapPtr)
 {
 

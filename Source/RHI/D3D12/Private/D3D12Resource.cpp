@@ -3,6 +3,7 @@
 #include "Public/D3D12RHI.h"
 #include "LinearAllocator.h"
 #include "../Color.h"
+#include <Math/kMath.hpp>
 
 NS_K3D_D3D12_BEGIN
 
@@ -220,8 +221,8 @@ public:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const { return GetDepthSRV(); }
 
-	void BeginRendering(GraphicsContext& context);
-	void EndRendering(GraphicsContext& context);
+	void BeginRendering(CommandContext& context);
+	void EndRendering(CommandContext& context);
 
 private:
 	D3D12_VIEWPORT m_Viewport;
@@ -831,14 +832,16 @@ void ShadowBuffer::Create(const std::wstring& Name, uint32_t Width, uint32_t Hei
 	m_Scissor.bottom = (LONG)Height - 2;
 }
 
-void ShadowBuffer::BeginRendering(GraphicsContext& Context)
+void ShadowBuffer::BeginRendering(CommandContext& Context)
 {
+	/*
 	Context.ClearDepth(*this);
 	Context.SetDepthStencilTarget(*this);
 	Context.SetViewportAndScissor(m_Viewport, m_Scissor);
+	*/
 }
 
-void ShadowBuffer::EndRendering(GraphicsContext& Context)
+void ShadowBuffer::EndRendering(CommandContext& Context)
 {
 	Context.TransitionResource(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
@@ -964,13 +967,14 @@ void ColorBuffer::CreateArray(const std::wstring& Name, uint32_t Width, uint32_t
 	CreateDerivedViews(GetPrimaryD3DDevice(), Format, ArrayCount, 1);
 }
 
+/**
+
 void ColorBuffer::GenerateMipMaps(CommandContext& BaseContext)
 {
 	if (m_NumMipMaps == 0)
 		return;
 
 	ComputeContext& Context = BaseContext.GetComputeContext();
-	/* TODO UNCOMMENT
 	Context.SetRootSignature(Graphics::g_GenerateMipsRS);
 
 	if (m_Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
@@ -980,7 +984,7 @@ void ColorBuffer::GenerateMipMaps(CommandContext& BaseContext)
 
 	Context.TransitionResource(*this, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	Context.SetDynamicDescriptor(1, 0, m_SRVHandle);
-	*/
+	
 	for (uint32_t TopMip = 0; TopMip < m_NumMipMaps; )
 	{
 		uint32_t DstWidth = m_Width >> (TopMip + 1);
@@ -1017,5 +1021,5 @@ void ColorBuffer::GenerateMipMaps(CommandContext& BaseContext)
 	Context.TransitionResource(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
-
+**/
 NS_K3D_D3D12_END

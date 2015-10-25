@@ -2,6 +2,8 @@
 #include <Config/Config.h>
 #include <Core/App.h>
 
+/**
+
 NS_K3D_D3D12_BEGIN
 
 class Device;
@@ -15,3 +17,5 @@ namespace ModuleD3D12
 }
 
 NS_K3D_D3D12_END
+
+**/

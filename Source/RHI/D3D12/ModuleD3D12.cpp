@@ -4,6 +4,8 @@
 #include "Public/D3D12RHI.h"
 #include <Core>
 
+
+/**
 NS_K3D_D3D12_BEGIN
 
 #define SWAP_CHAIN_BUFFER_COUNT 3
@@ -77,3 +79,5 @@ namespace ModuleD3D12
 }
 
 NS_K3D_D3D12_END
+
+**/

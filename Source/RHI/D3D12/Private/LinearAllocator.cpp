@@ -21,7 +21,7 @@ LinearAllocationPage* LinearAllocatorPageManager::RequestPage()
 {
 	lock_guard<mutex> LockGuard(m_Mutex);
 
-	while (!m_RetiredPages.empty() && GetPrimaryCommandListManager().IsFenceComplete(m_RetiredPages.front().first))
+	while (!m_RetiredPages.empty() /*&& GetPrimaryCommandListManager().IsFenceComplete(m_RetiredPages.front().first)*/)
 	{
 		m_AvailablePages.push(m_RetiredPages.front().second);
 		m_RetiredPages.pop();

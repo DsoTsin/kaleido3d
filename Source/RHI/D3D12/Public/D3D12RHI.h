@@ -3,8 +3,8 @@
 #define __D3D12RHI_h__
 
 #include "D3D12RHIResource.h"
-#include "Private/LinearAllocator.h"
-#include "Private/D3D12CommandListManager.h"
+#include "RHI/D3D12/Private/LinearAllocator.h"
+#include "RHI/D3D12/Private/D3D12CommandListManager.h"
 #include "../DescriptorHeap.h"
 
 NS_K3D_D3D12_BEGIN
@@ -90,7 +90,7 @@ public:
 		rhi::IDeviceAdapter* adapter,
 		bool withDbg = true) override;
 
-	rhi::ICommandContext*	NewCommandContext()override;
+	rhi::ICommandContext*	NewCommandContext(rhi::ECommandType)override;
 	rhi::IGpuResource*		NewGpuResource(rhi::EGpuResourceType type) override;
 	rhi::ISampler*			NewSampler(const rhi::SamplerState&) override;
 	rhi::IPipelineState*	NewPipelineState() override;
@@ -135,7 +135,7 @@ struct ShaderBytes : public rhi::IShaderBytes
 
 	uint32	Length() override
 	{
-		return ShaderBC->GetBufferSize();
+		return static_cast<uint32>(ShaderBC->GetBufferSize());
 	}
 	const void*	Bytes() override
 	{
@@ -226,7 +226,7 @@ class CommandContext : public rhi::ICommandContext
 {
 public:
 	CommandContext();
-	virtual ~CommandContext() {}
+	virtual ~CommandContext();
 	virtual void Detach(rhi::IDevice *) override;
 	virtual void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src) override;
 	virtual void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
@@ -244,6 +244,16 @@ public:
 	void SetDynamicIB(size_t IndexCount, const uint16_t* IBData);
 
 	void FlushResourceBarriers();
+
+	void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
+	void InsertTimeStamp(ID3D12QueryHeap* pQueryHeap, uint32_t QueryIdx);
+	void ResolveTimeStamps(ID3D12Resource* pReadbackHeap, ID3D12QueryHeap* pQueryHeap, uint32_t NumQueries);
+
+public:
+	static void InitializeTexture(GpuResource& Dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA SubData[]) {}
+	static void InitializeBuffer(GpuResource& Dest, const void* Data, size_t NumBytes) {}
+	static void InitializeTextureArraySlice(GpuResource& Dest, UINT SliceIndex, GpuResource& Src) {}
+
 private:
 
 	CommandListManager*			m_OwningManager;

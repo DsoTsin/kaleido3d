@@ -4,6 +4,14 @@
 
 namespace rhi
 {
+	enum ECommandType
+	{
+		ECMD_Bundle,
+		ECMD_Graphics,
+		ECMD_Compute,
+		ECommandTypeNum
+	};
+
 	enum EGpuResourceType
 	{
 		Texture1D,
@@ -42,12 +50,12 @@ namespace rhi
 
 	enum EShaderType
 	{
-		Fragment,
-		Vertex,
-		Geometry,
-		Hull,
-		Domain,
-		Compute,
+		ES_Fragment,
+		ES_Vertex,
+		ES_Geometry,
+		ES_Hull,
+		ES_Domain,
+		ES_Compute,
 		ShaderTypeNum
 	};
 

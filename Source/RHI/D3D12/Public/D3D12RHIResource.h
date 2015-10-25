@@ -2,7 +2,7 @@
 #ifndef __D3D12RHIResource_h__
 #define __D3D12RHIResource_h__
 #include "RHI/IRHI.h"
-#include "RHI.h"
+#include "RHI/D3D12/RHI.h"
 
 NS_K3D_D3D12_BEGIN
 

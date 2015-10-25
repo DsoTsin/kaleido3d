@@ -28,7 +28,7 @@ namespace rhi
 		virtual						~IDevice() {}
 		virtual Result				Create(IDeviceAdapter *, bool withDebug) = 0;
 
-		virtual ICommandContext*	NewCommandContext() = 0;
+		virtual ICommandContext*	NewCommandContext(ECommandType) = 0;
 		virtual IGpuResource*		NewGpuResource(EGpuResourceType type) = 0;
 		virtual ISampler*			NewSampler(const SamplerState&) = 0;
 		virtual IPipelineState*		NewPipelineState() = 0;

@@ -16,7 +16,7 @@ public:
 	{}
 
 	bool OnInit() override;
-
+	void OnDestroy() override;
 	void OnProcess(Message & msg) override;
 
 private:

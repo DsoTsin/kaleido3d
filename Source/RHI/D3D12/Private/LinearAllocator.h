@@ -1,5 +1,5 @@
 #pragma once 
-#include "Public/D3D12RHIResource.h"
+#include "RHI/D3D12/Public/D3D12RHIResource.h"
 
 NS_K3D_D3D12_BEGIN
 
