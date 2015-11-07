@@ -6,7 +6,7 @@
 
 NS_K3D_D3D12_BEGIN
 
-class K3D_API GpuResource : public RHIRoot, public rhi::IGpuResource
+class K3D_API GpuResource : public rhi::IGpuResource
 {
 public:
 	GpuResource() :
@@ -34,15 +34,16 @@ public:
 	void* Map();
 	D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const;
 
-	friend class GraphicsContext;
-	friend class ComputeContext;
 	friend class CommandContext;
+	friend class Device;
 
 protected:
-	PtrResource m_Resource;
-	D3D12_RESOURCE_STATES m_UsageState;
-	D3D12_RESOURCE_STATES m_TransitioningState;
-	D3D12_GPU_VIRTUAL_ADDRESS m_GpuVirtualAddress;
+
+	Device*						m_Device;
+	PtrResource					m_Resource;
+	D3D12_RESOURCE_STATES		m_UsageState;
+	D3D12_RESOURCE_STATES		m_TransitioningState;
+	D3D12_GPU_VIRTUAL_ADDRESS	m_GpuVirtualAddress;
 };
 
 class Sampler : public rhi::ISampler

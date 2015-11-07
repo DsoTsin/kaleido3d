@@ -3,8 +3,8 @@
 
 namespace rhi
 {
-	using namespace k3d;
-	using namespace k3d::d3d12;
+	using namespace ::k3d;
+	using namespace ::k3d::d3d12;
 
 	GpuVendor MapIdToVendor(uint32 id) {
 		GpuVendor vendor = GpuVendor::UnKnown;
@@ -136,11 +136,6 @@ rhi::ICommandContext*	Device::NewCommandContext(rhi::ECommandType Type)
 	return nullptr;
 }
 
-rhi::IGpuResource*		Device::NewGpuResource(rhi::EGpuResourceType type)
-{
-	return nullptr;
-}
-
 rhi::ISampler*			Device::NewSampler(const rhi::SamplerState&)
 {
 	return nullptr;
@@ -148,7 +143,9 @@ rhi::ISampler*			Device::NewSampler(const rhi::SamplerState&)
 
 rhi::IPipelineState*	Device::NewPipelineState()
 {
-	return new PipelineState;
+	PipelineState * ps = new PipelineState;
+	ps->SetDevice(this);
+	return ps;
 }
 
 
@@ -197,9 +194,10 @@ void DescriptorHeapAllocator::AllocateHeap()
 	ThrowIfFailed(m_Device->CreateDescriptorHeap(&m_Desc, IID_PPV_ARGS(Heap.GetAddressOf())));
 	D3D12_CPU_DESCRIPTOR_HANDLE HeapBase = Heap->GetCPUDescriptorHandleForHeapStart();
 	m_Heaps.reserve(m_Heaps.size() + 1);
-	Entry& heapEntry = m_Heaps.back();
-	heapEntry.m_FreeList.push_back({ HeapBase.ptr, HeapBase.ptr + m_Desc.NumDescriptors * m_DescriptorSize });
-	heapEntry.m_Heap = Heap;
+	NodeList freeList;
+	freeList.push_back({ HeapBase.ptr, HeapBase.ptr + m_Desc.NumDescriptors * m_DescriptorSize });
+	Entry entry = { Heap, freeList};
+	m_Heaps.push_back(entry);
 	m_FreeHeaps.push_back(m_Heaps.size() - 1);
 }
 

@@ -36,9 +36,12 @@ void CommandContext::SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView & 
 {
 }
 
-void CommandContext::SetPipelineState(uint32 Hash, rhi::IPipelineState *)
+void CommandContext::SetPipelineState(uint32 Hash, rhi::IPipelineState *RhiPipeLineState)
 {
-
+	PipelineState * pPSO = static_cast<PipelineState*>(RhiPipeLineState);
+	K3D_ASSERT(pPSO != nullptr);
+	//? pPSO->Finalize();
+	m_CommandList->SetPipelineState(pPSO->GetPipelineStateObject());
 }
 
 void CommandContext::SetViewport(const rhi::Viewport& Vp)

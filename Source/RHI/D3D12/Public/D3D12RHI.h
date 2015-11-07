@@ -57,7 +57,8 @@ private:
 	{
 		PtrDescHeap m_Heap;
 		NodeList	m_FreeList;
-		Entry(const Entry &) {}
+		Entry() {}
+		Entry(PtrDescHeap heap, NodeList list) :m_Heap(heap), m_FreeList(list) {}
 	};
 
 	typedef std::vector<Entry> THeapMap;
@@ -152,16 +153,21 @@ struct ShaderBytes : public rhi::IShaderBytes
 struct ShaderCompiler : public rhi::IShaderCompiler
 {
 	rhi::IShaderBytes* CompileFromSource(ELangVersion, rhi::EShaderType, const char*) override;
+	rhi::IShaderBytes* CompileFromSource(ELangVersion, rhi::EShaderType, const char*, const char * entry);
 };
 
 class RootSignature;
 
 class VertexInputLayout : public rhi::IVertexInputLayout
 {
+	friend class PipelineState;
 public:
+	VertexInputLayout(D3D12_INPUT_ELEMENT_DESC Descs[], uint32 Count)
+		: m_InputLayout(Descs), m_ElementCount(Count) {}
 
 private:
-
+	std::unique_ptr<D3D12_INPUT_ELEMENT_DESC[]> m_InputLayout;
+	uint32 m_ElementCount;
 };
 
 class PipelineState : public rhi::IPipelineState
@@ -171,14 +177,17 @@ public:
 
 	PipelineState();
 
-	virtual void	SetShader(rhi::EShaderType, rhi::IShaderBytes*)override;
-	virtual void	SetRasterizerState(const rhi::RasterizerState&)override;
-	virtual void	SetBlendState(const rhi::BlendState&)override;
-	virtual void	SetDepthStencilState(const rhi::DepthStencilState&)override;
-	virtual void	SetSampler(rhi::ISampler*)override;
-	virtual void	SetVertexInputLayout(rhi::IVertexInputLayout *) override;
+	void	SetShader(rhi::EShaderType, rhi::IShaderBytes*)override;
+	void	SetRasterizerState(const rhi::RasterizerState&)override;
+	void	SetBlendState(const rhi::BlendState&)override;
+	void	SetDepthStencilState(const rhi::DepthStencilState&)override;
+	void	SetSampler(rhi::ISampler*)override;
+	void	SetVertexInputLayout(rhi::IVertexInputLayout *) override;
+	void	SetPrimitiveTopology(const rhi::EPrimitiveType) override;
+
 
 	void			Finalize();
+	void			SetDevice(Device *);
 
 	static void				DestroyAll(void);
 	void					SetRootSignature(const RootSignature& BindMappings);
@@ -195,7 +204,9 @@ private:
 		D3D12_COMPUTE_PIPELINE_STATE_DESC			m_ComputePSODesc;
 	};
 	shared_ptr<const D3D12_INPUT_ELEMENT_DESC>		m_InputLayouts;
+	bool											m_IsComputeState;
 
+	PtrDevice										m_Device;
 };
 
 class VertexBufferView : public rhi::VertexBufferView

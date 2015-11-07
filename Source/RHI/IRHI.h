@@ -60,6 +60,7 @@ namespace rhi
 		virtual void SetRasterizerState(const RasterizerState&) = 0;
 		virtual void SetBlendState(const BlendState&) = 0;
 		virtual void SetDepthStencilState(const DepthStencilState&) = 0;
+		virtual void SetPrimitiveTopology(const EPrimitiveType) = 0;
 		virtual void SetVertexInputLayout(IVertexInputLayout *) = 0;
 		virtual void SetSampler(ISampler*) = 0;
 		virtual void Finalize() = 0;

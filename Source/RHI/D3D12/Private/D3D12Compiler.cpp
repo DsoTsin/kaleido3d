@@ -12,12 +12,22 @@ const char * ShaderModel[ShaderCompiler::ELangVersion::LangVersionNum][rhi::ESha
 
 rhi::IShaderBytes*	ShaderCompiler::CompileFromSource(ShaderCompiler::ELangVersion LangVersion, rhi::EShaderType ShaderType, const char* Source)
 {
-	PtrBlob ShaderBlob,ErrorBlob;
-	DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
+	return CompileFromSource(LangVersion, ShaderType, Source, "Main");
+}
+
+rhi::IShaderBytes * ShaderCompiler::CompileFromSource(ShaderCompiler::ELangVersion LangVersion, rhi::EShaderType ShaderType, const char* Source, const char * Entry)
+{
+	PtrBlob ShaderBlob, ErrorBlob;
+#if defined(_DEBUG)
+	// Enable better shader debugging with the graphics debugging tools.
+	UINT dwShaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+	UINT dwShaderFlags = 0;
+#endif
 	HRESULT Hr = ::D3DCompile(
-		Source, strlen(Source) + 1, /**SrcData, SrcDataLen***/
+		Source, strlen(Source), /**SrcData, SrcDataLen***/
 		nullptr, nullptr, nullptr, /**SrcName, Defines, Includes**/
-		"Main", ShaderModel[LangVersion][ShaderType],
+		Entry, ShaderModel[LangVersion][ShaderType],
 		dwShaderFlags, 0,
 		ShaderBlob.GetAddressOf(), ErrorBlob.GetAddressOf());
 	if (FAILED(Hr))

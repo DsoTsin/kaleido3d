@@ -198,7 +198,7 @@ namespace rhi
 
 		DepthStencilState()
 		{
-			DepthEnable = true;
+			DepthEnable = false;
 			DepthWriteMask = EDepthWriteMask::WriteAll;
 			DepthFunc = EComparisonFunc::Less;
 
