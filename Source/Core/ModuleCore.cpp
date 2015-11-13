@@ -52,16 +52,18 @@ namespace k3d {
 			*--q = '\0';
 			wcscpy_s(lpPathBuffer, nSize, p);
 		}
-#endif
-
+        
 		kString GetExecutablePath() {
 			if (s_ModulePath.empty()) {
 				WCHAR path[2048] = { 0 };
 				GetModulePath(NULL, path, 2048);
 				s_ModulePath = path;
-			}
-			return s_ModulePath;
-		}
+            }
+            return s_ModulePath;
+//            NSString * pPath = [[NSBundle mainBundle] executablePath];
+//            return [pPath utf8String];
+        }
+#endif
 
 	}
 }

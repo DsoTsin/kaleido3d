@@ -2,13 +2,13 @@
 
 NS_K3D_D3D12_BEGIN
 
-class CommandListManager
+class DirectCommandListManager
 {
 	friend class CommandContext;
 
 public:
-	CommandListManager();
-	~CommandListManager();
+	DirectCommandListManager();
+	~DirectCommandListManager();
 
 	void Create(PtrDevice pDevice);
 	void Shutdown();

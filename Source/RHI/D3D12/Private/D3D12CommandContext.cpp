@@ -9,12 +9,26 @@ CommandContext::CommandContext() :
 	m_CpuLinearAllocator(kCpuWritable),
 	m_GpuLinearAllocator(kGpuExclusive)
 {
-
+	m_OwningManager = nullptr;
+	m_CommandList = nullptr;
+	m_CurrentAllocator = nullptr;
+	ZeroMemory(m_CurrentDescriptorHeaps, sizeof(m_CurrentDescriptorHeaps));
+	m_CurGraphicsRootSignature = nullptr;
+	m_CurGraphicsPipelineState = nullptr;
+	m_CurComputeRootSignature = nullptr;
+	m_CurComputePipelineState = nullptr;
+	m_NumBarriersToFlush = 0;
 }
 
 CommandContext::~CommandContext()
 {
 
+}
+
+void CommandContext::Initialize()
+{
+	K3D_ASSERT(m_OwningManager != nullptr);
+	m_OwningManager->CreateNewCommandList(&m_CommandList, &m_CurrentAllocator);
 }
 
 void CommandContext::Detach(rhi::IDevice *)
@@ -46,7 +60,6 @@ void CommandContext::SetPipelineState(uint32 Hash, rhi::IPipelineState *RhiPipeL
 
 void CommandContext::SetViewport(const rhi::Viewport& Vp)
 {
-
 	m_CommandList->RSSetViewports(1, (const D3D12_VIEWPORT*) &Vp);
 }
 
@@ -86,17 +99,82 @@ void CommandContext::SetDynamicIB(size_t IndexCount, const uint16_t * IBData)
 
 void CommandContext::Reset()
 {
+	K3D_ASSERT(m_CommandList != nullptr && m_CurrentAllocator == nullptr);
+	m_CurrentAllocator = m_OwningManager->RequestAllocator();
+	m_CommandList->Reset(m_CurrentAllocator, nullptr);
 
+	m_CurGraphicsRootSignature = nullptr;
+	m_CurGraphicsPipelineState = nullptr;
+	m_CurComputeRootSignature = nullptr;
+	m_CurComputePipelineState = nullptr;
+	m_NumBarriersToFlush = 0;
 }
 
 void CommandContext::Execute(bool Wait)
 {
+	FlushResourceBarriers();
 
+	K3D_ASSERT(m_CurrentAllocator != nullptr);
+	K3D_ASSERT(SUCCEEDED(m_CommandList->Close()));
+
+	uint64_t FenceValue = m_OwningManager->ExecuteCommandList(m_CommandList);
+	m_OwningManager->DiscardAllocator(FenceValue, m_CurrentAllocator);
+	m_CurrentAllocator = nullptr;
+
+	m_CpuLinearAllocator.CleanupUsedPages(FenceValue);
+	m_GpuLinearAllocator.CleanupUsedPages(FenceValue);
+	m_DynamicDescriptorHeap.CleanupUsedHeaps(FenceValue);
+
+	if (Wait)
+		m_OwningManager->WaitForFence(FenceValue);
+
+	//return FenceValue;
 }
 
 void CommandContext::FlushResourceBarriers()
 {
+	if (m_NumBarriersToFlush == 0)
+		return;
 
+	m_CommandList->ResourceBarrier(m_NumBarriersToFlush, m_ResourceBarrierBuffer);
+	m_NumBarriersToFlush = 0;
+}
+
+void CommandContext::TransitionResource(GpuResource & Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate)
+{
+	D3D12_RESOURCE_STATES OldState = Resource.m_UsageState;
+
+	if (OldState != NewState)
+	{
+		K3D_ASSERT(m_NumBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+		D3D12_RESOURCE_BARRIER& BarrierDesc = m_ResourceBarrierBuffer[m_NumBarriersToFlush++];
+
+		BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		BarrierDesc.Transition.pResource = Resource.GetResource();
+		BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		BarrierDesc.Transition.StateBefore = OldState;
+		BarrierDesc.Transition.StateAfter = NewState;
+
+		// Check to see if we already started the transition
+		if (NewState == Resource.m_TransitioningState)
+		{
+			BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+			Resource.m_TransitioningState = (D3D12_RESOURCE_STATES)-1;
+		}
+		else
+			BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+		Resource.m_UsageState = NewState;
+	}
+	else if (NewState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS) 
+	{
+		//InsertUAVBarrier(Resource, FlushImmediate);
+	}
+	if (FlushImmediate || m_NumBarriersToFlush == 16)
+	{
+		m_CommandList->ResourceBarrier(m_NumBarriersToFlush, m_ResourceBarrierBuffer);
+		m_NumBarriersToFlush = 0;
+	}
 }
 
 NS_K3D_D3D12_END

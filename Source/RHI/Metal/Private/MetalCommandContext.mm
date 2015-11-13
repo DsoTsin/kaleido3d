@@ -1,12 +1,5 @@
-//
-//  CommandContext.cpp
-//  Renderer_Metal
-//
-//  Created by QinZhou on 15/9/2.
-//
-//
+#include "MetalRHI.h"
 
-#include "CommandContext.h"
 
 NS_K3D_METAL_BEGIN
 

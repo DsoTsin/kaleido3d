@@ -22,10 +22,11 @@ typedef unsigned char kByte;
 
 namespace k3d {
 #if K3DPLATFORM_OS_WIN
-typedef wchar_t kchar;
-#define KT(quote) L##quote
+    typedef wchar_t kchar;
+    #define KT(quote) L##quote
 #else
-typedef char	kchar;
+    #define KT(quote) quote
+    typedef char	kchar;
 #endif
 }
 

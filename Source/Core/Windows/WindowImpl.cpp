@@ -316,26 +316,23 @@ namespace k3d
 				PushMessage(event);
 				break;
 			}
-			/*
-						// Resize event
-						case WM_SIZE:
-						{
-						// Consider only events triggered by a maximize or a un-maximize
-						if (wParam != SIZE_MINIMIZED && !m_resizing && m_lastSize != getSize())
-						{
-						// Update the last handled size
-						m_lastSize = getSize();
+			// Resize event
+			case WM_SIZE:
+			{
+			// Consider only events triggered by a maximize or a un-maximize
+				if (wParam != SIZE_MINIMIZED)
+				{
+					// Push a resize event
+					Message event;
+					event.type = Message::Resized;
+					event.size.width = (UINT)(UINT64)lParam & 0xFFFF;
+					event.size.height = (UINT)(UINT64)lParam >> 16;
+					PushMessage(event);
+				}
+				break;
+			}
 
-						// Push a resize event
-						Message event;
-						event.type = Message::Resized;
-						event.size.width = m_lastSize.x;
-						event.size.height = m_lastSize.y;
-						PushMessage(event);
-						}
-						break;
-						}
-
+						/*
 						// Start resizing
 						case WM_ENTERSIZEMOVE:
 						{

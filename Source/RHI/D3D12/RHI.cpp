@@ -13,7 +13,7 @@
 NS_K3D_D3D12_BEGIN
 
 shared_ptr<Device> RHIRoot::s_PrimaryDevice;
-CommandListManager RHIRoot::s_PrimaryCmdListManager;
+DirectCommandListManager RHIRoot::s_PrimaryCmdListManager;
 
 void RHIRoot::Init(shared_ptr<Device> pDevice)
 {
@@ -32,7 +32,7 @@ shared_ptr<Device>& RHIRoot::GetPrimaryDevice()
 	return s_PrimaryDevice;
 }
 
-CommandListManager & RHIRoot::GetPrimaryCommandListManager() 
+DirectCommandListManager & RHIRoot::GetPrimaryCommandListManager()
 {
 	return s_PrimaryCmdListManager;
 }

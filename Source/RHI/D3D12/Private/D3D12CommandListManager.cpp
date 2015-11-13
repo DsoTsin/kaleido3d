@@ -3,16 +3,16 @@
 
 NS_K3D_D3D12_BEGIN
 
-CommandListManager::CommandListManager() : m_Device(nullptr), m_CommandQueue(nullptr)
+DirectCommandListManager::DirectCommandListManager() : m_Device(nullptr), m_CommandQueue(nullptr)
 {
 }
 
-CommandListManager::~CommandListManager()
+DirectCommandListManager::~DirectCommandListManager()
 {
 	Shutdown();
 }
 
-void CommandListManager::Shutdown()
+void DirectCommandListManager::Shutdown()
 {
 	if (m_CommandQueue == nullptr)
 		return;
@@ -28,7 +28,7 @@ void CommandListManager::Shutdown()
 	m_CommandQueue = nullptr;
 }
 
-void CommandListManager::Create(PtrDevice pDevice)
+void DirectCommandListManager::Create(PtrDevice pDevice)
 {
 	K3D_ASSERT(pDevice != nullptr);
 	K3D_ASSERT(!IsReady());
@@ -45,12 +45,12 @@ void CommandListManager::Create(PtrDevice pDevice)
 	QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	QueueDesc.NodeMask = 1;
 	m_Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(&m_CommandQueue));
-	m_CommandQueue->SetName(L"CommandListManager::m_CommandQueue");
+	m_CommandQueue->SetName(L"DirectCommandListManager::m_CommandQueue");
 
 	m_NextFenceValue = 1;
 	m_LastCompletedFenceValue = 0;
 	ThrowIfFailed(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_pFence)));
-	m_pFence->SetName(L"CommandListManager::m_pFence");
+	m_pFence->SetName(L"DirectCommandListManager::m_pFence");
 	m_pFence->Signal(0);
 
 	m_FenceEventHandle = CreateEvent(nullptr, false, false, nullptr);
@@ -59,14 +59,14 @@ void CommandListManager::Create(PtrDevice pDevice)
 	K3D_ASSERT(IsReady());
 }
 
-void CommandListManager::CreateNewCommandList(ID3D12GraphicsCommandList** List, ID3D12CommandAllocator** Allocator)
+void DirectCommandListManager::CreateNewCommandList(ID3D12GraphicsCommandList** List, ID3D12CommandAllocator** Allocator)
 {
 	*Allocator = RequestAllocator();
 	ThrowIfFailed(m_Device->CreateCommandList(1, D3D12_COMMAND_LIST_TYPE_DIRECT, *Allocator, nullptr, IID_PPV_ARGS(List)));
 	(*List)->SetName(L"CommandList");
 }
 
-uint64_t CommandListManager::ExecuteCommandList(ID3D12CommandList* List)
+uint64_t DirectCommandListManager::ExecuteCommandList(ID3D12CommandList* List)
 {
 	std::lock_guard<std::mutex> LockGuard(m_FenceMutex);
 
@@ -80,7 +80,7 @@ uint64_t CommandListManager::ExecuteCommandList(ID3D12CommandList* List)
 	return m_NextFenceValue++;
 }
 
-ID3D12CommandAllocator* CommandListManager::RequestAllocator(void)
+ID3D12CommandAllocator* DirectCommandListManager::RequestAllocator(void)
 {
 	std::lock_guard<std::mutex> LockGuard(m_AllocatorMutex);
 
@@ -111,7 +111,7 @@ ID3D12CommandAllocator* CommandListManager::RequestAllocator(void)
 	return pAllocator;
 }
 
-void CommandListManager::DiscardAllocator(uint64_t FenceValue, ID3D12CommandAllocator* Allocator)
+void DirectCommandListManager::DiscardAllocator(uint64_t FenceValue, ID3D12CommandAllocator* Allocator)
 {
 	std::lock_guard<std::mutex> LockGuard(m_AllocatorMutex);
 
@@ -119,14 +119,14 @@ void CommandListManager::DiscardAllocator(uint64_t FenceValue, ID3D12CommandAllo
 	m_ReadyAllocators.push(std::make_pair(FenceValue, Allocator));
 }
 
-uint64_t CommandListManager::IncrementFence(void)
+uint64_t DirectCommandListManager::IncrementFence(void)
 {
 	std::lock_guard<std::mutex> LockGuard(m_FenceMutex);
 	m_CommandQueue->Signal(m_pFence, m_NextFenceValue);
 	return m_NextFenceValue++;
 }
 
-bool CommandListManager::IsFenceComplete(uint64_t FenceValue)
+bool DirectCommandListManager::IsFenceComplete(uint64_t FenceValue)
 {
 	// Avoid querying the fence value by testing against the last one seen.
 	// The max() is to protect against an unlikely race condition that could cause the last
@@ -138,7 +138,7 @@ bool CommandListManager::IsFenceComplete(uint64_t FenceValue)
 }
 
 
-void CommandListManager::WaitForFence(uint64_t FenceValue)
+void DirectCommandListManager::WaitForFence(uint64_t FenceValue)
 {
 	if (IsFenceComplete(FenceValue))
 		return;

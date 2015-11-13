@@ -95,6 +95,7 @@ public:
 	rhi::IGpuResource*		NewGpuResource(rhi::EGpuResourceType type) override;
 	rhi::ISampler*			NewSampler(const rhi::SamplerState&) override;
 	rhi::IPipelineState*	NewPipelineState() override;
+	rhi::ISyncPointFence*	NewFence() override;
 
 	PtrDevice				Get()
 	{
@@ -209,46 +210,37 @@ private:
 	PtrDevice										m_Device;
 };
 
-class VertexBufferView : public rhi::VertexBufferView
+class SyncPointFence : public rhi::ISyncPointFence
 {
-	friend class CommandContext;
+	friend class Device;
 public:
-	VertexBufferView()
-	{
-	}
+	SyncPointFence();
+	~SyncPointFence();
 
 private:
-	D3D12_VERTEX_BUFFER_VIEW m_BufferView;
-};
-
-class IndexBufferView : public rhi::IndexBufferView
-{
-	friend class CommandContext;
-public:
-	IndexBufferView()
-	{
-	}
-
-private:
-	D3D12_INDEX_BUFFER_VIEW m_BufferView;
+	PtrFence m_Fence;
 };
 
 class CommandContext : public rhi::ICommandContext
 {
+	friend class Device;
 public:
 	CommandContext();
-	virtual ~CommandContext();
-	virtual void Detach(rhi::IDevice *) override;
-	virtual void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src) override;
-	virtual void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
-	virtual void SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView) override;
-	virtual void SetPipelineState(uint32 hashCode, rhi::IPipelineState*)override;
-	virtual void SetViewport(const rhi::Viewport &)override;
-	virtual void SetPrimitiveType(rhi::EPrimitiveType)override;
-	virtual void DrawInstanced(rhi::DrawInstanceParam)override;
-	virtual void DrawIndexedInstanced(rhi::DrawIndexedInstancedParam)override;
-	virtual void Execute(bool Wait) override;
-	virtual void Reset()override;
+	~CommandContext() override;
+
+	void Initialize();
+
+	void Detach(rhi::IDevice *) override;
+	void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src) override;
+	void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
+	void SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView) override;
+	void SetPipelineState(uint32 hashCode, rhi::IPipelineState*)override;
+	void SetViewport(const rhi::Viewport &)override;
+	void SetPrimitiveType(rhi::EPrimitiveType)override;
+	void DrawInstanced(rhi::DrawInstanceParam)override;
+	void DrawIndexedInstanced(rhi::DrawIndexedInstancedParam)override;
+	void Execute(bool Wait) override;
+	void Reset()override;
 
 	void SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type, ID3D12DescriptorHeap* HeapPtr);
 	void SetDynamicVB(UINT Slot, size_t NumVertices, size_t VertexStride, const void* VBData);
@@ -267,7 +259,7 @@ public:
 
 private:
 
-	CommandListManager*			m_OwningManager;
+	DirectCommandListManager*	m_OwningManager;
 	ID3D12GraphicsCommandList*	m_CommandList;
 	ID3D12CommandAllocator*		m_CurrentAllocator;
 
@@ -286,6 +278,8 @@ private:
 	LinearAllocator				m_CpuLinearAllocator;
 	LinearAllocator				m_GpuLinearAllocator;
 };
+
+extern DirectCommandListManager g_DirectCommandListManager;
 
 NS_K3D_D3D12_END
 

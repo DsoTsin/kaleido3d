@@ -25,6 +25,7 @@ public:
 	void OnDestroy() override;
 	void OnProcess(Message & msg) override;
 	void OnUpdate() override;
+	void OnSizeChanged(int width, int height);
 
 	bool InitDevice();
 	void InitCommandContext();
@@ -32,14 +33,17 @@ public:
 	void InitPipeLineState();
 	void InitRenderResource();
 
+	void RenderFrame();
+
 private:
 
 	rhi::IDevice *			m_TestDevice;
 	rhi::ICommandContext *	m_TestCommandContext;
 	rhi::IPipelineState *	m_TestPipelineState;
-	CommandListManager		m_TestCommandListManager;
+	DirectCommandListManager		m_TestCommandListManager;
 	PtrSwapChain			m_SwapChain;
 	uint32					m_FrameIndex;
 	PtrResource				m_RenderTargets[frame_count];
 
+	float					m_AspectRatio;
 };

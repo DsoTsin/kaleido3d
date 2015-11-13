@@ -1,23 +1,26 @@
-project "Renderer_Metal"
+project "RHI_Metal"
    kind "StaticLib"
    language "C++"
    --targetdir "bin/%{cfg.buildcfg}"
 
    files { 
-   "Device.h", 
-   "Device.mm",
    "Util/ImageUtil.h",
    "Util/ImageUtil.mm",
    "Renderer.h",
    "Renderer.mm",
    "Shader.h",
    "Shader.mm",
-   "CommandContext.h",
-   "CommandContext.mm"
+   "Public/MetalRHI.h",
+   "Public/MetalRHIResource.h",
+   "Private/MetalDevice.mm",
+   "Private/MetalCommandContext.mm",
+   "Private/MetalPipelineState.mm",
+   "Private/MetalResource.mm"
    }
 
    includedirs {
       "../..",
+      "..",
       "../../../Include"
    }
 

@@ -32,15 +32,6 @@ struct Vertex
 	XMFLOAT4 color;
 };
 
-Vertex triangleVertices[] =
-{
-	{ { 0.0f, 0.25f * 0.6f, 0.0f },{ 1.0f, 0.0f, 0.0f, 1.0f } },
-	{ { 0.25f, -0.25f * 0.6f, 0.0f },{ 0.0f, 1.0f, 0.0f, 1.0f } },
-	{ { -0.25f, -0.25f * 0.6f, 0.0f },{ 0.0f, 0.0f, 1.0f, 1.0f } }
-};
-
-const UINT vertexBufferSize = sizeof(triangleVertices);
-
 bool UnitTestRHICommandContext::OnInit()
 {
 	if(!App::OnInit())
@@ -77,12 +68,21 @@ void UnitTestRHICommandContext::OnDestroy()
 
 void UnitTestRHICommandContext::OnProcess(Message & msg)
 {
-
+	if (msg.type == Message::Resized)
+	{
+		OnSizeChanged(msg.size.width, msg.size.height);
+	}
 }
 
 void UnitTestRHICommandContext::OnUpdate()
 {
+	RenderFrame();
 	m_SwapChain->Present(1, 0);
+}
+
+void UnitTestRHICommandContext::OnSizeChanged(int width, int height)
+{
+
 }
 
 bool UnitTestRHICommandContext::InitDevice()
@@ -178,6 +178,48 @@ void UnitTestRHICommandContext::InitRenderResource()
 		handle = dha.AllocateHeapSlot(outIndex);
 	}
 
+	m_AspectRatio = 1920.f / 1080.f;
+
 	// test [Device -> NewGpuResource] interface
 	IGpuResource * GpuRes = m_TestDevice->NewGpuResource(rhi::Buffer);
+	// Create the vertex buffer.
+	{
+		// Define the geometry for a triangle.
+		Vertex triangleVertices[] =
+		{
+			{ { 0.0f, 0.25f * m_AspectRatio, 0.0f },{ 1.0f, 0.0f, 0.0f, 1.0f } },
+			{ { 0.25f, -0.25f * m_AspectRatio, 0.0f },{ 0.0f, 1.0f, 0.0f, 1.0f } },
+			{ { -0.25f, -0.25f * m_AspectRatio, 0.0f },{ 0.0f, 0.0f, 1.0f, 1.0f } }
+		};
+
+		const UINT vertexBufferSize = sizeof(triangleVertices);
+		GpuBuffer *resource = static_cast<GpuBuffer*>(GpuRes);
+		resource->Create(KT("Triangle Vertex Buffer"), 3, sizeof(Vertex), triangleVertices);
+		resource->AsVertexBufferView(0, 3 * sizeof(Vertex), sizeof(Vertex));
+		/*
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&m_vertexBuffer)));
+
+		// Copy the triangle data to the vertex buffer.
+		UINT8* pVertexDataBegin;
+		CD3DX12_RANGE readRange(0, 0);		// We do not intend to read from this resource on the CPU.
+		ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+		memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+		m_vertexBuffer->Unmap(0, nullptr);
+
+		// Initialize the vertex buffer view.
+		m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+		m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+		m_vertexBufferView.SizeInBytes = vertexBufferSize;
+		*/
+	}
+}
+
+void UnitTestRHICommandContext::RenderFrame()
+{
 }

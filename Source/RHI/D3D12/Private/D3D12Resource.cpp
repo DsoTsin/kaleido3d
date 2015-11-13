@@ -20,79 +20,83 @@ D3D12_GPU_VIRTUAL_ADDRESS GpuResource::GetGpuVirtualAddress() const
 	return m_Resource->GetGPUVirtualAddress();
 }
 
-///////////////////////////////////   Buffers  ////////////////////////////////////////////////////
-
-
-class GpuBuffer : public GpuResource
+/////////////////////////////////// GpuBuffer Implementation ///////////////////////////////////////////
+void GpuBuffer::Create(const kString& name, uint32_t NumElements, uint32_t ElementSize, const void* initialData)
 {
-public:
-	virtual ~GpuBuffer() { Destroy(); }
+	m_ElementCount = NumElements;
+	m_ElementSize = ElementSize;
+	m_BufferSize = NumElements * ElementSize;
 
-	virtual void Destroy(void);
+	D3D12_RESOURCE_DESC ResourceDesc = DescribeBuffer();
 
-	// Create a buffer.  If initial data is provided, it will be copied into the buffer using the default command context.
-	void Create(const std::wstring& name, uint32_t NumElements, uint32_t ElementSize,
-		const void* initialData = nullptr);
+	m_UsageState = D3D12_RESOURCE_STATE_COMMON;
 
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetUAV(void) const { return m_UAV; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV(void) const { return m_SRV; }
+	D3D12_HEAP_PROPERTIES HeapProps;
+	HeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+	HeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	HeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	HeapProps.CreationNodeMask = 1;
+	HeapProps.VisibleNodeMask = 1;
 
-	D3D12_GPU_VIRTUAL_ADDRESS RootConstantBufferView(void) const { return m_GpuVirtualAddress; }
+	ThrowIfFailed(
+		m_Device->Get()->CreateCommittedResource(
+			&HeapProps, D3D12_HEAP_FLAG_NONE,
+			&ResourceDesc, m_UsageState,
+			nullptr, IID_PPV_ARGS(m_Resource.GetAddressOf()))
+		);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE CreateConstantBufferView(uint32_t Offset, uint32_t Size) const;
+	m_GpuVirtualAddress = m_Resource->GetGPUVirtualAddress();
 
-	D3D12_VERTEX_BUFFER_VIEW VertexBufferView(size_t Offset, uint32_t Size, uint32_t Stride) const;
-	D3D12_VERTEX_BUFFER_VIEW VertexBufferView(size_t BaseVertexIndex = 0) const
-	{
-		size_t Offset = BaseVertexIndex * m_ElementSize;
-		return VertexBufferView(Offset, (uint32_t)(m_BufferSize - Offset), m_ElementSize);
-	}
+	if (initialData)
+		CommandContext::InitializeBuffer(*this, initialData, m_BufferSize);
 
-	D3D12_INDEX_BUFFER_VIEW IndexBufferView(size_t Offset, uint32_t Size, bool b32Bit = false) const;
-	D3D12_INDEX_BUFFER_VIEW IndexBufferView(size_t StartIndex = 0) const
-	{
-		size_t Offset = StartIndex * m_ElementSize;
-		return IndexBufferView(Offset, (uint32_t)(m_BufferSize - Offset), m_ElementSize == 4);
-	}
+#ifdef RELEASE
+	(name);
+#else
+	m_Resource->SetName(name.c_str());
+#endif
 
-protected:
-
-	GpuBuffer(void) : m_BufferSize(0), m_ElementCount(0), m_ElementSize(0)
-	{
-		m_ResourceFlags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		m_UAV.ptr = ~0ull;
-		m_SRV.ptr = ~0ull;
-	}
-
-	D3D12_RESOURCE_DESC DescribeBuffer(void);
-	virtual void CreateDerivedViews(void) = 0;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE m_UAV;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_SRV;
-
-	size_t m_BufferSize;
-	uint32_t m_ElementCount;
-	uint32_t m_ElementSize;
-	D3D12_RESOURCE_FLAGS m_ResourceFlags;
-};
-
-inline D3D12_VERTEX_BUFFER_VIEW GpuBuffer::VertexBufferView(size_t Offset, uint32_t Size, uint32_t Stride) const
-{
-	D3D12_VERTEX_BUFFER_VIEW VBView;
-	VBView.BufferLocation = m_GpuVirtualAddress + Offset;
-	VBView.SizeInBytes = Size;
-	VBView.StrideInBytes = Stride;
-	return VBView;
+	CreateDerivedViews();
 }
 
-inline D3D12_INDEX_BUFFER_VIEW GpuBuffer::IndexBufferView(size_t Offset, uint32_t Size, bool b32Bit) const
+void GpuBuffer::Destroy(void)
 {
-	D3D12_INDEX_BUFFER_VIEW IBView;
-	IBView.BufferLocation = m_GpuVirtualAddress + Offset;
-	IBView.Format = b32Bit ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
-	IBView.SizeInBytes = Size;
-	return IBView;
+	GpuResource::Destroy();
 }
+
+D3D12_CPU_DESCRIPTOR_HANDLE GpuBuffer::CreateConstantBufferView(uint32_t Offset, uint32_t Size) const
+{
+	K3D_ASSERT(Offset + Size <= m_BufferSize);
+	Size = kMath::AlignUp(Size, 16);
+	D3D12_CONSTANT_BUFFER_VIEW_DESC CBVDesc;
+	CBVDesc.BufferLocation = m_GpuVirtualAddress + (size_t)Offset;
+	CBVDesc.SizeInBytes = Size;
+	auto & HeapAllocator = m_Device->GetViewDescriptorAllocator<D3D12_CONSTANT_BUFFER_VIEW_DESC>();
+	SIZE_T AllocatedIndex;
+	D3D12_CPU_DESCRIPTOR_HANDLE hCBV = HeapAllocator.AllocateHeapSlot(AllocatedIndex);
+	m_Device->Get()->CreateConstantBufferView(&CBVDesc, hCBV);
+	return hCBV;
+}
+
+D3D12_RESOURCE_DESC GpuBuffer::DescribeBuffer(void)
+{
+	K3D_ASSERT(m_BufferSize != 0);
+
+	D3D12_RESOURCE_DESC Desc = {};
+	Desc.Alignment = 0;
+	Desc.DepthOrArraySize = 1;
+	Desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	Desc.Flags = m_ResourceFlags;
+	Desc.Format = DXGI_FORMAT_UNKNOWN;
+	Desc.Height = 1;
+	Desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	Desc.MipLevels = 1;
+	Desc.SampleDesc.Count = 1;
+	Desc.SampleDesc.Quality = 0;
+	Desc.Width = (UINT64)m_BufferSize;
+	return Desc;
+}
+
 
 class ByteAddressBuffer : public GpuBuffer
 {
@@ -289,82 +293,6 @@ protected:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_UAVHandle[12];
 	uint32_t m_NumMipMaps; // number of texture sublevels
 };
-
-void GpuBuffer::Create(const std::wstring& name, uint32_t NumElements, uint32_t ElementSize, const void* initialData)
-{
-	m_ElementCount = NumElements;
-	m_ElementSize = ElementSize;
-	m_BufferSize = NumElements * ElementSize;
-
-	D3D12_RESOURCE_DESC ResourceDesc = DescribeBuffer();
-
-	m_UsageState = D3D12_RESOURCE_STATE_COMMON;
-
-	D3D12_HEAP_PROPERTIES HeapProps;
-	HeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-	HeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	HeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	HeapProps.CreationNodeMask = 1;
-	HeapProps.VisibleNodeMask = 1;
-
-	ThrowIfFailed(
-		m_Device->Get()->CreateCommittedResource(
-			&HeapProps, D3D12_HEAP_FLAG_NONE,
-			&ResourceDesc, m_UsageState,
-			nullptr, IID_PPV_ARGS(m_Resource.GetAddressOf()))
-		);
-
-	m_GpuVirtualAddress = m_Resource->GetGPUVirtualAddress();
-
-	if (initialData)
-		CommandContext::InitializeBuffer(*this, initialData, m_BufferSize);
-
-#ifdef RELEASE
-	(name);
-#else
-	m_Resource->SetName(name.c_str());
-#endif
-
-	CreateDerivedViews();
-}
-
-void GpuBuffer::Destroy(void)
-{
-	GpuResource::Destroy();
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE GpuBuffer::CreateConstantBufferView(uint32_t Offset, uint32_t Size) const
-{
-	K3D_ASSERT(Offset + Size <= m_BufferSize);
-	Size = kMath::AlignUp(Size, 16);
-	D3D12_CONSTANT_BUFFER_VIEW_DESC CBVDesc;
-	CBVDesc.BufferLocation = m_GpuVirtualAddress + (size_t)Offset;
-	CBVDesc.SizeInBytes = Size;
-	auto & HeapAllocator = m_Device->GetViewDescriptorAllocator<D3D12_CONSTANT_BUFFER_VIEW_DESC>();
-	SIZE_T AllocatedIndex;
-	D3D12_CPU_DESCRIPTOR_HANDLE hCBV = HeapAllocator.AllocateHeapSlot(AllocatedIndex);
-	m_Device->Get()->CreateConstantBufferView(&CBVDesc, hCBV);
-	return hCBV;
-}
-
-D3D12_RESOURCE_DESC GpuBuffer::DescribeBuffer(void)
-{
-	K3D_ASSERT(m_BufferSize != 0);
-
-	D3D12_RESOURCE_DESC Desc = {};
-	Desc.Alignment = 0;
-	Desc.DepthOrArraySize = 1;
-	Desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	Desc.Flags = m_ResourceFlags;
-	Desc.Format = DXGI_FORMAT_UNKNOWN;
-	Desc.Height = 1;
-	Desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	Desc.MipLevels = 1;
-	Desc.SampleDesc.Count = 1;
-	Desc.SampleDesc.Quality = 0;
-	Desc.Width = (UINT64)m_BufferSize;
-	return Desc;
-}
 
 void ByteAddressBuffer::CreateDerivedViews(void)
 {

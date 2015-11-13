@@ -1188,7 +1188,7 @@ static HRESULT CreateTextureFromDDS( _In_ ID3D12Device* d3dDevice,
 
 		if (SUCCEEDED(hr))
 		{
-			k3d::d3d12::GpuResource DestTexture(*texture, D3D12_RESOURCE_STATE_COMMON);
+			//k3d::d3d12::GpuResource DestTexture(*texture, D3D12_RESOURCE_STATE_COMMON);
 			//k3d::d3d12::CommandContext::InitializeTexture(DestTexture, (UINT)mipCount, initData.get());
 		}
 	}

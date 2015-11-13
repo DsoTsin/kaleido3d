@@ -5,5 +5,6 @@
 #define NS_K3D_METAL_END }}
 
 #import <Metal/Metal.h>
+#import <QuartzCore/CAMetalLayer.h>
 
 #endif

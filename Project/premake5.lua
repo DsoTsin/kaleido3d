@@ -27,5 +27,5 @@
 	language "C++"
 	--dofile("findBoost.lua")
 	include "../Source/Core"
-	include "../Source/Renderer/Metal"
+	include "../Source/RHI/Metal"
 	include "../Source/Example/01-Metal-Cube"

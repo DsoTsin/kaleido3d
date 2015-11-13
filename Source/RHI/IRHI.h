@@ -13,6 +13,10 @@ namespace rhi
 	struct IDeviceAdapter {};
 	struct IShaderCompiler;
 	struct IShaderBytes;
+	struct ISyncPointFence
+	{
+	};
+
 
 	// List all devices
 	typedef void(*PFNEnumAllDevice)(IDeviceAdapter** &, uint32*);
@@ -32,7 +36,7 @@ namespace rhi
 		virtual IGpuResource*		NewGpuResource(EGpuResourceType type) = 0;
 		virtual ISampler*			NewSampler(const SamplerState&) = 0;
 		virtual IPipelineState*		NewPipelineState() = 0;
-
+		virtual ISyncPointFence*	NewFence() = 0;
 	};
 
 	struct IShaderCompiler

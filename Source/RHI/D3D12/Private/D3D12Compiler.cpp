@@ -36,6 +36,7 @@ rhi::IShaderBytes * ShaderCompiler::CompileFromSource(ShaderCompiler::ELangVersi
 		Log::Out(LogLevel::Fatal, "ShaderCompiler", "Error: %s", ErrorBlob->GetBufferPointer());
 		return nullptr;
 	}
+	Log::Out(LogLevel::Info, "ShaderCompiler", "Succeeded: %s", Source);
 	return new ShaderBytes(ShaderBlob);
 }
 

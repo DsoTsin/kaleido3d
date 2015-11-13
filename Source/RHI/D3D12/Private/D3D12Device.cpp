@@ -67,6 +67,9 @@ namespace rhi
 
 NS_K3D_D3D12_BEGIN
 
+DirectCommandListManager g_DirectCommandListManager;
+
+
 D3D_FEATURE_LEVEL TestFLs[] = {
 	D3D_FEATURE_LEVEL_12_1,
 	D3D_FEATURE_LEVEL_12_0,
@@ -126,6 +129,7 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 		m_RTVDHAllocator.Init(m_Inst);
 		m_UAVDHAllocator.Init(m_Inst);
 		m_SRVDHAllocator.Init(m_Inst);
+		g_DirectCommandListManager.Create(m_Inst);
 		return rhi::IDevice::DeviceFound;
 	}
 	return rhi::IDevice::DeviceNotFound;
@@ -133,7 +137,10 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 
 rhi::ICommandContext*	Device::NewCommandContext(rhi::ECommandType Type)
 {
-	return nullptr;
+	CommandContext * cmdCtx = new CommandContext;
+	cmdCtx->m_OwningManager = &g_DirectCommandListManager;
+	cmdCtx->Initialize();
+	return cmdCtx;
 }
 
 rhi::ISampler*			Device::NewSampler(const rhi::SamplerState&)
@@ -146,6 +153,11 @@ rhi::IPipelineState*	Device::NewPipelineState()
 	PipelineState * ps = new PipelineState;
 	ps->SetDevice(this);
 	return ps;
+}
+
+rhi::ISyncPointFence * Device::NewFence()
+{
+	return nullptr;
 }
 
 
