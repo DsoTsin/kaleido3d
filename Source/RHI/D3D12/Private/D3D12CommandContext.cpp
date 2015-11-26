@@ -4,6 +4,10 @@
 
 NS_K3D_D3D12_BEGIN
 
+const char * TAG_COMMAND_CONTEXT = "CommandContext";
+const char * TAG_COMPUTE_CONTEXT = "ComputeContext";
+const char * TAG_GRAPHICS_CONTEXT = "GraphicsContext";
+
 CommandContext::CommandContext() :
 	m_DynamicDescriptorHeap(*this),
 	m_CpuLinearAllocator(kCpuWritable),
@@ -13,11 +17,10 @@ CommandContext::CommandContext() :
 	m_CommandList = nullptr;
 	m_CurrentAllocator = nullptr;
 	ZeroMemory(m_CurrentDescriptorHeaps, sizeof(m_CurrentDescriptorHeaps));
-	m_CurGraphicsRootSignature = nullptr;
-	m_CurGraphicsPipelineState = nullptr;
-	m_CurComputeRootSignature = nullptr;
-	m_CurComputePipelineState = nullptr;
 	m_NumBarriersToFlush = 0;
+#if _DEBUG
+	Log::Out(LogLevel::Info, TAG_COMMAND_CONTEXT, "Allocated.");
+#endif
 }
 
 CommandContext::~CommandContext()
@@ -40,61 +43,9 @@ void CommandContext::CopyBuffer(rhi::IGpuResource & Dest, rhi::IGpuResource & Sr
 {
 }
 
-void CommandContext::SetIndexBuffer(const rhi::IndexBufferView & IBView)
-{
-	const IndexBufferView & IBV = reinterpret_cast<const IndexBufferView&>(IBView);
-
-}
-
-void CommandContext::SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView & VBView)
-{
-}
-
-void CommandContext::SetPipelineState(uint32 Hash, rhi::IPipelineState *RhiPipeLineState)
-{
-	PipelineState * pPSO = static_cast<PipelineState*>(RhiPipeLineState);
-	K3D_ASSERT(pPSO != nullptr);
-	//? pPSO->Finalize();
-	m_CommandList->SetPipelineState(pPSO->GetPipelineStateObject());
-}
-
-void CommandContext::SetViewport(const rhi::Viewport& Vp)
-{
-	m_CommandList->RSSetViewports(1, (const D3D12_VIEWPORT*) &Vp);
-}
-
-void CommandContext::SetPrimitiveType(rhi::EPrimitiveType PrimType)
-{
-	m_CommandList->IASetPrimitiveTopology(g_PrimitiveTopology[PrimType]);
-}
-
-void CommandContext::DrawInstanced(rhi::DrawInstanceParam Param)
-{
-	FlushResourceBarriers();
-	m_CommandList->DrawInstanced(
-		Param.VertexCountPerInstance, Param.InstanceCount, 
-		Param.StartVertexLocation, Param.StartInstanceLocation);
-}
-
-void CommandContext::DrawIndexedInstanced(rhi::DrawIndexedInstancedParam Param)
-{
-	FlushResourceBarriers();
-	m_CommandList->DrawIndexedInstanced(
-		Param.IndexCountPerInstance, Param.InstanceCount, 
-		Param.StartIndexLocation, Param.BaseVertexLocation, Param.StartInstanceLocation);
-}
-
 void CommandContext::SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type, ID3D12DescriptorHeap* HeapPtr)
 {
 
-}
-
-void CommandContext::SetDynamicVB(UINT Slot, size_t NumVertices, size_t VertexStride, const void * VBData)
-{
-}
-
-void CommandContext::SetDynamicIB(size_t IndexCount, const uint16_t * IBData)
-{
 }
 
 void CommandContext::Reset()
@@ -102,11 +53,6 @@ void CommandContext::Reset()
 	K3D_ASSERT(m_CommandList != nullptr && m_CurrentAllocator == nullptr);
 	m_CurrentAllocator = m_OwningManager->RequestAllocator();
 	m_CommandList->Reset(m_CurrentAllocator, nullptr);
-
-	m_CurGraphicsRootSignature = nullptr;
-	m_CurGraphicsPipelineState = nullptr;
-	m_CurComputeRootSignature = nullptr;
-	m_CurComputePipelineState = nullptr;
 	m_NumBarriersToFlush = 0;
 }
 
@@ -177,4 +123,123 @@ void CommandContext::TransitionResource(GpuResource & Resource, D3D12_RESOURCE_S
 	}
 }
 
+GraphicsContext::GraphicsContext()
+	: CommandContext()
+	, m_CurGraphicsRootSignature(nullptr)
+	, m_CurGraphicsPipelineState(nullptr)
+{
+#if _DEBUG
+	Log::Out(LogLevel::Info, TAG_GRAPHICS_CONTEXT, "Allocated.");
+#endif
+}
+
+GraphicsContext::~GraphicsContext()
+{
+}
+
+void GraphicsContext::ClearColorBuffer(rhi::IColorBuffer * iColorBuffer)
+{
+}
+
+void GraphicsContext::ClearDepthBuffer(rhi::IDepthBuffer * iDepthBuffer)
+{
+}
+
+void GraphicsContext::SetRenderTargets(
+	uint32 NumColorBuffer, rhi::IColorBuffer * ColorBuffers,
+	rhi::IDepthBuffer * iDepthBuffer, bool ReadOnlyDepth)
+{
+}
+
+void GraphicsContext::SetIndexBuffer(const rhi::IndexBufferView & IBView)
+{
+	m_CommandList->IASetIndexBuffer((const D3D12_INDEX_BUFFER_VIEW*)&IBView);
+}
+
+void GraphicsContext::SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView)
+{
+	m_CommandList->IASetVertexBuffers(Slot, 1, (const D3D12_VERTEX_BUFFER_VIEW*)&VBView);
+}
+
+void GraphicsContext::SetPipelineState(uint32 Hash, rhi::IPipelineStateObject *RhiPipeLineState)
+{
+	PipelineState * pPSO = static_cast<PipelineState*>(RhiPipeLineState);
+	K3D_ASSERT(pPSO != nullptr);
+	m_CommandList->SetPipelineState(pPSO->GetPipelineStateObject());
+}
+
+void GraphicsContext::SetPipelineLayout(rhi::IPipelineLayout * pRHIPipelineLayout)
+{
+	PipelineLayout * pipelineLayout = static_cast<PipelineLayout*>(pRHIPipelineLayout);
+	m_CommandList->SetGraphicsRootSignature(pipelineLayout->GetRootSignature());
+}
+
+void GraphicsContext::SetViewport(const rhi::Viewport& Vp)
+{
+	m_CommandList->RSSetViewports(1, (const D3D12_VIEWPORT*)&Vp);
+}
+
+void GraphicsContext::SetScissorRects(uint32 Num, const rhi::Rect *pRects)
+{
+	m_CommandList->RSSetScissorRects(Num, (const D3D12_RECT*)pRects);
+}
+
+void GraphicsContext::SetPrimitiveType(rhi::EPrimitiveType PrimType)
+{
+	m_CommandList->IASetPrimitiveTopology(g_PrimitiveTopology[PrimType]);
+}
+
+void GraphicsContext::DrawInstanced(rhi::DrawInstanceParam Param)
+{
+	FlushResourceBarriers();
+	m_CommandList->DrawInstanced(
+		Param.VertexCountPerInstance, Param.InstanceCount,
+		Param.StartVertexLocation, Param.StartInstanceLocation);
+}
+
+void GraphicsContext::DrawIndexedInstanced(rhi::DrawIndexedInstancedParam Param)
+{
+	FlushResourceBarriers();
+	m_CommandList->DrawIndexedInstanced(
+		Param.IndexCountPerInstance, Param.InstanceCount,
+		Param.StartIndexLocation, Param.BaseVertexLocation, Param.StartInstanceLocation);
+}
+
+void GraphicsContext::SetRootSignature(const RootSignature &RootSig)
+{
+	if (RootSig.GetSignature() == m_CurGraphicsRootSignature)
+		return;
+
+	m_CommandList->SetGraphicsRootSignature(m_CurGraphicsRootSignature = RootSig.GetSignature());
+
+	//m_DynamicDescriptorHeap.ParseGraphicsRootSignature(RootSig);
+}
+
+ComputeContext::ComputeContext()
+	: CommandContext()
+	, m_CurComputeRootSignature(nullptr)
+	, m_CurComputePipelineState(nullptr)
+{
+#if _DEBUG
+	Log::Out(LogLevel::Info, TAG_COMPUTE_CONTEXT, "Allocated.");
+#endif
+}
+
+ComputeContext::~ComputeContext()
+{
+#if _DEBUG
+	Log::Out(LogLevel::Info, TAG_COMPUTE_CONTEXT, "Destroyed.");
+#endif
+}
+
+void ComputeContext::Dispatch(uint32 X, uint32 Y, uint32 Z)
+{
+	m_CommandList->Dispatch(X, Y, Z);
+}
+
+void ComputeContext::SetPipelineLayout(rhi::IPipelineLayout * pRHIPipelineLayout)
+{
+	PipelineLayout * pipelineLayout = static_cast<PipelineLayout*>(pRHIPipelineLayout);
+	m_CommandList->SetComputeRootSignature(pipelineLayout->GetRootSignature());
+}
 NS_K3D_D3D12_END

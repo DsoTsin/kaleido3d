@@ -82,7 +82,7 @@ void UnitTestRHICommandContext::OnUpdate()
 
 void UnitTestRHICommandContext::OnSizeChanged(int width, int height)
 {
-
+	Log::Out("SizeChanged", "%d, %d", width, height);
 }
 
 bool UnitTestRHICommandContext::InitDevice()
@@ -117,6 +117,8 @@ void UnitTestRHICommandContext::InitSwapChain()
 	swapChainDesc.BufferCount = frame_count;
 	swapChainDesc.BufferDesc.Width = HostWindow()->Width();
 	swapChainDesc.BufferDesc.Height = HostWindow()->Height();
+	m_Viewport.Width = HostWindow()->Width();
+	m_Viewport.Height = HostWindow()->Height();
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -142,25 +144,26 @@ void UnitTestRHICommandContext::InitPipeLineState()
 	ShaderCompiler fsCompiler;
 	IShaderBytes* sbPixel = fsCompiler.CompileFromSource(rhi::IShaderCompiler::HLSL_5_0, rhi::ES_Fragment, source, "PSMain");
 	// test [Device -> NewpipelineState] interface
-	m_TestPipelineState = m_TestDevice->NewPipelineState();
-
+	m_TestPipelineState = m_TestDevice->NewPipelineState(rhi::EPipelineType::EPSO_Graphics);
+	rhi::ShaderParamLayout shaderLayout;
+	m_TestPipelineLayout = rhi::CreatePipelineLayout(shaderLayout);
 	// test PipelineState's interfaces
-	RootSignature rs;
-	rs.Finalize(static_cast<Device*>(m_TestDevice)->Get(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	static_cast<PipelineState*>(m_TestPipelineState)->SetRootSignature(rs);
-
+	m_TestPipelineLayout->Finalize(m_TestDevice);
+	m_TestPipelineState->SetLayout(m_TestPipelineLayout);
 	m_TestPipelineState->SetShader(rhi::ES_Vertex, sbVert);
 	m_TestPipelineState->SetShader(rhi::ES_Fragment, sbPixel);
-	m_TestPipelineState->SetBlendState(rhi::BlendState());
-	m_TestPipelineState->SetDepthStencilState(rhi::DepthStencilState());
-	m_TestPipelineState->SetRasterizerState(rhi::RasterizerState());
+	IGraphicsPipelineState * gPS = dynamic_cast<IGraphicsPipelineState *>(m_TestPipelineState);
+	gPS->SetBlendState(rhi::BlendState());
+	gPS->SetDepthStencilState(rhi::DepthStencilState());
+	gPS->SetRasterizerState(rhi::RasterizerState());
+	gPS->SetRenderTargetFormat(rhi::RenderTargetFormat());
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
-	m_TestPipelineState->SetVertexInputLayout(new VertexInputLayout(inputElementDescs, 2));
-	m_TestPipelineState->SetPrimitiveTopology(rhi::Triangles);
+	gPS->SetVertexInputLayout(new VertexInputLayout(inputElementDescs, 2));
+	gPS->SetPrimitiveTopology(rhi::EPT_Triangles);
 	m_TestPipelineState->Finalize();
 }
 
@@ -181,7 +184,7 @@ void UnitTestRHICommandContext::InitRenderResource()
 	m_AspectRatio = 1920.f / 1080.f;
 
 	// test [Device -> NewGpuResource] interface
-	IGpuResource * GpuRes = m_TestDevice->NewGpuResource(rhi::Buffer);
+	IGpuResource * GpuRes = m_TestDevice->NewGpuResource(rhi::EGT_Buffer);
 	// Create the vertex buffer.
 	{
 		// Define the geometry for a triangle.
@@ -195,7 +198,7 @@ void UnitTestRHICommandContext::InitRenderResource()
 		const UINT vertexBufferSize = sizeof(triangleVertices);
 		GpuBuffer *resource = static_cast<GpuBuffer*>(GpuRes);
 		resource->Create(KT("Triangle Vertex Buffer"), 3, sizeof(Vertex), triangleVertices);
-		resource->AsVertexBufferView(0, 3 * sizeof(Vertex), sizeof(Vertex));
+		m_TestVertexBufferView = resource->AsVertexBufferView(0, 3 * sizeof(Vertex), sizeof(Vertex));
 		/*
 		ThrowIfFailed(device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -222,4 +225,15 @@ void UnitTestRHICommandContext::InitRenderResource()
 
 void UnitTestRHICommandContext::RenderFrame()
 {
+	GraphicsContext * GfxContext = dynamic_cast<GraphicsContext*>(m_TestCommandContext);
+	GfxContext->SetViewport(m_Viewport);
+	rhi::Rect rect = { 0, 0, 1920, 1080 };
+	GfxContext->SetScissorRects(1, &rect);
+	GfxContext->SetPipelineState(0, m_TestPipelineState);
+	GfxContext->SetPrimitiveType(rhi::EPT_Triangles);
+	GfxContext->SetVertexBuffer(0, m_TestVertexBufferView);
+	GfxContext->SetPipelineLayout(m_TestPipelineLayout);
+	GfxContext->DrawInstanced(rhi::DrawInstanceParam(3, 1));
+	m_TestCommandContext->Execute(false);
+	m_TestCommandContext->Reset();
 }

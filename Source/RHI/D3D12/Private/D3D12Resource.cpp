@@ -173,7 +173,7 @@ protected:
 	DXGI_FORMAT m_Format;
 };
 
-class DepthBuffer : public PixelBuffer
+class DepthBuffer : public PixelBuffer, public rhi::IDepthBuffer
 {
 public:
 	DepthBuffer(float ClearDepth = 0.0f, uint32_t ClearStencil = 0)
@@ -233,7 +233,7 @@ private:
 	D3D12_RECT m_Scissor;
 };
 
-class ColorBuffer : public PixelBuffer
+class ColorBuffer : public PixelBuffer, public ID3D12ColorBuffer
 {
 public:
 	ColorBuffer(Color ClearColor = Color(0.0f, 0.0f, 0.0f, 0.0f))
@@ -245,12 +245,12 @@ public:
 	}
 
 	// Create a color buffer from a swap chain buffer.  Unordered access is restricted.
-	void CreateFromSwapChain(const std::wstring& Name, ID3D12Resource* BaseResource);
+	void CreateFromSwapChain(const kString& Name, ID3D12Resource* BaseResource) override;
 
 	// Create a color buffer.  If an address is supplied, memory will not be allocated.
 	// The vmem address allows you to alias buffers (which can be especially useful for
 	// reusing ESRAM across a frame.)
-	void Create(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t NumMips,
+	void Create(const kString& Name, uint32_t Width, uint32_t Height, uint32_t NumMips,
 		DXGI_FORMAT Format, D3D12_GPU_VIRTUAL_ADDRESS VidMemPtr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN);
 
 	// Create a color buffer.  If an address is supplied, memory will not be allocated.
@@ -842,7 +842,7 @@ void ColorBuffer::CreateDerivedViews(PtrDevice Device, DXGI_FORMAT Format, uint3
 	}
 }
 
-void ColorBuffer::CreateFromSwapChain(const std::wstring& Name, ID3D12Resource* BaseResource)
+void ColorBuffer::CreateFromSwapChain(const kString& Name, ID3D12Resource* BaseResource)
 {
 	AssociateWithResource(m_Device->Get(), Name, BaseResource, D3D12_RESOURCE_STATE_PRESENT);
 
@@ -854,7 +854,7 @@ void ColorBuffer::CreateFromSwapChain(const std::wstring& Name, ID3D12Resource* 
 	m_Device->Get()->CreateRenderTargetView(m_Resource.Get(), nullptr, m_RTVHandle);
 }
 
-void ColorBuffer::Create(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t NumMips,
+void ColorBuffer::Create(const kString& Name, uint32_t Width, uint32_t Height, uint32_t NumMips,
 	DXGI_FORMAT Format, D3D12_GPU_VIRTUAL_ADDRESS VidMem)
 {
 	NumMips = (NumMips == 0 ? ComputeNumMips(Width, Height) : NumMips);
@@ -945,13 +945,12 @@ void ColorBuffer::GenerateMipMaps(CommandContext& BaseContext)
 }
 **/
 
-
-
-rhi::IGpuResource*		Device::NewGpuResource(rhi::EGpuResourceType type)
+rhi::IGpuResource*
+Device::NewGpuResource(rhi::EGpuResourceType type)
 {
 	switch (type)
 	{
-	case rhi::Buffer:
+	case rhi::EGT_Buffer:
 		ByteAddressBuffer * byteBuffer = new ByteAddressBuffer();
 		byteBuffer->m_Device = this;
 		return byteBuffer;

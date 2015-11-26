@@ -1,6 +1,4 @@
 #include "Kaleido3D.h"
-
-#include "../Device.h"
 #include "ImageUtil.h"
 
 namespace k3d

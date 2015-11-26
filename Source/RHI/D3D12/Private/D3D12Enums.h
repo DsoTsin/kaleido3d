@@ -72,7 +72,21 @@ namespace
 		D3D12_DEPTH_WRITE_MASK_ALL
 	};
 
-	
+	/*
+        EPF_RGBA16Uint,
+        EPF_RGBA32Float,
+        EPF_RGBA8Unorm,
+        EPF_RGBA8Unorm_sRGB,
+	*/
+
+	DXGI_FORMAT g_DXGIFormatTable[rhi::EPixelFormat::PixelFormatNum] = {
+		DXGI_FORMAT_R16G16B16A16_UINT,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+		DXGI_FORMAT_R11G11B10_FLOAT,
+		DXGI_FORMAT_D32_FLOAT
+	};
 
 	inline void RHIBlendDesc(D3D12_BLEND_DESC & Desc, rhi::BlendState const & BState)
 	{

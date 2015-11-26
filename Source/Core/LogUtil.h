@@ -18,7 +18,7 @@ namespace k3d {
 		Fatal /** [Fatal]*/
 	};
 
-	class K3D_API Log : public Singleton<Log>
+	class Log : public Singleton<Log>
 	{
 	public:
 		Log & operator << (const char *);
@@ -58,6 +58,6 @@ namespace k3d {
 		::k3d::Log::Out(LogLevel::Error,"Assert","\'" #isFalse "\' is false"); \
 		::k3d::Log::Out(LogLevel::Error,"Assert", "args is" ##__VA_ARGS__); \
 		__debugbreak(); \
-	}
+    }
 
 #endif

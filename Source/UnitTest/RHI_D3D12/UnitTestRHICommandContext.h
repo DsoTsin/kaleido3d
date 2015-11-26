@@ -39,11 +39,15 @@ private:
 
 	rhi::IDevice *			m_TestDevice;
 	rhi::ICommandContext *	m_TestCommandContext;
-	rhi::IPipelineState *	m_TestPipelineState;
+	rhi::IPipelineLayout *	m_TestPipelineLayout;
+	rhi::IPipelineStateObject *	m_TestPipelineState;
+	rhi::VertexBufferView  m_TestVertexBufferView;
 	DirectCommandListManager		m_TestCommandListManager;
 	PtrSwapChain			m_SwapChain;
+	rhi::Viewport			m_Viewport;
 	uint32					m_FrameIndex;
 	PtrResource				m_RenderTargets[frame_count];
+
 
 	float					m_AspectRatio;
 };

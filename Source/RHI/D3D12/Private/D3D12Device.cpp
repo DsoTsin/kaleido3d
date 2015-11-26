@@ -137,10 +137,26 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 
 rhi::ICommandContext*	Device::NewCommandContext(rhi::ECommandType Type)
 {
-	CommandContext * cmdCtx = new CommandContext;
-	cmdCtx->m_OwningManager = &g_DirectCommandListManager;
-	cmdCtx->Initialize();
-	return cmdCtx;
+	CommandContext * CmdContext = nullptr;
+	switch(Type) 
+	{
+	case rhi::ECMD_Graphics:
+		CmdContext = new GraphicsContext;
+		break;
+	case rhi::ECMD_Compute:
+		CmdContext = new ComputeContext;
+		break;
+	default:
+		CmdContext = nullptr;
+		Log::Out("Device::NewCommandContext", "failed to create Unsupported CMDCTX.");
+		break;
+	}
+	if (CmdContext) 
+	{
+		CmdContext->m_OwningManager = &g_DirectCommandListManager;
+		CmdContext->Initialize();
+	}
+	return CmdContext;
 }
 
 rhi::ISampler*			Device::NewSampler(const rhi::SamplerState&)
@@ -148,11 +164,22 @@ rhi::ISampler*			Device::NewSampler(const rhi::SamplerState&)
 	return nullptr;
 }
 
-rhi::IPipelineState*	Device::NewPipelineState()
+rhi::IPipelineStateObject*	Device::NewPipelineState(rhi::EPipelineType type)
 {
-	PipelineState * ps = new PipelineState;
-	ps->SetDevice(this);
-	return ps;
+	PipelineState * pipeline = nullptr;
+	switch (type)
+	{
+	case rhi::EPSO_Graphics:
+		pipeline = new GraphicsPSO;
+		break;
+	case rhi::EPSO_Compute:
+		pipeline = new ComputePSO;
+		break;
+	default:
+		K3D_ASSERT(false, "unsupported pso type.");
+	}
+	pipeline->SetDevice(this);
+	return pipeline;
 }
 
 rhi::ISyncPointFence * Device::NewFence()

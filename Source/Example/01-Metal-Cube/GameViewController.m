@@ -74,6 +74,7 @@ static const size_t kMaxBytesPerFrame = 1024*1024;
     // Set the view to use the default device
     _device = MTLCreateSystemDefaultDevice();
 
+    NSLog(@"%@", [_device name]);
     // Create a new command queue
     _commandQueue = [_device newCommandQueue];
     

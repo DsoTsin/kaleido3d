@@ -1,9 +1,15 @@
 #pragma once
 #ifndef __IRHIDefs_h__
 #define __IRHIDefs_h__
+#include "Config/PlatformTypes.h"
 
 namespace rhi
 {
+	/**
+	 * Global Enums 
+	 * Must Start with 'E'
+	 **/
+
 	enum ECommandType
 	{
 		ECMD_Bundle,
@@ -12,39 +18,56 @@ namespace rhi
 		ECommandTypeNum
 	};
 
+	enum EPipelineType
+	{
+		EPSO_Compute,
+		EPSO_Graphics
+	};
+
 	enum EGpuResourceType
 	{
-		Texture1D,
-		Texture1DArray,
-		Texture2D,
-		Texture2DArray,
-		Texture2DMS,
-		Texture2DMSArray,
-		Texture3D,
-		Buffer,
+		EGT_Texture1D,
+		EGT_Texture1DArray,
+		EGT_Texture2D,
+		EGT_Texture2DArray,
+		EGT_Texture2DMS,
+		EGT_Texture2DMSArray,
+		EGT_Texture3D,
+		EGT_Buffer,
 		ResourceTypeNum
 	};
 
 	enum EGpuMemViewType
 	{
-		SRV,
-		UAV,
-		CBV,
-		Sampler,
-		RTV,
-		DSV,
-		IBV,
-		VBV,
-		SOV,
+		EGVT_SRV, // For Texture
+		EGVT_UAV, // For Buffer
+		EGVT_CBV, // For ConstantBuffer
+		EGVT_Sampler,
+		EGVT_RTV,
+		EGVT_DSV,
+		EGVT_IBV, // For IndexBuffer
+		EGVT_VBV, // For VertexBuffer
+		EGVT_SOV,
 		GpuViewTypeNum
 	};
 
+    enum EPixelFormat
+    {
+        EPF_RGBA16Uint,
+        EPF_RGBA32Float,
+        EPF_RGBA8Unorm,
+        EPF_RGBA8Unorm_sRGB,
+		EPF_R11G11B10Float,
+		EPF_D32Float,
+        PixelFormatNum
+    };
+    
 	enum EPrimitiveType
 	{
-		Points,
-		Lines,
-		Triangles,
-		TriangleStrip,
+		EPT_Points,
+		EPT_Lines,
+		EPT_Triangles,
+		EPT_TriangleStrip,
 		PrimTypeNum
 	};
 
@@ -57,6 +80,35 @@ namespace rhi
 		ES_Domain,
 		ES_Compute,
 		ShaderTypeNum
+	};
+
+	/** For pipeline layout declaration **/
+
+	constexpr int MAX_SHADER_PARAM = 64;
+
+	enum EShaderParam
+	{
+		ESP_UnAssigned,
+		ESP_Texture,
+		ESP_Buffer,
+		ESP_32BitsConstant,
+		ESP_Sampler,
+		ShaderParamNum
+	};
+
+	struct RenderTargetFormat
+	{
+		RenderTargetFormat()
+		{
+			NumRTs = 1;
+			RenderPixelFormats = new EPixelFormat{ EPF_RGBA8Unorm };
+			DepthPixelFormat = EPF_RGBA8Unorm;
+			MSAACount = 1;
+		}
+		uint32			NumRTs;
+		EPixelFormat *	RenderPixelFormats;
+		EPixelFormat 	DepthPixelFormat;
+		uint32			MSAACount;
 	};
 
 	struct BlendState
@@ -273,6 +325,19 @@ namespace rhi
 
 	struct Viewport
 	{
+		Viewport()
+			: Viewport(0.f, 0.f)
+		{
+		}
+
+		Viewport(
+			float width, float height, 
+			float left = 0.0f, float top = 0.0f,
+			float minDepth = 0.0f, float maxDepth = 1.0f
+			) 
+			: Left(left), Top(top), Width(width), Height(height), MinDepth(minDepth), MaxDepth(maxDepth) 
+		{
+		}
 		float Left;
 		float Top;
 		float Width;
@@ -281,6 +346,32 @@ namespace rhi
 		float MaxDepth;
 	};
 
+	struct Rect
+	{
+		long  Left;
+		long  Top;
+		long  Right;
+		long  Bottom;
+	};
+
+	struct VertexBufferView
+	{
+		uint64 BufferLocation;
+		uint32 SizeInBytes;
+		uint32 StrideInBytes;
+	};
+
+	struct IndexBufferView
+	{
+		uint64 BufferLocation;
+		uint32 SizeInBytes;
+		uint32 Padding;
+	};
+
+	struct ShaderParamLayout
+	{
+		EShaderParam Location[MAX_SHADER_PARAM];
+	};
 }
 
 #endif

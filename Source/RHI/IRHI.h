@@ -4,19 +4,81 @@
 
 namespace rhi
 {
-	struct IGpuResource {};
-	struct ISampler {};
-	struct IVertexInputLayout {};
-	struct IPipelineState;
 	struct ICommandContext;
 	struct IDevice;
-	struct IDeviceAdapter {};
 	struct IShaderCompiler;
 	struct IShaderBytes;
+
+	struct IGpuResource 
+	{
+		uint64 Padding;
+	};
+
+	struct ISampler 
+	{
+		uint64 Padding;
+	};
+	
+	struct IVertexInputLayout 
+	{
+		uint64 Padding;
+	};
+	
+	struct IDeviceAdapter 
+	{
+		uint64 Padding;
+	};
+
+	/**
+	* Vulkan has pipeline layout,
+	* D3D12 is root signature.
+	* PipelineLayout defines shaders impose constraints on table layout.
+	*/
+	struct IPipelineLayout
+	{
+		virtual void Create(ShaderParamLayout const &) = 0;
+		virtual void Finalize(IDevice *) = 0;
+	};
+
+	extern IPipelineLayout * CreatePipelineLayout(ShaderParamLayout const &);
+
+	struct IColorBuffer
+	{
+		virtual void Create(const kString& Name, uint32_t Width, uint32_t Height, uint32 NumMips, EPixelFormat Format) = 0;
+	};
+
+	struct IDepthBuffer
+	{
+		virtual void Create(const kString& Name, uint32_t Width, uint32_t Height, EPixelFormat Format) = 0;
+	};
+
 	struct ISyncPointFence
 	{
 	};
 
+	struct IPipelineStateObject
+	{
+		virtual EPipelineType   GetType() = 0;
+		virtual void			SetShader(EShaderType, IShaderBytes*) = 0;
+		virtual void			SetLayout(IPipelineLayout*) = 0;
+		virtual void			Finalize() = 0;
+	};
+
+	struct IGraphicsPipelineState
+	{
+		virtual void SetRasterizerState(const RasterizerState&) = 0;
+		virtual void SetBlendState(const BlendState&) = 0;
+		virtual void SetDepthStencilState(const DepthStencilState&) = 0;
+		virtual void SetPrimitiveTopology(const EPrimitiveType) = 0;
+		virtual void SetVertexInputLayout(IVertexInputLayout *) = 0;
+		virtual void SetRenderTargetFormat(const RenderTargetFormat &) = 0;
+		virtual void SetSampler(ISampler*) = 0;
+	};
+
+	struct IComputePipelineState
+	{
+
+	};
 
 	// List all devices
 	typedef void(*PFNEnumAllDevice)(IDeviceAdapter** &, uint32*);
@@ -35,7 +97,7 @@ namespace rhi
 		virtual ICommandContext*	NewCommandContext(ECommandType) = 0;
 		virtual IGpuResource*		NewGpuResource(EGpuResourceType type) = 0;
 		virtual ISampler*			NewSampler(const SamplerState&) = 0;
-		virtual IPipelineState*		NewPipelineState() = 0;
+		virtual IPipelineStateObject*NewPipelineState(EPipelineType) = 0;
 		virtual ISyncPointFence*	NewFence() = 0;
 	};
 
@@ -58,18 +120,6 @@ namespace rhi
 		virtual const void*	Bytes() = 0;
 	};
 
-	struct IPipelineState
-	{
-		virtual void SetShader(EShaderType, IShaderBytes*) = 0;
-		virtual void SetRasterizerState(const RasterizerState&) = 0;
-		virtual void SetBlendState(const BlendState&) = 0;
-		virtual void SetDepthStencilState(const DepthStencilState&) = 0;
-		virtual void SetPrimitiveTopology(const EPrimitiveType) = 0;
-		virtual void SetVertexInputLayout(IVertexInputLayout *) = 0;
-		virtual void SetSampler(ISampler*) = 0;
-		virtual void Finalize() = 0;
-	};
-
 	struct DrawIndexedInstancedParam
 	{
 		uint32 IndexCountPerInstance;
@@ -81,29 +131,49 @@ namespace rhi
 
 	struct DrawInstanceParam
 	{
+		DrawInstanceParam(uint32 vertexPerInst, uint32 instances, uint32 startLocation = 0, uint32 startInstLocation = 0)
+			: VertexCountPerInstance(vertexPerInst)
+			, InstanceCount(instances)
+			, StartVertexLocation(startLocation)
+			, StartInstanceLocation(startInstLocation)
+		{}
 		uint32 VertexCountPerInstance;
 		uint32 InstanceCount;
 		uint32 StartVertexLocation;
 		uint32 StartInstanceLocation;
 	};
-
-	struct VertexBufferView {};
-	struct IndexBufferView {};
+    
+    struct ICommandContext
+    {
+        virtual ~ICommandContext() {}
+        
+        virtual void Detach(IDevice *) = 0;
+        virtual void CopyBuffer(IGpuResource& Dest, IGpuResource& Src) = 0;
+        virtual void Execute(bool Wait) = 0;
+        virtual void Reset() = 0;
+    };
 
 	// Unthread-safe context, only for new APIs like D3D12,Vulkan..
-	struct ICommandContext
+    struct IGraphicsCommand
 	{
-		virtual ~ICommandContext() {}
-		virtual void Detach(IDevice *) = 0;
-		virtual void CopyBuffer(IGpuResource& Dest, IGpuResource& Src) = 0;
-		virtual void SetIndexBuffer(const IndexBufferView& IBView) = 0;
-		virtual void SetVertexBuffer(uint32 Slot, const VertexBufferView& VBView) = 0;
-		virtual void SetPipelineState(uint32 HashCode, IPipelineState*) = 0;
+        virtual ~IGraphicsCommand() {}
+		virtual void ClearColorBuffer(IColorBuffer*) = 0;
+		virtual void ClearDepthBuffer(IDepthBuffer*) = 0;
+		virtual void SetRenderTargets(uint32 NumColorBuffer, IColorBuffer*, IDepthBuffer*, bool ReadOnlyDepth = false) = 0;
+		virtual void SetScissorRects(uint32, const Rect*) = 0;
 		virtual void SetViewport(const Viewport &) = 0;
+        virtual void SetIndexBuffer(const IndexBufferView& IBView) = 0;
+		virtual void SetVertexBuffer(uint32 Slot, const VertexBufferView& VBView) = 0;
+		virtual void SetPipelineState(uint32 HashCode, IPipelineStateObject*) = 0;
+		virtual void SetPipelineLayout(IPipelineLayout *) = 0;
 		virtual void SetPrimitiveType(EPrimitiveType) = 0;
 		virtual void DrawInstanced(DrawInstanceParam) = 0;
 		virtual void DrawIndexedInstanced(DrawIndexedInstancedParam) = 0;
-		virtual void Execute(bool Wait) = 0;
-		virtual void Reset() = 0;
 	};
+    
+    struct IComputeCommand
+    {
+		virtual void SetPipelineLayout(IPipelineLayout *) = 0;
+        virtual void Dispatch( uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ) = 0;
+    };
 }

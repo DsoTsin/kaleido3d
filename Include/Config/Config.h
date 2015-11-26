@@ -74,7 +74,7 @@
 		#define K3D_API     
 	#endif
 #else
-    #define K3D_API
+    #define K3D_API  __attribute__((visibility("default")))
 #endif
 
 #endif

@@ -54,37 +54,11 @@ protected:
 	D3D12_GPU_VIRTUAL_ADDRESS	m_GpuVirtualAddress;
 };
 
-class VertexBufferView : public rhi::VertexBufferView
-{
-	friend class CommandContext;
-	friend class GpuBuffer;
-public:
-	VertexBufferView()
-	{
-	}
-
-private:
-	D3D12_VERTEX_BUFFER_VIEW m_BufferView;
-};
-
-class IndexBufferView : public rhi::IndexBufferView
-{
-	friend class CommandContext;
-	friend class GpuBuffer;
-public:
-	IndexBufferView()
-	{
-	}
-
-private:
-	D3D12_INDEX_BUFFER_VIEW m_BufferView;
-};
-
 class ResourceViewHelper
 {
 public:
-	virtual VertexBufferView AsVertexBufferView(uint64 Offset, uint32_t Size, uint32_t Stride) const = 0;
-	virtual IndexBufferView AsIndexBufferView(uint64 Offset, uint32_t Size, bool b32Bit = false) const = 0;
+	virtual rhi::VertexBufferView AsVertexBufferView(uint64 Offset, uint32_t Size, uint32_t Stride) const = 0;
+	virtual rhi::IndexBufferView AsIndexBufferView(uint64 Offset, uint32_t Size, bool b32Bit = false) const = 0;
 };
 
 
@@ -108,31 +82,31 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE CreateConstantBufferView(uint32_t Offset, uint32_t Size) const;
 
 
-	VertexBufferView AsVertexBufferView(size_t Offset, uint32_t Size, uint32_t Stride)const override
+	rhi::VertexBufferView AsVertexBufferView(size_t Offset, uint32_t Size, uint32_t Stride)const override
 	{
-		VertexBufferView VBV;
-		VBV.m_BufferView.BufferLocation = m_GpuVirtualAddress + Offset;
-		VBV.m_BufferView.SizeInBytes = Size;
-		VBV.m_BufferView.StrideInBytes = Stride;
+		rhi::VertexBufferView VBV;
+		VBV.BufferLocation = m_GpuVirtualAddress + Offset;
+		VBV.SizeInBytes = Size;
+		VBV.StrideInBytes = Stride;
 		return VBV;
 	}
 
-	IndexBufferView AsIndexBufferView(size_t Offset, uint32_t Size, bool b32Bit = false)const override
+	rhi::IndexBufferView AsIndexBufferView(size_t Offset, uint32_t Size, bool b32Bit = false)const override
 	{
-		IndexBufferView IBV;
-		IBV.m_BufferView.BufferLocation = m_GpuVirtualAddress + Offset;
-		IBV.m_BufferView.Format = b32Bit ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
-		IBV.m_BufferView.SizeInBytes = Size;
+		rhi::IndexBufferView IBV;
+		IBV.BufferLocation = m_GpuVirtualAddress + Offset;
+		IBV.Padding = b32Bit ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+		IBV.SizeInBytes = Size;
 		return IBV;
 	}
 
-	VertexBufferView AsVertexBufferView(size_t BaseVertexIndex = 0) const
+	rhi::VertexBufferView AsVertexBufferView(size_t BaseVertexIndex = 0) const
 	{
 		size_t Offset = BaseVertexIndex * m_ElementSize;
 		return AsVertexBufferView(Offset, (uint32_t)(m_BufferSize - Offset), m_ElementSize);
 	}
 
-	IndexBufferView AsIndexBufferView(size_t StartIndex = 0) const
+	rhi::IndexBufferView AsIndexBufferView(size_t StartIndex = 0) const
 	{
 		size_t Offset = StartIndex * m_ElementSize;
 		return AsIndexBufferView(Offset, (uint32_t)(m_BufferSize - Offset), m_ElementSize == 4);

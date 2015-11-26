@@ -29,3 +29,4 @@
 	include "../Source/Core"
 	include "../Source/RHI/Metal"
 	include "../Source/Example/01-Metal-Cube"
+	include "../Source/UnitTest/RHI_Metal"

@@ -12,6 +12,7 @@ project "RHI_Metal"
    "Shader.mm",
    "Public/MetalRHI.h",
    "Public/MetalRHIResource.h",
+   "Private/MetalEnums.h",
    "Private/MetalDevice.mm",
    "Private/MetalCommandContext.mm",
    "Private/MetalPipelineState.mm",
@@ -19,8 +20,9 @@ project "RHI_Metal"
    }
 
    includedirs {
-      "../..",
+      ".",
       "..",
+      "../..",
       "../../../Include"
    }
 
