@@ -50,6 +50,9 @@
 ## ===============================================================================================
 
 ################################## Unit Test For RHI #####################################
+
+include_directories(${Kaleido3D_ROOT_DIR}/Source/RHI/D3D12)
+
 set(UTRHID3D12_SRCS
 	RHI_D3D12/Main.cpp
 	RHI_D3D12/UnitTestRHIDevice.h

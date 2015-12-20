@@ -28,5 +28,6 @@
 	--dofile("findBoost.lua")
 	include "../Source/Core"
 	include "../Source/RHI/Metal"
+	include "../Source/Renderer"
 	include "../Source/Example/01-Metal-Cube"
 	include "../Source/UnitTest/RHI_Metal"

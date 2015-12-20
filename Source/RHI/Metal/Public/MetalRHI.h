@@ -19,9 +19,14 @@ class DeviceAdapter : public rhi::IDeviceAdapter
     friend class Device;
 public:
     DeviceAdapter(id<MTLDevice> device)
-    : m_Device(device) {}
+    : m_Device(device), m_pRHIDevice(nullptr) {}
     
+    id<MTLDevice> GetDevice() const { return m_Device; }
+    
+    rhi::IDevice * GetDevice() override;
 private:
+    
+    rhi::IDevice *  m_pRHIDevice;
     id<MTLDevice>   m_Device;
 };
 
@@ -50,6 +55,17 @@ private:
     id <MTLCommandQueue>    m_CommandQueue;
 };
 
+//// Create RHI MetalDevice /////
+rhi::IDevice * DeviceAdapter::GetDevice()
+{
+    if(!m_pRHIDevice)
+    {
+        m_pRHIDevice = new Device;
+    }
+    return m_pRHIDevice;
+}
+//////////////////////////////////
+
 class PipelineState : public rhi::IPipelineStateObject
 {
     friend class Device;
@@ -57,6 +73,7 @@ public:
     PipelineState();
     ~PipelineState();
     
+    virtual void SetLayout(rhi::IPipelineLayout*) override;
     virtual void SetShader(rhi::EShaderType, rhi::IShaderBytes*) override;
     virtual void Finalize() override;
     
@@ -67,6 +84,8 @@ private:
 class ComputePSO : public PipelineState, public rhi::IComputePipelineState
 {
 public:
+    ComputePSO();
+    ~ComputePSO();
     
     rhi::EPipelineType GetType () override
     {
@@ -91,7 +110,8 @@ public:
     void SetBlendState(const rhi::BlendState&) override;
     void SetDepthStencilState(const rhi::DepthStencilState&) override;
     void SetPrimitiveTopology(const rhi::EPrimitiveType) override;
-    void SetVertexInputLayout(rhi::IVertexInputLayout *) override;
+    void SetVertexInputLayout(rhi::VertexDeclaration *, uint32 Count) override;
+    void SetRenderTargetFormat(const rhi::RenderTargetFormat &) override;
     void SetSampler(rhi::ISampler*)override;
     
 private:
@@ -141,7 +161,7 @@ public:
     void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
     void SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView) override;
     void SetPipelineState(uint32 HashCode, rhi::IPipelineStateObject*) override;
-    void SetViewport(const rhi::Viewport &) override;
+    void SetViewport(const rhi::ViewportDesc &) override;
     void SetPrimitiveType(rhi::EPrimitiveType) override;
     void DrawInstanced(rhi::DrawInstanceParam) override;
     void DrawIndexedInstanced(rhi::DrawIndexedInstancedParam) override;

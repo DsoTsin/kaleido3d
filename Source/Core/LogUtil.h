@@ -50,6 +50,10 @@ namespace k3d {
 	Log::Out(LogLevel::Error, (tag), "%s in file(%s) line(%d) %s", (message), __FILE__, __LINE__, GetLastWin32Error().c_str());
 }
 
+#ifndef K3DPLATFORM_OS_WIN
+#define __debugbreak __builtin_trap
+#endif
+
 #define K3D_STRINGIFY(x) #x
 #define K3D_STRINGIFY_BUILTIN(x) K3D_STRINGIFY(x)
 #define K3D_ASSERT(isFalse, ...) \

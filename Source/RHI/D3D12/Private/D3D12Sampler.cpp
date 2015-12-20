@@ -15,7 +15,7 @@ void Sampler::Create(const D3D12_SAMPLER_DESC& Desc)
 	auto iter = s_SamplerCache.find(hashValue);
 	if (iter != s_SamplerCache.end())
 	{
-		*this = Sampler(iter->second);
+		//*this = Sampler(iter->second);
 		return;
 	}
 	/*

@@ -8,10 +8,10 @@ const char * TAG_COMMAND_CONTEXT = "CommandContext";
 const char * TAG_COMPUTE_CONTEXT = "ComputeContext";
 const char * TAG_GRAPHICS_CONTEXT = "GraphicsContext";
 
-CommandContext::CommandContext() :
-	m_DynamicDescriptorHeap(*this),
-	m_CpuLinearAllocator(kCpuWritable),
-	m_GpuLinearAllocator(kGpuExclusive)
+CommandContext::CommandContext(Device::Ptr pDevice) :
+	//m_DynamicDescriptorHeap(*this),
+	m_CpuLinearAllocator(kCpuWritable, pDevice),
+	m_GpuLinearAllocator(kGpuExclusive, pDevice)
 {
 	m_OwningManager = nullptr;
 	m_CommandList = nullptr;
@@ -69,7 +69,7 @@ void CommandContext::Execute(bool Wait)
 
 	m_CpuLinearAllocator.CleanupUsedPages(FenceValue);
 	m_GpuLinearAllocator.CleanupUsedPages(FenceValue);
-	m_DynamicDescriptorHeap.CleanupUsedHeaps(FenceValue);
+	//m_DynamicDescriptorHeap.CleanupUsedHeaps(FenceValue);
 
 	if (Wait)
 		m_OwningManager->WaitForFence(FenceValue);
@@ -123,8 +123,8 @@ void CommandContext::TransitionResource(GpuResource & Resource, D3D12_RESOURCE_S
 	}
 }
 
-GraphicsContext::GraphicsContext()
-	: CommandContext()
+GraphicsContext::GraphicsContext(Device::Ptr pDevice)
+	: CommandContext(pDevice)
 	, m_CurGraphicsRootSignature(nullptr)
 	, m_CurGraphicsPipelineState(nullptr)
 {
@@ -149,6 +149,8 @@ void GraphicsContext::SetRenderTargets(
 	uint32 NumColorBuffer, rhi::IColorBuffer * ColorBuffers,
 	rhi::IDepthBuffer * iDepthBuffer, bool ReadOnlyDepth)
 {
+	
+	//m_CommandList->OMSetRenderTargets(NumColorBuffer, )
 }
 
 void GraphicsContext::SetIndexBuffer(const rhi::IndexBufferView & IBView)
@@ -174,7 +176,7 @@ void GraphicsContext::SetPipelineLayout(rhi::IPipelineLayout * pRHIPipelineLayou
 	m_CommandList->SetGraphicsRootSignature(pipelineLayout->GetRootSignature());
 }
 
-void GraphicsContext::SetViewport(const rhi::Viewport& Vp)
+void GraphicsContext::SetViewport(const rhi::ViewportDesc& Vp)
 {
 	m_CommandList->RSSetViewports(1, (const D3D12_VIEWPORT*)&Vp);
 }
@@ -215,8 +217,8 @@ void GraphicsContext::SetRootSignature(const RootSignature &RootSig)
 	//m_DynamicDescriptorHeap.ParseGraphicsRootSignature(RootSig);
 }
 
-ComputeContext::ComputeContext()
-	: CommandContext()
+ComputeContext::ComputeContext(Device::Ptr pDevice)
+	: CommandContext(pDevice)
 	, m_CurComputeRootSignature(nullptr)
 	, m_CurComputePipelineState(nullptr)
 {

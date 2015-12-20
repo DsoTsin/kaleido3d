@@ -88,6 +88,19 @@ namespace
 		DXGI_FORMAT_D32_FLOAT
 	};
 
+	/*
+		EVF_Float2x32,
+		EVF_Float3x32,
+		EVF_Float4x32,
+		VertexFormatNum
+	*/
+
+	DXGI_FORMAT g_VertexFormatTable[rhi::EVertexFormat::VertexFormatNum] = {
+		DXGI_FORMAT_R32G32_FLOAT,
+		DXGI_FORMAT_R32G32B32_FLOAT,
+		DXGI_FORMAT_R32G32B32A32_FLOAT
+	};
+
 	inline void RHIBlendDesc(D3D12_BLEND_DESC & Desc, rhi::BlendState const & BState)
 	{
 		D3D12_RENDER_TARGET_BLEND_DESC RenderTargetBlendDesc =
@@ -141,6 +154,17 @@ namespace
 		Desc.BackFace.StencilDepthFailOp	= g_StencilOp		[	DState.BackFace.DepthStencilFailOp	];
 		Desc.BackFace.StencilPassOp			= g_StencilOp		[	DState.BackFace.StencilPassOp		];
 		Desc.BackFace.StencilFunc			= g_ComparisonFunc	[	DState.BackFace.StencilFunc			];
+	}
+
+	inline D3D12_INPUT_ELEMENT_DESC RHIInputElementDesc(rhi::VertexDeclaration const & Dec, LPCSTR SemanticName )
+	{
+		D3D12_INPUT_ELEMENT_DESC Desc;
+		Desc.SemanticName = SemanticName;
+		Desc.SemanticIndex = Dec.AttributeIndex;
+		Desc.InputSlot = 0;
+		Desc.AlignedByteOffset = Dec.OffSet;
+		Desc.InstanceDataStepRate = 0;
+		Desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
 	}
 }
 

@@ -1,5 +1,5 @@
 #include "DXCommon.h"
-#include "LinearAllocator.h"
+#include "Public/D3D12RHI.h"
 #include "Math/kMath.hpp"
 
 NS_K3D_D3D12_BEGIN
@@ -8,14 +8,13 @@ using namespace std;
 
 LinearAllocatorType LinearAllocatorPageManager::sm_AutoType = kGpuExclusive;
 
-LinearAllocatorPageManager::LinearAllocatorPageManager()
+LinearAllocatorPageManager::LinearAllocatorPageManager(Device::Ptr pDevice)
+	: D3D12RHIDeviceChild(pDevice)
 {
 	m_AllocationType = sm_AutoType;
 	sm_AutoType = (LinearAllocatorType)(sm_AutoType + 1);
 	K3D_ASSERT(sm_AutoType <= kNumAllocatorTypes);
 }
-
-LinearAllocatorPageManager LinearAllocator::sm_PageManager[2];
 
 LinearAllocationPage* LinearAllocatorPageManager::RequestPage()
 {
@@ -87,12 +86,12 @@ LinearAllocationPage* LinearAllocatorPageManager::CreateNewPage(void)
 	}
 
 	ID3D12Resource* pBuffer;
-	ThrowIfFailed(GetPrimaryD3DDevice()->CreateCommittedResource(&HeapProps, D3D12_HEAP_FLAG_NONE, &ResourceDesc,
+	ThrowIfFailed(GetParentDeviceRef().Get()->CreateCommittedResource(&HeapProps, D3D12_HEAP_FLAG_NONE, &ResourceDesc,
 		DefaultUsage, nullptr, IID_PPV_ARGS(&pBuffer)));
 
 	pBuffer->SetName(L"LinearAllocator Page");
 
-	return new LinearAllocationPage(pBuffer, DefaultUsage);
+	return new LinearAllocationPage(GetParentDevicePtr(), pBuffer, DefaultUsage);
 }
 
 void LinearAllocator::CleanupUsedPages(uint64_t FenceID)
@@ -104,7 +103,7 @@ void LinearAllocator::CleanupUsedPages(uint64_t FenceID)
 	m_CurPage = nullptr;
 	m_CurOffset = 0;
 
-	sm_PageManager[m_AllocationType].DiscardPages(FenceID, m_RetiredPages);
+	sm_PageManager[m_AllocationType]->DiscardPages(FenceID, m_RetiredPages);
 	m_RetiredPages.clear();
 }
 
@@ -131,7 +130,7 @@ DynAlloc LinearAllocator::Allocate(size_t SizeInBytes, size_t Alignment)
 
 	if (m_CurPage == nullptr)
 	{
-		m_CurPage = sm_PageManager[m_AllocationType].RequestPage();
+		m_CurPage = sm_PageManager[m_AllocationType]->RequestPage();
 		m_CurOffset = 0;
 	}
 

@@ -4,56 +4,6 @@
 
 NS_K3D_D3D12_BEGIN
 
-namespace GpuTimeManager {
-	void Initialize(uint32_t MaxNumTimers = 4096);
-	void Shutdown();
-	void EndFrame(CommandContext& Context);
-
-	// Reserve a unique timer index
-	uint32_t NewTimer(void);
-
-	// Write start and stop time stamps on the GPU timeline
-	void StartTimer(CommandContext& Context, uint32_t TimerIdx);
-	void StopTimer(CommandContext& Context, uint32_t TimerIdx);
-
-	// Bookend all calls to GetTime() with Begin/End which correspond to Map/Unmap
-	void BeginReadBack(void);
-	void EndReadBack(void);
-
-	// Returns the time in milliseconds between start and stop queries
-	float GetTime(uint32_t TimerIdx);
-}
-
-
-class GpuTimer
-{
-public:
-	GpuTimer::GpuTimer()
-	{
-		m_TimerIndex = GpuTimeManager::NewTimer();
-	}
-
-	void Start(CommandContext& Context)
-	{
-		GpuTimeManager::StartTimer(Context, m_TimerIndex);
-	}
-
-	void Stop(CommandContext& Context)
-	{
-		GpuTimeManager::StopTimer(Context, m_TimerIndex);
-	}
-
-	float GpuTimer::GetTime(void)
-	{
-		return GpuTimeManager::GetTime(m_TimerIndex);
-	}
-
-private:
-
-	uint32_t m_TimerIndex;
-};
-
-
 // Test create d3d12 device from feature level 12.1 - 11.0
 extern D3D_FEATURE_LEVEL TestCreateDevice(IUnknown* comObj, Microsoft::WRL::ComPtr<ID3D12Device> & device);
 

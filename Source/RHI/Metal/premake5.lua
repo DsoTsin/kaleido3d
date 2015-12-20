@@ -16,7 +16,9 @@ project "RHI_Metal"
    "Private/MetalDevice.mm",
    "Private/MetalCommandContext.mm",
    "Private/MetalPipelineState.mm",
-   "Private/MetalResource.mm"
+   "Private/MetalResource.mm",
+   "Private/MetalBuffer.mm",
+   "Private/MetalTexture.mm"
    }
 
    includedirs {

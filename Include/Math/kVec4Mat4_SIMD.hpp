@@ -136,6 +136,3 @@ NS_MATHLIB_BEGIN
 
 NS_MATHLIB_END
 
-typedef kMath::tVectorN<float, 4> Vec4f;
-typedef kMath::tMatrixNxN<float, 4> Mat4f;
-

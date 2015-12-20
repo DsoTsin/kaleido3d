@@ -77,7 +77,7 @@ void UnitTestRHICommandContext::OnProcess(Message & msg)
 void UnitTestRHICommandContext::OnUpdate()
 {
 	RenderFrame();
-	m_SwapChain->Present(1, 0);
+	m_pViewport->Present();
 }
 
 void UnitTestRHICommandContext::OnSizeChanged(int width, int height)
@@ -106,34 +106,17 @@ bool UnitTestRHICommandContext::InitDevice()
 
 void UnitTestRHICommandContext::InitCommandContext()
 {
-	m_TestCommandListManager.Create(static_cast<Device*>(m_TestDevice)->Get());
 	// test [Device -> NewCommandContext] interface
 	m_TestCommandContext = m_TestDevice->NewCommandContext(rhi::ECommandType::ECMD_Graphics);
 }
 
 void UnitTestRHICommandContext::InitSwapChain()
 {
-	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-	swapChainDesc.BufferCount = frame_count;
-	swapChainDesc.BufferDesc.Width = HostWindow()->Width();
-	swapChainDesc.BufferDesc.Height = HostWindow()->Height();
-	m_Viewport.Width = HostWindow()->Width();
-	m_Viewport.Height = HostWindow()->Height();
-	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.OutputWindow = (HWND)HostWindow()->GetHandle();
-	swapChainDesc.SampleDesc.Count = 1;
-	swapChainDesc.Windowed = TRUE;
-
-	ComPtr<IDXGISwapChain> swapChain;
-	ThrowIfFailed(static_cast<Device*>(m_TestDevice)->GetDXGIFactory()->CreateSwapChain(
-		m_TestCommandListManager.GetCommandQueue(),
-		&swapChainDesc,
-		swapChain.GetAddressOf()
-		));
-
-	ThrowIfFailed(swapChain.As(&m_SwapChain));
+	m_pViewport = new D3D12Viewport(
+		Device::Ptr(static_cast<Device*>(m_TestDevice)), 
+		(HWND)HostWindow()->GetHandle(), 
+		HostWindow()->Width(), HostWindow()->Height());
+	m_pViewport->Init();
 }
 
 void UnitTestRHICommandContext::InitPipeLineState()
@@ -162,7 +145,7 @@ void UnitTestRHICommandContext::InitPipeLineState()
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
-	gPS->SetVertexInputLayout(new VertexInputLayout(inputElementDescs, 2));
+	//gPS->SetVertexInputLayout(new VertexInputLayout(inputElementDescs, 2));
 	gPS->SetPrimitiveTopology(rhi::EPT_Triangles);
 	m_TestPipelineState->Finalize();
 }
@@ -196,36 +179,16 @@ void UnitTestRHICommandContext::InitRenderResource()
 		};
 
 		const UINT vertexBufferSize = sizeof(triangleVertices);
+		/*
 		GpuBuffer *resource = static_cast<GpuBuffer*>(GpuRes);
 		resource->Create(KT("Triangle Vertex Buffer"), 3, sizeof(Vertex), triangleVertices);
-		m_TestVertexBufferView = resource->AsVertexBufferView(0, 3 * sizeof(Vertex), sizeof(Vertex));
-		/*
-		ThrowIfFailed(device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&m_vertexBuffer)));
-
-		// Copy the triangle data to the vertex buffer.
-		UINT8* pVertexDataBegin;
-		CD3DX12_RANGE readRange(0, 0);		// We do not intend to read from this resource on the CPU.
-		ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-		memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-		m_vertexBuffer->Unmap(0, nullptr);
-
-		// Initialize the vertex buffer view.
-		m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-		m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-		m_vertexBufferView.SizeInBytes = vertexBufferSize;
-		*/
+		m_TestVertexBufferView = resource->AsVertexBufferView(0, 3 * sizeof(Vertex), sizeof(Vertex));*/
 	}
 }
 
 void UnitTestRHICommandContext::RenderFrame()
 {
-	GraphicsContext * GfxContext = dynamic_cast<GraphicsContext*>(m_TestCommandContext);
+	rhi::IGraphicsCommand * GfxContext = dynamic_cast<rhi::IGraphicsCommand*>(m_TestCommandContext);
 	GfxContext->SetViewport(m_Viewport);
 	rhi::Rect rect = { 0, 0, 1920, 1080 };
 	GfxContext->SetScissorRects(1, &rect);
@@ -233,6 +196,7 @@ void UnitTestRHICommandContext::RenderFrame()
 	GfxContext->SetPrimitiveType(rhi::EPT_Triangles);
 	GfxContext->SetVertexBuffer(0, m_TestVertexBufferView);
 	GfxContext->SetPipelineLayout(m_TestPipelineLayout);
+	//GfxContext->SetRenderTargets();
 	GfxContext->DrawInstanced(rhi::DrawInstanceParam(3, 1));
 	m_TestCommandContext->Execute(false);
 	m_TestCommandContext->Reset();

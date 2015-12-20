@@ -141,10 +141,10 @@ rhi::ICommandContext*	Device::NewCommandContext(rhi::ECommandType Type)
 	switch(Type) 
 	{
 	case rhi::ECMD_Graphics:
-		CmdContext = new GraphicsContext;
+		CmdContext = new GraphicsContext(shared_from_this());
 		break;
 	case rhi::ECMD_Compute:
-		CmdContext = new ComputeContext;
+		CmdContext = new ComputeContext(shared_from_this());
 		break;
 	default:
 		CmdContext = nullptr;
@@ -170,15 +170,14 @@ rhi::IPipelineStateObject*	Device::NewPipelineState(rhi::EPipelineType type)
 	switch (type)
 	{
 	case rhi::EPSO_Graphics:
-		pipeline = new GraphicsPSO;
+		pipeline = new GraphicsPSO(shared_from_this());
 		break;
 	case rhi::EPSO_Compute:
-		pipeline = new ComputePSO;
+		pipeline = new ComputePSO(shared_from_this());
 		break;
 	default:
 		K3D_ASSERT(false, "unsupported pso type.");
 	}
-	pipeline->SetDevice(this);
 	return pipeline;
 }
 

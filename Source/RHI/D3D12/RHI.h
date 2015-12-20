@@ -3,22 +3,6 @@
 
 NS_K3D_D3D12_BEGIN
 
-class Device;
-class DirectCommandListManager;
-
-class RHIRoot {
-public:
-
-	static void						Init(shared_ptr<Device> pDevice);
-	static PtrDevice				GetPrimaryD3DDevice();
-	static shared_ptr<Device> &		GetPrimaryDevice();
-	static DirectCommandListManager &		GetPrimaryCommandListManager();
-
-private:
-	static shared_ptr<Device> s_PrimaryDevice;
-	static DirectCommandListManager s_PrimaryCmdListManager;
-};
-
 class GfxRootParameter
 {
 public:

@@ -4,7 +4,7 @@
 #include <Core/Message.h>
 #include <RHI/IRHI.h>
 #include <RHI/D3D12/DXCommon.h>
-#include <RHI/D3D12/Private/D3D12CommandListManager.h>
+#include <RHI/D3D12/Public/D3D12Viewport.h>
 
 using namespace k3d;
 using namespace k3d::d3d12;
@@ -42,9 +42,10 @@ private:
 	rhi::IPipelineLayout *	m_TestPipelineLayout;
 	rhi::IPipelineStateObject *	m_TestPipelineState;
 	rhi::VertexBufferView  m_TestVertexBufferView;
-	DirectCommandListManager		m_TestCommandListManager;
+
+	D3D12Viewport *			m_pViewport;
 	PtrSwapChain			m_SwapChain;
-	rhi::Viewport			m_Viewport;
+	rhi::ViewportDesc		m_Viewport;
 	uint32					m_FrameIndex;
 	PtrResource				m_RenderTargets[frame_count];
 
