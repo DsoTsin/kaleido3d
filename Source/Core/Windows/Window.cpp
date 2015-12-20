@@ -1,18 +1,99 @@
 #include "Kaleido3D.h"
-#include "WindowImpl.h"
-#include "../LogUtil.h"
-#include "../Window.h"
-
+#include "Core/Window.h"
+#include "Core/Message.h"
+#include "Core/LogUtil.h"
+#include <queue>
+#include <Config/OSHeaders.h>
 
 namespace k3d
 {
-	namespace Global {
-		unsigned int				gWindowCount = 0;
-		TCHAR						gClassName[256] = "Kaleido3D";
-	}
-
 	namespace WindowImpl
 	{
+		namespace Global {
+			unsigned int				gWindowCount = 0;
+			TCHAR						gClassName[256] = "Kaleido3D";
+		}
+
+		class WindowsWindow : public IWindow
+		{
+		public:
+			WindowsWindow() = default;
+			WindowsWindow(const kchar *windowName, int width, int height);
+
+			/**
+			* Interfaces
+			*/
+			void	SetWindowCaption(const kchar * name) override
+			{
+				SetCaption(name);
+			}
+
+			bool	IsOpen() override
+			{
+				return true;
+			}
+
+			void*	GetHandle() const override
+			{
+				return handle;
+			}
+
+			bool	PollMessage(Message & message) override
+			{
+				if (PopMessage(message, false))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+
+			uint32 Width() const override
+			{
+				RECT rect;
+				::GetWindowRect(handle, &rect);
+				return rect.right - rect.left;
+			}
+
+			uint32 Height() const override
+			{
+				RECT rect;
+				::GetWindowRect(handle, &rect);
+				return rect.bottom - rect.top;
+			}
+
+			union {
+				HWND	handle;
+			};
+			LONG_PTR	callback;
+
+			int			Init();
+			void		SetCaption(const kchar * name);
+			void		Show(WindowMode mode) override;
+			void		Resize(int width, int height) override;
+			void		Move(int x, int y) override;
+
+			void		PushMessage(const Message & message);
+			bool		PopMessage(Message & message, bool block);
+			void		ProcessMessage();
+
+			static LRESULT CALLBACK WindowProc(HWND hwnd, UINT32 msg, WPARAM wParam, LPARAM lParam);
+
+		protected:
+			void		RegisterWindowClass();
+			void		ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam);
+
+			std::queue<Message> m_MessageQueue;
+		};
+
+		extern int InitApp();
+
+		extern Keyboard::Key virtualKeyCodeToSF(WPARAM key, LPARAM flags);
+
+
 		Keyboard::Key virtualKeyCodeToSF(WPARAM key, LPARAM flags)
 		{
 			switch (key)
@@ -132,14 +213,14 @@ namespace k3d
 			return Keyboard::Unknown;
 		}
 
-		LRESULT WindowPrivate::WindowProc(HWND hwnd, UINT32 msg, WPARAM wParam, LPARAM lParam)
+		LRESULT WindowsWindow::WindowProc(HWND hwnd, UINT32 msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (msg == WM_CREATE)
 			{
 				LONG_PTR window = (LONG_PTR)reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams;
 				SetWindowLongPtr(hwnd, GWLP_USERDATA, window);
 			}
-			WindowPrivate* window = hwnd ? reinterpret_cast<WindowPrivate*>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) : NULL;
+			WindowsWindow* window = hwnd ? reinterpret_cast<WindowsWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) : NULL;
 			if (window)
 			{
 				window->ProcessMessage(msg, wParam, lParam);
@@ -155,7 +236,14 @@ namespace k3d
 			return DefWindowProc(hwnd, msg, wParam, lParam);
 		}
 
-		int WindowPrivate::Init() {
+		WindowsWindow::WindowsWindow(const kchar * windowName, int width, int height)
+		{
+			Init();
+			SetCaption(windowName);
+			Resize(width, height);
+		}
+
+		int WindowsWindow::Init() {
 			if (Global::gWindowCount == 0)
 				RegisterWindowClass();
 
@@ -168,7 +256,7 @@ namespace k3d
 				GetModuleHandle(NULL), this);
 
 			if (!handle) {
-				DBG_LINE_WITH_LAST_ERROR("WindowPrivate","InitWindow failed!");
+				DBG_LINE_WITH_LAST_ERROR("WindowsWindow", "InitWindow failed!");
 				return E_FAIL;
 			}
 
@@ -178,12 +266,12 @@ namespace k3d
 			return S_OK;
 		}
 
-		void WindowPrivate::SetCaption(const kchar * name) {
+		void WindowsWindow::SetCaption(const kchar * name) {
 			assert(handle != nullptr && "handle cannot be nullptr");
 			::SetWindowTextW(handle, name);
 		}
 
-		void WindowPrivate::Show(WindowMode mode) {
+		void WindowsWindow::Show(WindowMode mode) {
 			assert(handle != nullptr);
 			switch (mode)
 			{
@@ -197,25 +285,25 @@ namespace k3d
 			}
 		}
 
-		void WindowPrivate::Resize(int width, int height) {
+		void WindowsWindow::Resize(int width, int height) {
 			assert(handle != nullptr);
 			RECT rect;
 			GetWindowRect(handle, &rect);
 			::SetWindowPos(handle, NULL, rect.left, rect.top, width, height, SWP_SHOWWINDOW);
 		}
 
-		void WindowPrivate::Move(int x, int y) {
+		void WindowsWindow::Move(int x, int y) {
 			assert(handle != nullptr);
 			RECT rect;
 			GetWindowRect(handle, &rect);
 			::SetWindowPos(handle, NULL, x, y, rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
 		}
 
-		void WindowPrivate::RegisterWindowClass()
+		void WindowsWindow::RegisterWindowClass()
 		{
 			WNDCLASS windowClass;
 			windowClass.style = 0;
-			windowClass.lpfnWndProc = &WindowPrivate::WindowProc;
+			windowClass.lpfnWndProc = &WindowsWindow::WindowProc;
 			windowClass.cbClsExtra = 0;
 			windowClass.cbWndExtra = 0;
 			windowClass.hInstance = GetModuleHandle(NULL);
@@ -228,12 +316,12 @@ namespace k3d
 		}
 
 
-		void WindowPrivate::PushMessage(const Message & message)
+		void WindowsWindow::PushMessage(const Message & message)
 		{
 			m_MessageQueue.push(message);
 		}
 
-		bool WindowPrivate::PopMessage(Message & message, bool block)
+		bool WindowsWindow::PopMessage(Message & message, bool block)
 		{
 			if (m_MessageQueue.empty())
 			{
@@ -270,7 +358,7 @@ namespace k3d
 			return false;
 		}
 
-		void WindowPrivate::ProcessMessage()
+		void WindowsWindow::ProcessMessage()
 		{
 			if (!callback)
 			{
@@ -283,7 +371,7 @@ namespace k3d
 			}
 		}
 
-		void WindowPrivate::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
+		void WindowsWindow::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if (handle == NULL)
 				return;
@@ -291,23 +379,23 @@ namespace k3d
 			switch (message)
 			{
 				// Destroy event
-				case WM_DESTROY:
-				{
-					// Here we must cleanup resources !
-					//cleanup();
-					break;
-				}
+			case WM_DESTROY:
+			{
+				// Here we must cleanup resources !
+				//cleanup();
+				break;
+			}
 			/*
-						// Set cursor event
-						case WM_SETCURSOR:
-						{
-						// The mouse has moved, if the cursor is in our window we must refresh the cursor
-						if (LOWORD(lParam) == HTCLIENT)
-						::SetCursor(m_cursor);
+			// Set cursor event
+			case WM_SETCURSOR:
+			{
+			// The mouse has moved, if the cursor is in our window we must refresh the cursor
+			if (LOWORD(lParam) == HTCLIENT)
+			::SetCursor(m_cursor);
 
-						break;
-						}
-						*/
+			break;
+			}
+			*/
 			// Close event
 			case WM_CLOSE:
 			{
@@ -319,7 +407,7 @@ namespace k3d
 			// Resize event
 			case WM_SIZE:
 			{
-			// Consider only events triggered by a maximize or a un-maximize
+				// Consider only events triggered by a maximize or a un-maximize
 				if (wParam != SIZE_MINIMIZED)
 				{
 					// Push a resize event
@@ -332,35 +420,35 @@ namespace k3d
 				break;
 			}
 
-						/*
-						// Start resizing
-						case WM_ENTERSIZEMOVE:
-						{
-						m_resizing = true;
-						break;
-						}
+			/*
+			// Start resizing
+			case WM_ENTERSIZEMOVE:
+			{
+			m_resizing = true;
+			break;
+			}
 
-						// Stop resizing
-						case WM_EXITSIZEMOVE:
-						{
-						m_resizing = false;
+			// Stop resizing
+			case WM_EXITSIZEMOVE:
+			{
+			m_resizing = false;
 
-						// Ignore cases where the window has only been moved
-						if (m_lastSize != getSize())
-						{
-						// Update the last handled size
-						m_lastSize = getSize();
+			// Ignore cases where the window has only been moved
+			if (m_lastSize != getSize())
+			{
+			// Update the last handled size
+			m_lastSize = getSize();
 
-						// Push a resize event
-						Message event;
-						event.type = Message::Resized;
-						event.size.width = m_lastSize.x;
-						event.size.height = m_lastSize.y;
-						PushMessage(event);
-						}
-						break;
-						}
-						*/
+			// Push a resize event
+			Message event;
+			event.type = Message::Resized;
+			event.size.width = m_lastSize.x;
+			event.size.height = m_lastSize.y;
+			PushMessage(event);
+			}
+			break;
+			}
+			*/
 			// The system request the min/max window size and position
 			case WM_GETMINMAXINFO:
 			{
@@ -390,24 +478,24 @@ namespace k3d
 				break;
 			}
 			/*
-						// Keydown event
-						case WM_KEYDOWN:
-						case WM_SYSKEYDOWN:
-						{
-						if (m_keyRepeatEnabled || ((HIWORD(lParam) & KF_REPEAT) == 0))
-						{
-						Message event;
-						event.type = Message::KeyPressed;
-						event.key.alt = HIWORD(GetAsyncKeyState(VK_MENU)) != 0;
-						event.key.control = HIWORD(GetAsyncKeyState(VK_CONTROL)) != 0;
-						event.key.shift = HIWORD(GetAsyncKeyState(VK_SHIFT)) != 0;
-						event.key.system = HIWORD(GetAsyncKeyState(VK_LWIN)) || HIWORD(GetAsyncKeyState(VK_RWIN));
-						event.key.code = virtualKeyCodeToSF(wParam, lParam);
-						PushMessage(event);
-						}
-						break;
-						}
-						*/
+			// Keydown event
+			case WM_KEYDOWN:
+			case WM_SYSKEYDOWN:
+			{
+			if (m_keyRepeatEnabled || ((HIWORD(lParam) & KF_REPEAT) == 0))
+			{
+			Message event;
+			event.type = Message::KeyPressed;
+			event.key.alt = HIWORD(GetAsyncKeyState(VK_MENU)) != 0;
+			event.key.control = HIWORD(GetAsyncKeyState(VK_CONTROL)) != 0;
+			event.key.shift = HIWORD(GetAsyncKeyState(VK_SHIFT)) != 0;
+			event.key.system = HIWORD(GetAsyncKeyState(VK_LWIN)) || HIWORD(GetAsyncKeyState(VK_RWIN));
+			event.key.code = virtualKeyCodeToSF(wParam, lParam);
+			PushMessage(event);
+			}
+			break;
+			}
+			*/
 			// Keyup event
 			case WM_KEYUP:
 			case WM_SYSKEYUP:
@@ -587,12 +675,19 @@ namespace k3d
 				}
 			}
 			default:
-				if (message >= WM_USER) 
+				if (message >= WM_USER)
 				{
 					//....
 					break;
 				}
 			}
 		}
+	}
+
+
+
+	IWindow::Ptr MakePlatformWindow(const kchar *windowName, int width, int height)
+	{
+		return std::make_shared<WindowImpl::WindowsWindow>(windowName, width, height);
 	}
 }

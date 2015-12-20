@@ -121,7 +121,6 @@ ${COMMON_SRCS}
 
 set(APP_SRCS
 Window.h
-Window.cpp
 Looper.h
 Looper.cpp
 App.h
@@ -163,5 +162,5 @@ add_library(Core ${LIB_TYPE}
 ${IOS_IMPL_SRCS}
 )
 
-add_precompiled_header(Core "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Core/Window.cpp")
+add_precompiled_header(Core "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Core/App.cpp")
 set_target_properties(Core PROPERTIES FOLDER "Runtime")

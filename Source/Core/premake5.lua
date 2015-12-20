@@ -20,7 +20,6 @@ project "Core"
    "MacOS/App.mm",
    "MacOS/ModuleCore.mm",
    "LogUtil.h", 
-   "LogUtil.cpp",
    "MacOS/LogUtil.mm",
    "Utils/MD5.h",
    "Utils/MD5.cpp",

@@ -132,13 +132,10 @@ void RootSignature::Finalize(PtrDevice Device, D3D12_ROOT_SIGNATURE_FLAGS Flags)
 	if (firstCompile)
 	{
 		ComPtr<ID3DBlob> pOutBlob, pErrorBlob;
-
 		ThrowIfFailed(D3D12SerializeRootSignature(&RootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
 			pOutBlob.GetAddressOf(), pErrorBlob.GetAddressOf()));
-
 		ThrowIfFailed(Device->CreateRootSignature(1, pOutBlob->GetBufferPointer(), pOutBlob->GetBufferSize(),
 			IID_PPV_ARGS(&m_Signature)));
-
 		s_RootSignatureHashMap[HashCode].Attach(m_Signature);
 		assert(*RSRef == m_Signature);
 	}

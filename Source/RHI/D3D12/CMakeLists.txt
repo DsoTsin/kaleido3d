@@ -10,15 +10,16 @@ Utils
 #endif()
 
 set(RHI_HEADERS
-	Public/D3D12RHIResource.h
+	../IRHI.h
 	Public/D3D12RHI.h
+	Public/D3D12Viewport.h
+	Public/D3D12RenderTarget.h
 )
 
 set(RHI_IMPL_SRCS
 	Private/D3D12CommandContext.cpp
 	Private/D3D12Device.cpp
 	Private/D3D12Resource.cpp
-	Private/LinearAllocator.h
 	Private/LinearAllocator.cpp
 	Private/D3D12Enums.h
 	Private/D3D12PipelineState.cpp
@@ -28,12 +29,10 @@ set(RHI_IMPL_SRCS
 	Private/D3D12Compiler.cpp
 	Private/D3D12CommandListManager.h
 	Private/D3D12CommandListManager.cpp
-)
-
-source_group(
-	Renderer FILES
-	ModuleD3D12.h ModuleD3D12.cpp
-	ResourceManager.h
+	Private/D3D12Viewport.cpp
+	Private/D3D12RenderTarget.cpp
+	Private/D3D12GpuBuffer.h
+	Private/D3D12GpuTexture.h
 )
 
 source_group(
@@ -41,7 +40,6 @@ source_group(
 	Color.h
 	Utils.h Utils.cpp
 	DDSTextureLoader.h DDSTextureLoader.cpp
-	DescriptorHeap.h DescriptorHeap.cpp
 	PSOLibrary.h PSOLibrary.cpp
 	RHI.h RHI.cpp
 )

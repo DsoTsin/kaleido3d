@@ -6,7 +6,7 @@ using namespace std;
 namespace k3d {
 	/*
 	static map<string, IRenderer*> gRendererMap;
-	IRenderer * RendererFactory::SetUpRenderer(const char *name, Window *window) {
+	IRenderer * RendererFactory::SetUpRenderer(const char *name, IWindow *window) {
 		assert(window != nullptr);
 		string renderName{ name };
 		IRenderer *renderer = nullptr;

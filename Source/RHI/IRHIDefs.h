@@ -24,33 +24,6 @@ namespace rhi
 		EPSO_Graphics
 	};
 
-	enum EGpuResourceType
-	{
-		EGT_Texture1D,
-		EGT_Texture1DArray,
-		EGT_Texture2D,
-		EGT_Texture2DArray,
-		EGT_Texture2DMS,
-		EGT_Texture2DMSArray,
-		EGT_Texture3D,
-		EGT_Buffer,
-		ResourceTypeNum
-	};
-
-	enum EGpuMemViewType
-	{
-		EGVT_SRV, // For Texture
-		EGVT_UAV, // For Buffer
-		EGVT_CBV, // For ConstantBuffer
-		EGVT_Sampler,
-		EGVT_RTV,
-		EGVT_DSV,
-		EGVT_IBV, // For IndexBuffer
-		EGVT_VBV, // For VertexBuffer
-		EGVT_SOV,
-		GpuViewTypeNum
-	};
-
     enum EPixelFormat
     {
         EPF_RGBA16Uint,
@@ -62,6 +35,14 @@ namespace rhi
         PixelFormatNum
     };
     
+	enum EVertexFormat
+	{
+		EVF_Float2x32,
+		EVF_Float3x32,
+		EVF_Float4x32,
+		VertexFormatNum
+	};
+
 	enum EPrimitiveType
 	{
 		EPT_Points,
@@ -323,14 +304,14 @@ namespace rhi
 		}
 	};
 
-	struct Viewport
+	struct ViewportDesc
 	{
-		Viewport()
-			: Viewport(0.f, 0.f)
+		ViewportDesc()
+			: ViewportDesc(0.f, 0.f)
 		{
 		}
 
-		Viewport(
+		ViewportDesc(
 			float width, float height, 
 			float left = 0.0f, float top = 0.0f,
 			float minDepth = 0.0f, float maxDepth = 1.0f
@@ -344,6 +325,13 @@ namespace rhi
 		float Height;
 		float MinDepth;
 		float MaxDepth;
+	};
+
+	struct VertexDeclaration
+	{
+		EVertexFormat	Format;
+		uint32			AttributeIndex;
+		uint32			OffSet;
 	};
 
 	struct Rect
@@ -372,6 +360,81 @@ namespace rhi
 	{
 		EShaderParam Location[MAX_SHADER_PARAM];
 	};
+
+	enum EGpuMemViewType
+	{
+		EGVT_SRV, // For Texture
+		EGVT_UAV, // For Buffer
+		EGVT_RTV,
+		EGVT_CBV, // For ConstantBuffer,
+		EGVT_DSV,
+		EGVT_Sampler,
+		EGVT_IBV, // For IndexBuffer
+		EGVT_VBV, // For VertexBuffer
+		EGVT_SOV,
+		GpuViewTypeNum
+	};
+
+	enum EGpuResourceType
+	{
+		EGT_Texture1D,
+		EGT_Texture1DArray,
+		EGT_Texture2D,
+		EGT_Texture2DArray,
+		EGT_Texture2DMS,
+		EGT_Texture2DMSArray,
+		EGT_Texture3D,
+		EGT_Buffer,
+		ResourceTypeNum
+	};
+
+	enum EGpuResourceAccessFlag
+	{
+		EGRAF_Read = 0x1,
+		EGRAF_Write = 0x1 << 1,
+		EGRAF_ReadAndWrite = (EGRAF_Read | EGRAF_Write)
+	};
+
+	enum EGpuResourceCreationFlag
+	{
+		EGRCF_Dynamic,
+		EGRCF_Static
+	};
+
+	struct ResourceDesc
+	{
+		EGpuResourceType Type;
+		EGpuResourceAccessFlag Flag;
+		EGpuResourceCreationFlag CreationFlag;
+
+		ResourceDesc() : Type(EGT_Buffer), Flag(EGRAF_ReadAndWrite), CreationFlag(EGRCF_Dynamic) { }
+	};
+
+	struct TextureDesc
+	{
+		EPixelFormat		Format;
+		uint32				Width;
+		uint32				Height;
+		uint32				Depth;
+		uint32				MipLevels;
+		uint32				Layers;
+
+		TextureDesc()
+		{
+			Format = EPixelFormat::EPF_RGBA8Unorm;
+			Width = 0;
+			Height = 0;
+			Depth = 0;
+			MipLevels = 0;
+			Layers = 0;
+		}
+
+		bool				IsTex1D() const { return Depth == 1 && Layers == 1 && Height == 1; }
+		bool				IsTex2D() const { return Depth == 1 && Layers == 1 && Height > 1; }
+		bool				IsTex3D() const { return Depth > 1 && Layers == 1; }
+	};
+
+
 }
 
 #endif

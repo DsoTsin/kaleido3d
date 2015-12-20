@@ -49,7 +49,7 @@ namespace k3d {
 		void GetFrustumPlanes(kMath::Vec4f planes[6]);
 
 	private:
-		K3DDISCOPY(Camera)
+		K3D_DISCOPY(Camera)
 
 	protected:
 		float m_Yaw, m_Pitch, m_Roll;

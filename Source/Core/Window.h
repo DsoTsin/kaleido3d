@@ -2,13 +2,8 @@
 #ifndef __Window_h__
 #define __Window_h__
 
-#if K3DPLATFORM_OS_MAC
-@class WindowPrivate;
-@class ViewPrivate;
-#endif
-
-namespace k3d {
-
+namespace k3d
+{
 	class Message;
 
 	enum class WindowMode {
@@ -16,45 +11,35 @@ namespace k3d {
 		FULLSCREEN
 	};
 
-#if K3DPLATFORM_OS_WIN
-	namespace WindowImpl {
-		class WindowPrivate;
-	}
-#endif
-
-	class K3D_API Window {
+	class K3D_API IWindow {
 	public:
-		Window();
-		explicit Window(const kchar *windowName, int width, int height);
+		typedef std::shared_ptr<IWindow> Ptr;
 
-		virtual ~Window();
+		virtual ~IWindow() {}
 
-		void	SetWindowCaption(const kchar * name);
-		void	Show(WindowMode mode = WindowMode::NORMAL);
-		void	Resize(int width, int height);
-		void	Move(int x, int y);
-		bool	IsOpen();
-		//implemented by platform
-		void*	GetHandle() const;
+		virtual void	SetWindowCaption(const kchar * name) = 0;
+		virtual void	Show(WindowMode mode = WindowMode::NORMAL) = 0;
+		virtual void	Resize(int width, int height) = 0;
+		virtual void	Move(int x, int y) = 0;
+		virtual bool	IsOpen() = 0;
+		virtual void*	GetHandle() const = 0;
 
-		bool	PollMessage(Message & messge);
+		virtual bool	PollMessage(Message & messge) = 0;
 
-		Window & operator = (Window const &) = delete;
-		Window(const Window&) = delete;
-		Window(const Window&&) = delete;
+		virtual uint32 	Width() const = 0;
+		virtual uint32 	Height() const = 0;
 
-		uint32 Width() const;
-		uint32 Height() const;
+		IWindow & operator = (IWindow const &) = delete;
+		IWindow(const IWindow&) = delete;
+		IWindow(const IWindow&&) = delete;
 
-	private:
-#if K3DPLATFORM_OS_WIN
-		WindowImpl::WindowPrivate *pipl;
-#else
-        WindowPrivate * pipl;
-        ViewPrivate * piplView;
-#endif
-		uint32 m_Width, m_Height;
+	protected:
+		IWindow() {} 
+		IWindow(const kchar *windowName, int width, int height) {}
+
+		friend Ptr MakePlatformWindow(const kchar *windowName, int width, int height);
 	};
 
-};
+	extern IWindow::Ptr MakePlatformWindow(const kchar *windowName, int width, int height);
+}
 #endif

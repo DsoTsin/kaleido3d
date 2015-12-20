@@ -10,22 +10,18 @@ namespace k3d {
 		: m_Window(nullptr)
 		, m_AppName(appName)
 	{
-		m_Window = new Window(appName.c_str(), 1920, 1080);
+		m_Window = MakePlatformWindow(appName.c_str(), 1920, 1080);
 	}
 
 	App::App(kString const & appName, uint32 width, uint32 height)
 		: m_Window(nullptr)
 		, m_AppName(appName)
 	{
-		m_Window = new Window(appName.c_str(), width, height);
+		m_Window = MakePlatformWindow(appName.c_str(), width, height);
 	}
 
 	App::~App()
 	{
-		if (m_Window) {
-			delete m_Window;
-			m_Window = nullptr;
-		}
 	}
 	
 	bool App::OnInit()

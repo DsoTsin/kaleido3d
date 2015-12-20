@@ -6,6 +6,12 @@
 #include <cstdio>
 #include <Config/OSHeaders.h>
 
+
+#if defined(K3DPLATFORM_OS_IOS) | defined(K3DPLATFORM_OS_MAC)
+//#import <Foundation/Foundation.h>
+#endif
+
+
 namespace k3d {
 	
 	const char *header = 
@@ -60,15 +66,6 @@ namespace k3d {
 			s++;
 		}
 		return ret;
-	}
-
-	static inline void DebugOut(const char * dbgBuffer) {
-#if   K3DPLATFORM_OS_WIN
-		OutputDebugStringA(dbgBuffer);
-#elif K3DPLATFORM_OS_LINUX
-		fputs(dbgBuffer, stderr);
-		fflush(stderr);
-#endif
 	}
 
 }

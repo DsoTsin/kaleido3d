@@ -19,14 +19,9 @@ namespace rhi
 		uint64 Padding;
 	};
 	
-	struct IVertexInputLayout 
-	{
-		uint64 Padding;
-	};
-	
 	struct IDeviceAdapter 
 	{
-		uint64 Padding;
+        virtual IDevice * GetDevice() = 0;
 	};
 
 	/**
@@ -41,16 +36,6 @@ namespace rhi
 	};
 
 	extern IPipelineLayout * CreatePipelineLayout(ShaderParamLayout const &);
-
-	struct IColorBuffer
-	{
-		virtual void Create(const kString& Name, uint32_t Width, uint32_t Height, uint32 NumMips, EPixelFormat Format) = 0;
-	};
-
-	struct IDepthBuffer
-	{
-		virtual void Create(const kString& Name, uint32_t Width, uint32_t Height, EPixelFormat Format) = 0;
-	};
 
 	struct ISyncPointFence
 	{
@@ -70,7 +55,7 @@ namespace rhi
 		virtual void SetBlendState(const BlendState&) = 0;
 		virtual void SetDepthStencilState(const DepthStencilState&) = 0;
 		virtual void SetPrimitiveTopology(const EPrimitiveType) = 0;
-		virtual void SetVertexInputLayout(IVertexInputLayout *) = 0;
+		virtual void SetVertexInputLayout(rhi::VertexDeclaration *, uint32 Count) = 0;
 		virtual void SetRenderTargetFormat(const RenderTargetFormat &) = 0;
 		virtual void SetSampler(ISampler*) = 0;
 	};
@@ -153,6 +138,9 @@ namespace rhi
         virtual void Reset() = 0;
     };
 
+	struct IColorBuffer;
+	struct IDepthBuffer;
+
 	// Unthread-safe context, only for new APIs like D3D12,Vulkan..
     struct IGraphicsCommand
 	{
@@ -161,7 +149,7 @@ namespace rhi
 		virtual void ClearDepthBuffer(IDepthBuffer*) = 0;
 		virtual void SetRenderTargets(uint32 NumColorBuffer, IColorBuffer*, IDepthBuffer*, bool ReadOnlyDepth = false) = 0;
 		virtual void SetScissorRects(uint32, const Rect*) = 0;
-		virtual void SetViewport(const Viewport &) = 0;
+		virtual void SetViewport(const ViewportDesc &) = 0;
         virtual void SetIndexBuffer(const IndexBufferView& IBView) = 0;
 		virtual void SetVertexBuffer(uint32 Slot, const VertexBufferView& VBView) = 0;
 		virtual void SetPipelineState(uint32 HashCode, IPipelineStateObject*) = 0;

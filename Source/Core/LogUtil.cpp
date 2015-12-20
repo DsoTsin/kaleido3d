@@ -9,6 +9,19 @@
 #include "../../Data/style.css.h"
 
 namespace k3d {
+
+    
+    static inline void DebugOut(const char * dbgBuffer) {
+#if   K3DPLATFORM_OS_WIN
+        OutputDebugStringA(dbgBuffer);
+#elif K3DPLATFORM_OS_LINUX
+        fputs(dbgBuffer, stderr);
+        fflush(stderr);
+#else
+        //NSLog(@ "％s", dbgBuffer);
+#endif
+    }
+    
     void Log::SetDebugOutFunction(Log::OutPutCallBack callBack)
     {
     }

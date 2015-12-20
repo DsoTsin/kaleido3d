@@ -29,7 +29,7 @@ namespace k3d
 		}
 
 
-		Mouse::Vector2i getMousePosition(const Window& relativeTo)
+		Mouse::Vector2i getMousePosition(const IWindow& relativeTo)
 		{
 			void* handle = relativeTo.GetHandle();
 			if (handle)
@@ -52,7 +52,7 @@ namespace k3d
 		}
 
 
-		void setMousePosition(const Mouse::Vector2i& position, const Window& relativeTo)
+		void setMousePosition(const Mouse::Vector2i& position, const IWindow& relativeTo)
 		{
 			void* handle = relativeTo.GetHandle();
 			if (handle)

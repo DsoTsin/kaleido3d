@@ -17,7 +17,7 @@ namespace k3d
 		return InputDeviceImpl::getMousePosition();
 	}
 
-	Mouse::Vector2i Mouse::GetPosition(const Window& relativeTo)
+	Mouse::Vector2i Mouse::GetPosition(const IWindow& relativeTo)
 	{
 		return InputDeviceImpl::getMousePosition(relativeTo);
 	}
@@ -27,7 +27,7 @@ namespace k3d
 		return InputDeviceImpl::setMousePosition(position);
 	}
 	
-	void Mouse::SetPosition(const Mouse::Vector2i& position, const Window& relativeTo)
+	void Mouse::SetPosition(const Mouse::Vector2i& position, const IWindow& relativeTo)
 	{
 		return InputDeviceImpl::setMousePosition(position, relativeTo);
 	}

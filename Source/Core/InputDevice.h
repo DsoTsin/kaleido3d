@@ -1,3 +1,5 @@
+#ifndef __InputDevice_h__
+#define __InputDevice_h__
 #pragma once
 #include "Window.h"
 #include <Math/kMath.hpp>
@@ -20,9 +22,9 @@ namespace k3d
 		};
 		static bool		IsButtonPressed(Button button);
 		static Vector2i GetPosition();
-		static Vector2i GetPosition(const Window& relativeTo);
+		static Vector2i GetPosition(const IWindow& relativeTo);
 		static void		SetPosition(const Vector2i& position);
-		static void		SetPosition(const Vector2i& position, const Window& relativeTo);
+		static void		SetPosition(const Vector2i& position, const IWindow& relativeTo);
 	};
 
 	class Keyboard
@@ -138,6 +140,5 @@ namespace k3d
 
 		static bool IsKeyPressed(Key key);
 	};
-
-
 }
+#endif

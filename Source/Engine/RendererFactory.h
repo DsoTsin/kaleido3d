@@ -4,14 +4,14 @@
 
 namespace k3d {
 
-	class Window;
+	class IWindow;
 
 	class RendererFactory {
 	public:
 		
 		~RendererFactory();
 
-		/*static IRenderer * SetUpRenderer(const char *, Window *);*/
+		/*static IRenderer * SetUpRenderer(const char *, IWindow *);*/
 
 	private:
 		RendererFactory();

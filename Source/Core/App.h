@@ -12,7 +12,7 @@ using std::shared_ptr;
 
 namespace k3d {
 
-    class Window;
+    class IWindow;
     
 	enum class AppStatus : uint32 {
 		Destroyed,
@@ -30,15 +30,21 @@ namespace k3d {
         virtual void OnDestroy();
 		virtual void OnProcess(Message & message) = 0;
         
-		Window * HostWindow() { return m_Window; }
+		IWindow::Ptr  HostWindow() { return m_Window; }
 		AppStatus Run();
 
     protected:
-        Window * m_Window;
+		IWindow::Ptr m_Window;
 		const kString & m_AppName;
+        
+#if K3DPLATFORM_OS_MAC
+        id m_AppDelegate;
+#endif
+        
     };
 
-	namespace Core {
+	namespace Core
+    {
 		uint32 RunApplication(App & app, kString const & appName);
 	}
 }

@@ -37,11 +37,15 @@ void PipelineLayout::CreateFromShaderLayout(rhi::ShaderParamLayout const &)
 
 }
 
-PipelineState::PipelineState()
-	: m_GraphicsPSODesc{}
+PipelineState::PipelineState(Device::Ptr pDevice)
+	: D3D12RHIDeviceChild(pDevice)
+	, m_GraphicsPSODesc{}
 	, m_ComputePSODesc{}
 {
 }
+
+PipelineState::~PipelineState()
+{}
 
 void PipelineState::SetShader(rhi::EShaderType Type, rhi::IShaderBytes* RShader)
 {
@@ -70,12 +74,6 @@ void PipelineState::SetShader(rhi::EShaderType Type, rhi::IShaderBytes* RShader)
 	}
 }
 
-void PipelineState::SetDevice(Device * pDevice)
-{
-	K3D_ASSERT(pDevice != nullptr);
-	m_Device = pDevice->Get();
-}
-
 void PipelineState::DestroyAll()
 {
 
@@ -99,7 +97,7 @@ void PipelineState::Finalize()
 {
 	if (GetType() == rhi::EPipelineType::EPSO_Compute)
 	{
-		ThrowIfFailed(m_Device->CreateComputePipelineState(&m_ComputePSODesc, IID_PPV_ARGS(m_pPSO.GetAddressOf())));
+		ThrowIfFailed(GetParentDeviceRef().Get()->CreateComputePipelineState(&m_ComputePSODesc, IID_PPV_ARGS(m_pPSO.GetAddressOf())));
 	}
 	else
 	{
@@ -109,7 +107,7 @@ void PipelineState::Finalize()
 		m_GraphicsPSODesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		m_GraphicsPSODesc.SampleDesc.Count = 1;
 		*/
-		ThrowIfFailed(m_Device->CreateGraphicsPipelineState(&m_GraphicsPSODesc, IID_PPV_ARGS(m_pPSO.GetAddressOf())));
+		ThrowIfFailed(GetParentDeviceRef().Get()->CreateGraphicsPipelineState(&m_GraphicsPSODesc, IID_PPV_ARGS(m_pPSO.GetAddressOf())));
 	}
 }
 
@@ -119,8 +117,8 @@ const RootSignature & PipelineState::GetRootSignature() const
 	return *m_RootSignature;
 }
 
-GraphicsPSO::GraphicsPSO()
-	: PipelineState()
+GraphicsPSO::GraphicsPSO(Device::Ptr pDevice)
+	: PipelineState(pDevice)
 {
 }
 
@@ -149,10 +147,11 @@ void GraphicsPSO::SetSampler(rhi::ISampler* RHISampler)
 	
 }
 
-void GraphicsPSO::SetVertexInputLayout(rhi::IVertexInputLayout * RHILayout)
+void GraphicsPSO::SetVertexInputLayout(rhi::VertexDeclaration *, uint32 Count)
 {
+	/*
 	VertexInputLayout * layout = static_cast<VertexInputLayout*>(RHILayout);
-	m_GraphicsPSODesc.InputLayout = {layout->m_InputLayout.get(), layout->m_ElementCount};
+	m_GraphicsPSODesc.InputLayout = {layout->m_InputLayout.get(), layout->m_ElementCount};*/
 }
 
 void GraphicsPSO::SetPrimitiveTopology(const rhi::EPrimitiveType TopologyType)
@@ -198,8 +197,8 @@ void GraphicsPSO::SetRenderTargetFormats(UINT NumRTVs, const DXGI_FORMAT * RTVFo
 	m_GraphicsPSODesc.SampleDesc.Quality = MsaaQuality;
 }
 
-ComputePSO::ComputePSO()
-	: PipelineState()
+ComputePSO::ComputePSO(Device::Ptr pDevice)
+	: PipelineState(pDevice)
 {}
 
 ComputePSO::~ComputePSO()

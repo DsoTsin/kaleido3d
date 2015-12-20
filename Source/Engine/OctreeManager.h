@@ -42,7 +42,7 @@ namespace k3d {
 		bool BoundVisible(int index, kMath::AABB const & aabb) const;
 
 	private:
-		K3DDISCOPY(OctreeSceneManager)
+		K3D_DISCOPY(OctreeSceneManager)
 
 	private:
 

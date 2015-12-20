@@ -13,11 +13,17 @@
 #include <windowsx.h>
 #include <wrl/client.h>
 #include <dxgi1_4.h>
+
 #include "Utils/d3dx12.h"
 
 #include <Core/Thread/Thread.h>
 #include <Core/Dispatch/Dispatcher.h>
 #include <Core/LogUtil.h>
+
+#include <Math/kMath.hpp>
+#ifdef ENABLE_SSE
+#include <Math/kMath_SSE.hpp>
+#endif
 
 #include <memory>
 #include <vector>
@@ -75,7 +81,7 @@ namespace k3d
 		using PtrD2DFactory = ComPtr<ID2D1Factory3>;
 		using PtrDXGIDevice = ComPtr < IDXGIDevice3 >;
 		using PtrAdapter = ComPtr < IDXGIAdapter1 >;
-		using PtrSwapChain = ComPtr < IDXGISwapChain1 >;
+		using PtrSwapChain = ComPtr < IDXGISwapChain3 >;
 		using PtrGIFactory = ComPtr<IDXGIFactory4>;
 		using PtrGfxCmdList = ComPtr < ID3D12GraphicsCommandList >;
 		using PtrCmdList = ComPtr < ID3D12CommandList >;
@@ -90,6 +96,7 @@ namespace k3d
 		using PtrSolidColorBrush = ComPtr<ID2D1SolidColorBrush>;
 		using PtrTextFormat = ComPtr<IDWriteTextFormat>;
 		using PtrCommandSignature = ComPtr<ID3D12CommandSignature>;
+		using Vector4F = kMath::tVectorN<float, 4>;
 		
 		enum class MeshSemantic {
 			VertexData,

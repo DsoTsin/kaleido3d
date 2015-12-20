@@ -19,7 +19,7 @@ namespace k3d {
 
 		void OnLoad() override;
 	private:
-		K3DDISCOPY(ObjectMesh)
+		K3D_DISCOPY(ObjectMesh)
 	private:
 
 		PtrMeshArray  m_MeshInstances;

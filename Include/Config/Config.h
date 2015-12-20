@@ -55,9 +55,10 @@
 /**
  * Class Macros
 **/
-#define K3DDISCOPY(CLASSNAME)\
+#define K3D_DISCOPY(CLASSNAME)\
   CLASSNAME & operator = (const CLASSNAME &);\
-  CLASSNAME( CLASSNAME const & );
+  CLASSNAME( CLASSNAME const & );\
+  CLASSNAME( CLASSNAME const && );
 
 #define K3D_UNUSED(x) (void)x
 

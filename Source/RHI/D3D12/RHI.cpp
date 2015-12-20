@@ -1,41 +1,13 @@
 #include "DXCommon.h"
 #include "RHI.h"
 #include "Public/D3D12RHI.h"
-#include "ModuleD3D12.h"
 #include "Utils.h"
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <Core/File.h>
 #include <Core/AssetManager.h>
 
-
-
 NS_K3D_D3D12_BEGIN
-
-shared_ptr<Device> RHIRoot::s_PrimaryDevice;
-DirectCommandListManager RHIRoot::s_PrimaryCmdListManager;
-
-void RHIRoot::Init(shared_ptr<Device> pDevice)
-{
-	s_PrimaryDevice = pDevice;
-	s_PrimaryCmdListManager.Create(pDevice->Get());
-}
-
-PtrDevice RHIRoot::GetPrimaryD3DDevice()
-{
-	K3D_ASSERT(s_PrimaryDevice != nullptr);
-	return s_PrimaryDevice->Get();
-}
-
-shared_ptr<Device>& RHIRoot::GetPrimaryDevice() 
-{
-	return s_PrimaryDevice;
-}
-
-DirectCommandListManager & RHIRoot::GetPrimaryCommandListManager()
-{
-	return s_PrimaryCmdListManager;
-}
 
 using namespace rapidjson;
 
