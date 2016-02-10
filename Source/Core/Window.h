@@ -2,13 +2,8 @@
 #ifndef __Window_h__
 #define __Window_h__
 
-#if K3DPLATFORM_OS_MAC
-@class WindowPrivate;
-@class ViewPrivate;
-#endif
-
-namespace k3d {
-
+namespace k3d
+{
 	class Message;
 
 	enum class WindowMode {
@@ -16,11 +11,9 @@ namespace k3d {
 		FULLSCREEN
 	};
 
-#if K3DPLATFORM_OS_WIN
 	namespace WindowImpl {
 		class WindowPrivate;
 	}
-#endif
 
 	class K3D_API Window {
 	public:
@@ -47,14 +40,10 @@ namespace k3d {
 		uint32 Height() const;
 
 	private:
-#if K3DPLATFORM_OS_WIN
-		WindowImpl::WindowPrivate *pipl;
-#else
-        WindowPrivate * pipl;
-        ViewPrivate * piplView;
-#endif
+        
+        std::unique_ptr<WindowImpl::WindowPrivate> pipl;
 		uint32 m_Width, m_Height;
 	};
 
-};
+}
 #endif

@@ -36,9 +36,15 @@ namespace k3d {
     protected:
         Window * m_Window;
 		const kString & m_AppName;
+        
+#if K3DPLATFORM_OS_MAC
+        id m_AppDelegate;
+#endif
+        
     };
 
-	namespace Core {
+	namespace Core
+    {
 		uint32 RunApplication(App & app, kString const & appName);
 	}
 }

@@ -18,16 +18,8 @@ project "Core"
    files { 
    "App.h",
    "MacOS/App.mm",
-   --'MacOS/AAPLAppDelegate.h",
-   --"MacOS/AAPLAppDelegate.mm",
-   --"MacOS/main.mm",
    "MacOS/ModuleCore.mm",
-   --"Apple/AAPLView.h",
-   --"Apple/AAPLView.mm",
-   --"Apple/AAPLViewController.h",
-   --"Apple/AAPLViewController.mm",
    "LogUtil.h", 
-   --"LogUtil.cpp",
    "MacOS/LogUtil.mm",
    "Utils/MD5.h",
    "Utils/MD5.cpp",
@@ -40,7 +32,9 @@ project "Core"
    "Image.h",
    "Image.cpp",
    "Window.h",
-   "MacOS/Window.mm",
+   "Window.cpp",
+   "MacOS/WindowImpl.h",
+   "MacOS/WindowImpl.mm",
    "ModuleCore.h",
    "ModuleCore.cpp"
    }

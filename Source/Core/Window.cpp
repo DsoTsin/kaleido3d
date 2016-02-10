@@ -5,6 +5,8 @@
 #include "Windows/WindowImpl.h"
 #elif K3DPLATFORM_OS_IOS
 #include "iOS/WindowImpl.h"
+#elif K3DPLATFORM_OS_MAC
+#include "MacOS/WindowImpl.h"
 #endif
 
 using namespace k3d;
