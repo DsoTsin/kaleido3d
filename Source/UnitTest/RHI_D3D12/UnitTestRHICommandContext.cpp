@@ -89,7 +89,7 @@ bool UnitTestRHICommandContext::InitDevice()
 {
 	IDeviceAdapter ** list = nullptr;
 	uint32 adapterNum = 0;
-	EnumAllDeviceAdapter(list, &adapterNum);
+	k3d::d3d12::EnumAllDeviceAdapter(list, &adapterNum);
 	if (list == nullptr)
 	{
 		return false;

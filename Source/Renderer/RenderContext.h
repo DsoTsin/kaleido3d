@@ -1,11 +1,23 @@
 #ifndef __RenderContext_h__
 #define __RenderContext_h__
 #pragma once
-#include "RHI/IRHI.h"
 #include <memory>
 
-namespace k3d {
+namespace rhi 
+{
+	struct IDevice;
+}
+
+namespace k3d 
+{
     
+	enum class RHIType
+	{
+		ERTMetal,
+		ERTVulkan,
+		ERTDirect3D12,
+	};
+
     using PtrRHIDevice = std::shared_ptr<rhi::IDevice>;
     
     /**
@@ -16,7 +28,7 @@ namespace k3d {
     public:
         RenderContext();
         
-        void Init();
+        void Init(RHIType type = RHIType::ERTVulkan);
         void Destroy();
         
         ~RenderContext();

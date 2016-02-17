@@ -10,6 +10,8 @@
 
 NS_K3D_D3D12_BEGIN
 
+extern void EnumAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*);
+
 class K3D_API DeviceAdapter : public rhi::IDeviceAdapter
 {
 public:

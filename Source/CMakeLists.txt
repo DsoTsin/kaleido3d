@@ -77,6 +77,8 @@ include_directories(
 include(${Kaleido3D_ROOT_DIR}/Project/pch.cmake)
 
 if(WIN32)
+    include(${Kaleido3D_ROOT_DIR}/Project/Common.cmake)
+    include(${Kaleido3D_ROOT_DIR}/Project/FindVulkanSDK.cmake)
     include(${Kaleido3D_ROOT_DIR}/Project/FindSDL2.cmake)
     include(${Kaleido3D_ROOT_DIR}/Project/FindMaya.cmake)
     include(${Kaleido3D_ROOT_DIR}/Project/FindTBB.cmake)
@@ -88,6 +90,7 @@ if(WIN32)
 	find_package(TBB)
 	set(PROTOBUF_SRC_ROOT_FOLDER "${K3D_THIRD_PARTY}/protobuf-2.6-win")
 	find_package(Protobuf REQUIRED)
+	_add_package_VulkanSDK()
 endif()
 
 add_subdirectory(Core)
