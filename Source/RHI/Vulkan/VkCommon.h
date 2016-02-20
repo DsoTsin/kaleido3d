@@ -13,4 +13,13 @@
 #include <array>
 #include <Core/LogUtil.h>
 
+
+#define K3D_VK_VERIFY(expr) \
+	do { \
+		if ((expr) != VK_SUCCESS) { \
+		Log::Out (LogLevel::Fatal, "VKRHI_ASSERT", "failed "## #expr ##" %s@%d.", __FILE__, __LINE__); \
+		throw; \
+		}\
+	} while (0);
+
 #endif

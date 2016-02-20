@@ -4,6 +4,8 @@
 #include "RHI/Vulkan/VkCommon.h"
 #include "RHI/Vulkan/Public/VkRHI.h"
 
+K3D_APP_MAIN(UnitTestRHIDevice);
+
 using namespace rhi;
 
 bool UnitTestRHIDevice::OnInit()

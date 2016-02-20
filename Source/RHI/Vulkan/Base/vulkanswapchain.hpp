@@ -122,8 +122,6 @@ public:
 #endif
 #endif
 
-		uint32_t i;
-
 		// Get queue properties
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, NULL);
 
@@ -133,7 +131,7 @@ public:
 
 		// Iterate over each queue to learn whether it supports presenting:
 		VkBool32* supportsPresent = (VkBool32 *)malloc(queueCount * sizeof(VkBool32));
-		for (i = 0; i < queueCount; i++) 
+		for (uint32_t i = 0; i < queueCount; i++)
 		{
 			fpGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i,
 				surface,
@@ -144,7 +142,7 @@ public:
 		// families, try to find one that supports both
 		uint32_t graphicsQueueNodeIndex = UINT32_MAX;
 		uint32_t presentQueueNodeIndex = UINT32_MAX;
-		for (i = 0; i < queueCount; i++) 
+		for (uint32_t i = 0; i < queueCount; i++)
 		{
 			if ((queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) 
 			{

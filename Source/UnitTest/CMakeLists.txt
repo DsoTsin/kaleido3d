@@ -73,9 +73,8 @@ add_unittest(
 	RHI_D3D12/Main.cpp
 )
 
-set_target_properties(UnitTestRHIDevice PROPERTIES COMPILE_DEFINITIONS "__TESTRHIDEVICE__")
-set_target_properties(UnitTestRHIDevice PROPERTIES FOLDER "Unit Test")
-
-set_target_properties(UnitTestRHICommandContext PROPERTIES COMPILE_DEFINITIONS "__TESTRHICOMMANDCONTEXT__")
-set_target_properties(UnitTestRHICommandContext PROPERTIES FOLDER "Unit Test")
-
+add_unittest(
+	UTVkTriangle
+	../Core/Win32Res/win32icon.rc
+	RHI_Vulkan/UTVkTriangle.cpp
+)

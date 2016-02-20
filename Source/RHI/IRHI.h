@@ -9,19 +9,19 @@ namespace rhi
 	struct IShaderCompiler;
 	struct IShaderBytes;
 
-	struct IGpuResource 
+	struct IGpuResource
 	{
 		uint64 Padding;
 	};
 
-	struct ISampler 
+	struct ISampler
 	{
 		uint64 Padding;
 	};
-	
-	struct IDeviceAdapter 
+
+	struct IDeviceAdapter
 	{
-        virtual IDevice * GetDevice() = 0;
+		virtual IDevice * GetDevice() = 0;
 	};
 
 	/**
@@ -86,6 +86,24 @@ namespace rhi
 		virtual ISyncPointFence*	NewFence() = 0;
 	};
 
+	struct IRenderViewport
+	{
+		virtual						~IRenderViewport() {}
+
+		virtual bool				InitViewport(
+										void *windowHandle, 
+										IDevice * pDevice, 
+										uint32 width, uint32 height,
+										EPixelFormat rtFmt
+									) = 0;
+
+		/**
+		 * @param	vSync	true to synchronise.
+		 * @return	true if it succeeds, false if it fails.
+		 */
+		virtual bool				Present(bool vSync) = 0;
+	};
+
 	struct IShaderCompiler
 	{
 		enum ELangVersion
@@ -96,6 +114,7 @@ namespace rhi
 			METALSL_1_1,
 			LangVersionNum
 		};
+
 		virtual IShaderBytes* CompileFromSource(ELangVersion, EShaderType, const char*) = 0;
 	};
 
@@ -127,30 +146,30 @@ namespace rhi
 		uint32 StartVertexLocation;
 		uint32 StartInstanceLocation;
 	};
-    
-    struct ICommandContext
-    {
-        virtual ~ICommandContext() {}
-        
-        virtual void Detach(IDevice *) = 0;
-        virtual void CopyBuffer(IGpuResource& Dest, IGpuResource& Src) = 0;
-        virtual void Execute(bool Wait) = 0;
-        virtual void Reset() = 0;
-    };
+
+	struct ICommandContext
+	{
+		virtual ~ICommandContext() {}
+
+		virtual void Detach(IDevice *) = 0;
+		virtual void CopyBuffer(IGpuResource& Dest, IGpuResource& Src) = 0;
+		virtual void Execute(bool Wait) = 0;
+		virtual void Reset() = 0;
+	};
 
 	struct IColorBuffer;
 	struct IDepthBuffer;
 
 	// Unthread-safe context, only for new APIs like D3D12,Vulkan..
-    struct IGraphicsCommand
+	struct IGraphicsCommand
 	{
-        virtual ~IGraphicsCommand() {}
+		virtual ~IGraphicsCommand() {}
 		virtual void ClearColorBuffer(IColorBuffer*) = 0;
 		virtual void ClearDepthBuffer(IDepthBuffer*) = 0;
 		virtual void SetRenderTargets(uint32 NumColorBuffer, IColorBuffer*, IDepthBuffer*, bool ReadOnlyDepth = false) = 0;
 		virtual void SetScissorRects(uint32, const Rect*) = 0;
 		virtual void SetViewport(const ViewportDesc &) = 0;
-        virtual void SetIndexBuffer(const IndexBufferView& IBView) = 0;
+		virtual void SetIndexBuffer(const IndexBufferView& IBView) = 0;
 		virtual void SetVertexBuffer(uint32 Slot, const VertexBufferView& VBView) = 0;
 		virtual void SetPipelineState(uint32 HashCode, IPipelineStateObject*) = 0;
 		virtual void SetPipelineLayout(IPipelineLayout *) = 0;
@@ -158,10 +177,10 @@ namespace rhi
 		virtual void DrawInstanced(DrawInstanceParam) = 0;
 		virtual void DrawIndexedInstanced(DrawIndexedInstancedParam) = 0;
 	};
-    
-    struct IComputeCommand
-    {
+
+	struct IComputeCommand
+	{
 		virtual void SetPipelineLayout(IPipelineLayout *) = 0;
-        virtual void Dispatch( uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ) = 0;
-    };
+		virtual void Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ) = 0;
+	};
 }

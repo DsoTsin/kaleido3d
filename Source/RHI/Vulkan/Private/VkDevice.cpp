@@ -4,9 +4,16 @@
 
 K3D_VK_BEGIN
 
+Device::~Device()
+{
+	vkDestroyDevice(m_Device, nullptr);
+	Log::Out(LogLevel::Info, "Device", "Destroying..");
+}
+
 rhi::IDevice::Result
 Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 {
+	m_pPhysicDevice = static_cast<DeviceAdapter*>(pAdapter)->m_pPDevice;
 	VkPhysicalDevice& physicalDevice = *static_cast<DeviceAdapter*>(pAdapter)->m_pPDevice;
 	uint32_t graphicsQueueIndex = 0;
 	uint32_t queueCount;
@@ -54,6 +61,7 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 		return rhi::IDevice::DeviceNotFound;
 	}
 	else {
+		vkGetDeviceQueue(m_Device, graphicsQueueIndex, 0, &m_DefaultQueue);
 		return rhi::IDevice::DeviceFound;
 	}
 }
@@ -61,7 +69,17 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 rhi::ICommandContext*	
 Device::NewCommandContext(rhi::ECommandType Type)
 {
-	return nullptr;
+	rhi::ICommandContext * commandContext = nullptr;
+	switch (Type)
+	{
+	case rhi::ECMD_Graphics:
+		commandContext = new GraphicsCommandContext(this);
+		break;
+	case rhi::ECMD_Compute:
+		commandContext = new ComputeCommandContext(this);
+		break;
+	}
+	return commandContext;
 }
 
 rhi::ISampler*			
@@ -73,7 +91,17 @@ Device::NewSampler(const rhi::SamplerState&)
 rhi::IPipelineStateObject*	
 Device::NewPipelineState(rhi::EPipelineType type)
 {
-	return nullptr;
+	rhi::IPipelineStateObject * pso = nullptr;
+	switch (type)
+	{
+	case rhi::EPSO_Graphics:
+		pso = new GraphicsPSO(this);
+		break;
+	case rhi::EPSO_Compute:
+		pso = new ComputePSO(this);
+		break;
+	}
+	return pso;
 }
 
 rhi::ISyncPointFence * 
@@ -85,6 +113,17 @@ Device::NewFence()
 rhi::IGpuResource*
 Device::NewGpuResource(rhi::EGpuResourceType type)
 {
-	return nullptr;
+	rhi::IGpuResource * resource = nullptr;
+	switch (type)
+	{
+	case rhi::EGT_Buffer:
+		resource = new Buffer(this);
+		break;
+	case rhi::EGT_Texture1D:
+		break;
+	default:
+		break;
+	}
+	return resource;
 }
 K3D_VK_END

@@ -1,6 +1,8 @@
 #include "UnitTestRHICommandContext.h"
 #include "RHI/D3D12/Public/D3D12RHI.h"
 
+K3D_APP_MAIN(UnitTestRHICommandContext);
+
 using namespace rhi;
 
 const char * source = K3D_STRINGIFY(
@@ -116,7 +118,7 @@ void UnitTestRHICommandContext::InitSwapChain()
 		Device::Ptr(static_cast<Device*>(m_TestDevice)), 
 		(HWND)HostWindow()->GetHandle(), 
 		HostWindow()->Width(), HostWindow()->Height());
-	m_pViewport->Init();
+	m_pViewport->InitViewport(nullptr, nullptr, HostWindow()->Width(), HostWindow()->Height(), rhi::EPF_RGBA8Unorm);
 }
 
 void UnitTestRHICommandContext::InitPipeLineState()

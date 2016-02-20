@@ -51,12 +51,12 @@ source_group(
 )
 
 source_group(
-	Impl\\Public FILES
+	Public FILES
 	${RHI_HEADERS}
 )
 
 source_group(
-	Impl\\Private FILES
+	Private FILES
 	${RHI_IMPL_SRCS}
 )
 

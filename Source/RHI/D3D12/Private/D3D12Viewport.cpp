@@ -4,7 +4,11 @@
 
 NS_K3D_D3D12_BEGIN
 
-void D3D12Viewport::Init()
+bool D3D12Viewport::InitViewport(
+	void *windowHandle, 
+	rhi::IDevice * pDevice, 
+	uint32 width, uint32 height, 
+	rhi::EPixelFormat rtFmt)
 {
 	PtrGIFactory Factory = GetParentDeviceRef().GetDXGIFactory();
 	ID3D12CommandQueue * pCmdQueue = GetParentDeviceRef().GetDefaultContext()
@@ -25,6 +29,7 @@ void D3D12Viewport::Init()
 		GetParentDeviceRef().Get()->CreateRenderTargetView(m_BackBuffers[n].Get(), nullptr, handle);
 		m_BackBuffersHandle[n] = dha.AllocateHeapSlot(outIndex);
 	}
+	return true;
 }
 
 void D3D12Viewport::Resize(uint32 Width, uint32 Height)

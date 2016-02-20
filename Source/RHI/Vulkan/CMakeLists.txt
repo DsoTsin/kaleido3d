@@ -36,15 +36,20 @@ set(RHI_IMPL_SRCS
 	Private/VkDevice.cpp
 	Private/VkUtils.h
 	Private/VkUtils.cpp
+	Private/VkRenderViewport.cpp
+	Private/VkCommandContext.cpp
+	Private/VkResource.cpp
+	Private/VkShaderCompiler.cpp
+	Private/VkPipelineState.cpp
 )
 
 source_group(
-	Impl\\Public FILES
+	Public FILES
 	${RHI_HEADERS}
 )
 
 source_group(
-	Impl\\Private FILES
+	Private FILES
 	${RHI_IMPL_SRCS}
 )
 
