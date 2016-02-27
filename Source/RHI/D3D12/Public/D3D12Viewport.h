@@ -8,6 +8,8 @@ NS_K3D_D3D12_BEGIN
 class D3D12Viewport : public D3D12RHIDeviceChild, public rhi::IRenderViewport
 {
 public:
+	D3D12Viewport(rhi::IDevice* pDevice, void* WindowHandle) : D3D12RHIDeviceChild(static_cast<Device::Ptr>(pDevice)) {}
+
 	D3D12Viewport(Device::Ptr pDevice, HWND WindowHandle,	uint32 Width, uint32 Height)
 		: D3D12RHIDeviceChild(pDevice)
 		, m_WindowHandle(WindowHandle)

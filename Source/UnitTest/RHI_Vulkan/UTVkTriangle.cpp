@@ -2,6 +2,7 @@
 #include <Core/App.h>
 #include <Core/Message.h>
 #include <RHI/IRHI.h>
+#include <Renderer/RenderContext.h>
 #include "RHI/Vulkan/VkCommon.h"
 #include "RHI/Vulkan/Public/VkRHI.h"
 using namespace k3d;
@@ -18,8 +19,26 @@ public:
 
 private:
 
-	rhi::IDevice * m_TestDevice;
+	RenderContext			m_RenderContext;
+	rhi::IDevice *			m_Device;
+	rhi::IRenderViewport *	m_Viewport;
 };
 
 K3D_APP_MAIN(VkTriangleUnitTest);
 
+bool VkTriangleUnitTest::OnInit()
+{
+	App::OnInit();
+	m_RenderContext.Init(RHIType::ERTDirect3D12);
+	return true;
+}
+
+void VkTriangleUnitTest::OnDestroy()
+{
+
+}
+
+void VkTriangleUnitTest::OnProcess(Message& msg)
+{
+
+}

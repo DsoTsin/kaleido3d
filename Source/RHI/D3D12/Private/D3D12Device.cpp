@@ -59,9 +59,12 @@ void EnumAllDeviceAdapter(rhi::IDeviceAdapter ** & adapterList, uint32 * num)
 	}
 };
 
-
 DirectCommandListManager g_DirectCommandListManager;
 
+rhi::IDevice * DeviceAdapter::GetDevice()
+{
+	return new Device;
+}
 
 D3D_FEATURE_LEVEL TestFLs[] = {
 	D3D_FEATURE_LEVEL_12_1,
@@ -134,10 +137,10 @@ rhi::ICommandContext*	Device::NewCommandContext(rhi::ECommandType Type)
 	switch(Type) 
 	{
 	case rhi::ECMD_Graphics:
-		CmdContext = new GraphicsContext(shared_from_this());
+		CmdContext = new GraphicsContext(this);
 		break;
 	case rhi::ECMD_Compute:
-		CmdContext = new ComputeContext(shared_from_this());
+		CmdContext = new ComputeContext(this);
 		break;
 	default:
 		CmdContext = nullptr;
@@ -163,10 +166,10 @@ rhi::IPipelineStateObject*	Device::NewPipelineState(rhi::EPipelineType type)
 	switch (type)
 	{
 	case rhi::EPSO_Graphics:
-		pipeline = new GraphicsPSO(shared_from_this());
+		pipeline = new GraphicsPSO(this);
 		break;
 	case rhi::EPSO_Compute:
-		pipeline = new ComputePSO(shared_from_this());
+		pipeline = new ComputePSO(this);
 		break;
 	default:
 		K3D_ASSERT(false, "unsupported pso type.");

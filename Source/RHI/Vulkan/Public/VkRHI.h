@@ -8,6 +8,8 @@ K3D_VK_BEGIN
 
 extern void EnumAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*);
 
+extern rhi::IRenderViewport * AllocateRHIRenderViewport(rhi::IDevice* pDevice, void* WindowHandle);
+
 struct RHIRoot
 {
 	using DeviceList	= std::vector<VkPhysicalDevice>;
@@ -38,10 +40,8 @@ class DeviceAdapter : public rhi::IDeviceAdapter
 public:
 	explicit DeviceAdapter(VkPhysicalDevice * pDevice) : m_pPDevice(pDevice) {}
 
-	rhi::IDevice * GetDevice() override
-	{
-		return nullptr;
-	}
+	rhi::IDevice * GetDevice() override;
+
 private:
 	VkPhysicalDevice * m_pPDevice;
 };
@@ -142,6 +142,7 @@ private:
 class RenderViewport : public rhi::IRenderViewport
 {
 public:
+	RenderViewport(rhi::IDevice*pDevice, void*windowHandle) {}
 						RenderViewport();
 						~RenderViewport() override; 
 	bool				InitViewport(
@@ -152,7 +153,7 @@ public:
 							) override;
 	bool				Present(bool vSync) override;
 private:
-	std::unique_ptr<VulkanSwapChain>	m_pSwapChain;
+	VulkanSwapChain*	m_pSwapChain;
 };
 
 class PipelineLayout : public rhi::IPipelineLayout

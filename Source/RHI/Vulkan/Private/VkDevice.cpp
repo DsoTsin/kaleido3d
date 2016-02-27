@@ -4,6 +4,11 @@
 
 K3D_VK_BEGIN
 
+rhi::IDevice * DeviceAdapter::GetDevice()
+{
+	return new Device;
+}
+
 Device::~Device()
 {
 	vkDestroyDevice(m_Device, nullptr);

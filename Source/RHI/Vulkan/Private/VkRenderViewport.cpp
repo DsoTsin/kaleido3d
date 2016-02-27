@@ -28,4 +28,9 @@ bool RenderViewport::Present(bool vSync)
 	return false;
 }
 
+rhi::IRenderViewport * AllocateRHIRenderViewport(rhi::IDevice* pDevice, void* WindowHandle)
+{
+	return new RenderViewport(pDevice, WindowHandle);
+}
+
 K3D_VK_END

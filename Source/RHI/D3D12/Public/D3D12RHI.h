@@ -12,13 +12,12 @@ NS_K3D_D3D12_BEGIN
 
 extern void EnumAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*);
 
+extern rhi::IRenderViewport * AllocateRHIRenderViewport(rhi::IDevice* pDevice, void* WindowHandle);
+
 class K3D_API DeviceAdapter : public rhi::IDeviceAdapter
 {
 public:
-	rhi::IDevice * GetDevice()
-	{
-		return nullptr;
-	}
+	rhi::IDevice * GetDevice() override;
 
 	enum Vendor {
 		AMD,
@@ -91,7 +90,7 @@ private:
 class K3D_API Device : public rhi::IDevice, public std::enable_shared_from_this<Device>
 {
 public:
-	typedef std::shared_ptr<Device> Ptr;
+	typedef Device*			Ptr;
 
 	explicit				Device(bool useWarp = false);
 							~Device();

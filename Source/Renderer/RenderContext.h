@@ -21,7 +21,7 @@ namespace k3d
     using PtrRHIDevice = std::shared_ptr<rhi::IDevice>;
     
     /**
-     Associated with RHI
+     * Associated with RHI
      */
     class RenderContext
     {
@@ -33,9 +33,12 @@ namespace k3d
         
         ~RenderContext();
         
-    private:
-        
-        PtrRHIDevice m_pDevice;
+		rhi::IRenderViewport * AllocateRenderVP();
+
+
+	protected:
+		RHIType			m_RhiType;
+        rhi::IDevice*	m_pDevice;
     };
     
 }

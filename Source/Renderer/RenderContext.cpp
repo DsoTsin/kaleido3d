@@ -13,6 +13,21 @@ namespace k3d
 {
     const char * TAG_RENDERCONTEXT = "RenderContext";
     
+	typedef void(*PFNRHIEnumFunc)(rhi::IDeviceAdapter**&,uint32*);
+	typedef rhi::IRenderViewport * (*PFNAllocateRHIRenderViewport)(rhi::IDevice* pDevice, void* WindowHandle);
+
+	PFNRHIEnumFunc s_RHIEnumFunction[] = {
+		nullptr,
+		reinterpret_cast<PFNRHIEnumFunc>(vk::EnumAllDeviceAdapter),
+		reinterpret_cast<PFNRHIEnumFunc>(d3d12::EnumAllDeviceAdapter)
+	};
+
+	PFNAllocateRHIRenderViewport s_RHIAllocateViewportFn[] = {
+		nullptr,
+		reinterpret_cast<PFNAllocateRHIRenderViewport>(vk::AllocateRHIRenderViewport),
+		reinterpret_cast<PFNAllocateRHIRenderViewport>(d3d12::AllocateRHIRenderViewport)
+	};
+
     RenderContext::RenderContext()
     {
         
@@ -20,23 +35,15 @@ namespace k3d
     
     void RenderContext::Init(RHIType type)
     {
+		m_RhiType = type;
         rhi::IDeviceAdapter ** adapters = nullptr;
         uint32 adapterCount = 0;
-		switch (type) 
-		{
-		case RHIType::ERTDirect3D12:
-			d3d12::EnumAllDeviceAdapter(adapters, &adapterCount);
-			break;
-		case RHIType::ERTVulkan:
-			vk::EnumAllDeviceAdapter(adapters, &adapterCount);
-			break;
-		case RHIType::ERTMetal:
-			break;
-		}
-		m_pDevice = std::shared_ptr<rhi::IDevice>(adapters[0]->GetDevice());
+		s_RHIEnumFunction[static_cast<uint32>(type)](adapters, &adapterCount);
+		m_pDevice = adapters[0]->GetDevice();
         rhi::IDevice::Result result = m_pDevice->Create(adapters[0], false);
         Log::Out(TAG_RENDERCONTEXT, result == rhi::IDevice::DeviceFound ?
                  "Device found !" : "Device unfound...");
+		//s_RHIAllocateViewportFn[static_cast<uint32>(type)](m_pDevice.get(), nullptr);
     }
     
     void RenderContext::Destroy()
@@ -47,5 +54,10 @@ namespace k3d
     {
         
     }
+
+	rhi::IRenderViewport * RenderContext::AllocateRenderVP()
+	{
+		return nullptr;
+	}
     
 }

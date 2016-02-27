@@ -42,4 +42,9 @@ bool D3D12Viewport::Present(bool VSync)
 	return false;
 }
 
+rhi::IRenderViewport * AllocateRHIRenderViewport(rhi::IDevice* pDevice, void* WindowHandle)
+{
+	return new D3D12Viewport(pDevice, WindowHandle);
+}
+
 NS_K3D_D3D12_END
