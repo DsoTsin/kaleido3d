@@ -1,7 +1,10 @@
 #pragma once
 #ifndef __IRHIDefs_h__
 #define __IRHIDefs_h__
+
 #include "Config/PlatformTypes.h"
+#include <KTL/DynArray.hpp>
+//#include "Tools/ShaderGen/ShaderCompiler.h"
 
 namespace rhi
 {
@@ -444,6 +447,22 @@ namespace rhi
 		bool				IsTex1D() const { return Depth == 1 && Layers == 1 && Height == 1; }
 		bool				IsTex2D() const { return Depth == 1 && Layers == 1 && Height > 1; }
 		bool				IsTex3D() const { return Depth > 1 && Layers == 1; }
+	};
+
+	typedef ::k3d::DynArray<uint32>	ShaderByteCode;
+
+	struct PipelineDesc
+	{
+		RasterizerState		Rasterizer;
+		BlendState			Blend;
+		DepthStencilState	DepthStencil;
+
+		// Shaders
+		ShaderByteCode		Shaders[ShaderTypeNum];
+		// VertexAttributes
+
+		// InputAssemblyState
+		EPrimitiveType		PrimitiveTopology;
 	};
 
 	struct DrawIndexedInstancedParam
