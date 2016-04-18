@@ -449,7 +449,8 @@ namespace rhi
 		bool				IsTex3D() const { return Depth > 1 && Layers == 1; }
 	};
 
-	typedef ::k3d::DynArray<uint32>	ShaderByteCode;
+	typedef ::k3d::DynArray<uint32>				ShaderByteCode;
+	typedef ::k3d::DynArray<VertexDeclaration>	VertexInputLayout;
 
 	struct PipelineDesc
 	{
@@ -460,9 +461,9 @@ namespace rhi
 		// Shaders
 		ShaderByteCode		Shaders[ShaderTypeNum];
 		// VertexAttributes
-
+		VertexInputLayout	VertexLayout;
 		// InputAssemblyState
-		EPrimitiveType		PrimitiveTopology;
+		EPrimitiveType		PrimitiveTopology = rhi::EPT_Triangles;
 	};
 
 	struct DrawIndexedInstancedParam

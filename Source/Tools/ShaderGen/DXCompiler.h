@@ -24,6 +24,13 @@ namespace k3d {
 		const char*		GetErrorMsg() const		{ return m_ErrorMsg.c_str(); }
 		const char*		GetShaderBytes() const	{ return m_Data.data(); }
 		const uint32	GetByteCount() const	{ return m_Data.size(); }
+
+		const rhi::ShaderByteCode GetByteCode() const override
+		{
+			rhi::ShaderByteCode byteCode = { m_Data.data(), (uint32)m_Data.size() };
+			return byteCode;
+		};
+
 	private:
 		std::string				m_Data;
 		std::string				m_ErrorMsg;

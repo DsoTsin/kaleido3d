@@ -2,6 +2,7 @@
 #include "Public/VkRHI.h"
 #include "Tools/ShaderGen/ShaderCompiler.h"
 #include "Base/vulkantools.h"
+#include "Base/vulkandebug.h"
 #include "Private/VkUtils.h"
 
 K3D_VK_BEGIN
@@ -61,6 +62,11 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 	deviceCreateInfo.queueCreateInfoCount = 1;
 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 	deviceCreateInfo.pEnabledFeatures = NULL;
+
+#if _DEBUG
+	deviceCreateInfo.enabledLayerCount = vkDebug::validationLayerCount;
+	deviceCreateInfo.ppEnabledLayerNames = vkDebug::validationLayerNames;
+#endif
 
 	if (enabledExtensions.size() > 0)
 	{
@@ -137,6 +143,13 @@ Device::NewPipelineState(rhi::EPipelineType type)
 		pso = new PipelineStateObject(this);
 		break;
 	}
+	return pso;
+}
+
+rhi::IPipelineStateObject*	
+Device::CreatePipelineStateObject(rhi::PipelineDesc const & desc)
+{
+	PipelineStateObject * pso = new PipelineStateObject(this, desc);
 	return pso;
 }
 
