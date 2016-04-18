@@ -45,6 +45,15 @@ namespace k3d
 			//memset(m_pElement, 0, m_Capacity*sizeof(ElementType));
 		}
 
+		template <typename OtherElementType>
+		DynArray(OtherElementType * data, uint32 count)
+		{
+			m_Capacity = (uint32)(count * sizeof(OtherElementType) / sizeof(ElementType) * 1.5f);
+			m_ElementCount = count * sizeof(OtherElementType) / sizeof(ElementType);
+			m_pElement = (ElementType*)m_Allocator.Allocate(m_Capacity * sizeof(ElementType));
+			memmove(m_pElement, data, count * sizeof(OtherElementType));
+		}
+
 		~DynArray()
 		{
 			if (m_pElement)
@@ -93,6 +102,20 @@ namespace k3d
 			}
 			m_pElement[m_ElementCount - 1] = element;
 			return *this;
+		}
+
+		DynArray& operator=(DynArray const& rhs)
+		{
+			m_ElementCount = rhs.m_ElementCount;
+			m_Capacity = rhs.m_Capacity;
+			m_pElement = (ElementType*)m_Allocator.Allocate(m_Capacity*sizeof(ElementType));
+			memcpy(m_pElement, rhs.m_pElement, rhs.m_ElementCount * sizeof(ElementType));
+			return *this;
+		}
+
+		void Swap(DynArray & rhs)
+		{
+			// TODO
 		}
 
 		ElementType const& operator[](uint32 index) const

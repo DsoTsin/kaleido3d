@@ -17,6 +17,22 @@ RHIRoot::Initializer::~Initializer()
 	Log::Out(LogLevel::Info, "RHIRoot::Initializer", "Destroy Instance.");
 }
 
+#if _DEBUG
+VKAPI_ATTR VkBool32 VKAPI_CALL MyDebugReportCallback(
+	VkDebugReportFlagsEXT       flags,
+	VkDebugReportObjectTypeEXT  objectType,
+	uint64_t                    object,
+	size_t                      location,
+	int32_t                     messageCode,
+	const char*                 pLayerPrefix,
+	const char*                 pMessage,
+	void*                       pUserData)
+{
+	Log::Out(LogLevel::Info, "VkDebug", "[%s]: %s ", pLayerPrefix, pMessage);
+	return VK_FALSE;
+}
+#endif
+
 VkResult RHIRoot::Initializer::Init(bool enableValidation, std::string name)
 {
 	VkResult err;
@@ -25,6 +41,36 @@ VkResult RHIRoot::Initializer::Init(bool enableValidation, std::string name)
 	{
 		Log::Out(LogLevel::Fatal, "RHIRoot::Initializer", "Could not create Vulkan instance : %s.", vkTools::errorString(err).c_str());
 	}
+	else
+	{
+		Log::Out(LogLevel::Info, "RHIRoot::Initializer", "Vulkan instance created. version %d.%d.%d", VK_VERSION_MAJOR(VK_API_VERSION), VK_VERSION_MINOR(VK_API_VERSION), VK_VERSION_PATCH(VK_API_VERSION));
+	}
+
+#if _DEBUG
+	/* Load VK_EXT_debug_report entry points in debug builds */
+	PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT =
+		reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>
+		(vkGetInstanceProcAddr(Instance, "vkCreateDebugReportCallbackEXT"));
+	PFN_vkDebugReportMessageEXT vkDebugReportMessageEXT =
+		reinterpret_cast<PFN_vkDebugReportMessageEXT>
+		(vkGetInstanceProcAddr(Instance, "vkDebugReportMessageEXT"));
+	PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT =
+		reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>
+		(vkGetInstanceProcAddr(Instance, "vkDestroyDebugReportCallbackEXT"));
+	VkDebugReportCallbackCreateInfoEXT callbackCreateInfo;
+	callbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
+	callbackCreateInfo.pNext = nullptr;
+	callbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT |
+		VK_DEBUG_REPORT_WARNING_BIT_EXT |
+		VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+	callbackCreateInfo.pfnCallback = &MyDebugReportCallback;
+	callbackCreateInfo.pUserData = nullptr;
+
+	/* Register the callback */
+	VkDebugReportCallbackEXT callback;
+	VkResult result = vkCreateDebugReportCallbackEXT(Instance, &callbackCreateInfo, nullptr, &callback);
+#endif
+
 	uint32_t gpuCount;
 	err = vkEnumeratePhysicalDevices(Instance, &gpuCount, nullptr);
 	std::vector<VkPhysicalDevice> deviceList(gpuCount);
@@ -71,7 +117,11 @@ VkResult RHIRoot::Initializer::CreateInstance(bool enableValidation, std::string
 	return vkCreateInstance(&instanceCreateInfo, nullptr, &Instance);
 }
 
+#if _DEBUG
+RHIRoot::Initializer RHIRoot::s_Impl("k3d_vk", true);
+#else
 RHIRoot::Initializer RHIRoot::s_Impl("k3d_vk", false);
+#endif
 
 void EnumAllDeviceAdapter(rhi::IDeviceAdapter** & adapterList, uint32* count)
 {

@@ -11,10 +11,11 @@ namespace k3d
 	class IShaderCompilerOutput
 	{
 	public:
-		virtual const char*			GetErrorMsg() const = 0;
-		virtual const char*			GetShaderBytes() const = 0;
-		virtual const uint32		GetByteCount() const = 0;
-		virtual						~IShaderCompilerOutput() {}
+		virtual const char*					GetErrorMsg() const = 0;
+		virtual const char*					GetShaderBytes() const = 0;
+		virtual const uint32				GetByteCount() const = 0;
+		virtual const rhi::ShaderByteCode	GetByteCode() const = 0;
+		virtual								~IShaderCompilerOutput() {}
 	};
 
 	enum class EShaderLang

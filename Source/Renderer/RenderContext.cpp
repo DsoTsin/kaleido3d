@@ -35,7 +35,7 @@ namespace render
         uint32 adapterCount = 0;
 		s_RHIEnumFunction[static_cast<uint32>(type)](adapters, &adapterCount);
 		m_pDevice = adapters[0]->GetDevice();
-        rhi::IDevice::Result result = m_pDevice->Create(adapters[0], false);
+        rhi::IDevice::Result result = m_pDevice->Create(adapters[0], true);
         Log::Out(TAG_RENDERCONTEXT, result == rhi::IDevice::DeviceFound ?
                  "Device found !" : "Device unfound...");
     }

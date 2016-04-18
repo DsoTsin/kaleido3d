@@ -143,15 +143,14 @@ void VkTriangleUnitTest::PreparePipeline()
 	auto pDevice = m_RenderContext.GetDevice();
 	IShaderCompilerOutput * vertSh = compile("../../Data/Test/triangle.vert", rhi::ES_Vertex);
 	IShaderCompilerOutput * fragSh = compile("../../Data/Test/triangle.frag", rhi::ES_Fragment);
-	auto pPipelineState = pDevice->NewPipelineState(rhi::EPSO_Graphics);
-	pPipelineState->SetShader(rhi::EShaderType::ES_Vertex, vertSh);
-	pPipelineState->SetShader(rhi::EShaderType::ES_Fragment, fragSh);
-	pPipelineState->SetVertexInputLayout(m_TriMesh->GetVertDec(), 2);
-	pPipelineState->SetBlendState(rhi::BlendState());
-	pPipelineState->SetDepthStencilState(rhi::DepthStencilState());
-	pPipelineState->SetRasterizerState(rhi::RasterizerState());
-	pPipelineState->SetPrimitiveTopology(rhi::EPrimitiveType::EPT_Triangles);
-	pPipelineState->Finalize();
+
+	rhi::PipelineDesc desc;
+	desc.Shaders[rhi::ES_Vertex] = vertSh->GetByteCode();
+	desc.Shaders[rhi::ES_Fragment] = fragSh->GetByteCode();
+	desc.VertexLayout.Append(m_TriMesh->GetVertDec()[0])
+		.Append(m_TriMesh->GetVertDec()[1]);
+
+	static_cast<vk::Device*>(pDevice)->CreatePipelineStateObject(desc);
 }
 
 void VkTriangleUnitTest::PrepareCommandBuffer()

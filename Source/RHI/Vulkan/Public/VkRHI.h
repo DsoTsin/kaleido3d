@@ -89,7 +89,10 @@ public:
 	rhi::ICommandContext*		NewCommandContext(rhi::ECommandType)override;
 	rhi::IGpuResource*			NewGpuResource(rhi::ResourceDesc const&,uint64)override;
 	rhi::ISampler*				NewSampler(const rhi::SamplerState&)override;
+	
 	rhi::IPipelineStateObject*	NewPipelineState(rhi::EPipelineType)override;
+	rhi::IPipelineStateObject* 	CreatePipelineStateObject(rhi::PipelineDesc const & desc);
+
 	rhi::ISyncFence*			NewFence()override;
 	rhi::IDescriptorPool *		NewDescriptorPool() override;
 	rhi::IRenderViewport *		NewRenderViewport(void * winHandle, uint32 width, uint32 height) override;
@@ -501,14 +504,13 @@ private:
 class K3D_API PipelineStateObject : public rhi::IPipelineStateObject, public DeviceChild
 {
 public:
-
+										PipelineStateObject(Device::Ptr pDevice, rhi::PipelineDesc const& desc);
 	explicit							PipelineStateObject(Device *pDevice);
 	virtual								~PipelineStateObject();
 
 	void								BindRenderPass(VkRenderPass RenderPass);
 	void								SetShader(rhi::EShaderType, k3d::IShaderCompilerOutput*) override;
 	void								SetLayout(rhi::IPipelineLayout *) override;
-	void								Finalize() override;
 
 	void								SetRasterizerState(const rhi::RasterizerState&)override;
 	void								SetBlendState(const rhi::BlendState&)override;
@@ -518,12 +520,20 @@ public:
 	void								SetPrimitiveTopology(const rhi::EPrimitiveType) override;
 	void								SetRenderTargetFormat(const rhi::RenderTargetFormat &) override;
 
+	VkPipeline 							GetPipeline() const { return m_Pipeline; }
+	void								Finalize() override;
+
+	/**
+	 * TOFIX
+	 */
 	rhi::EPipelineType GetType() override
 	{
 		return rhi::EPipelineType::EPSO_Graphics;
 	}
 
 protected:
+	void								InitWithDesc(rhi::PipelineDesc const & desc);
+
 	friend class						CommandContext;
 
 	VkPipeline							m_Pipeline;

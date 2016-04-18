@@ -3,6 +3,7 @@
 #define __GLSLCompiler_h__
 
 #include "ShaderCompiler.h"
+#include <cassert>
 #include <vector>
 
 namespace k3d {
@@ -24,6 +25,12 @@ namespace k3d {
 		const char*			GetErrorMsg() const { return m_ErrorMsg.c_str(); }
 		const char*			GetShaderBytes() const { return reinterpret_cast<const char*>(&shaderOutput[0]); }
 		const uint32		GetByteCount() const { return shaderOutput.size()*sizeof(unsigned int); }
+
+		const rhi::ShaderByteCode GetByteCode() const override 
+		{
+			rhi::ShaderByteCode byteCode = {&shaderOutput[0], (uint32)shaderOutput.size()};
+			return byteCode;
+		};
 
 	private:
 		friend GLSLOutput*	glslToSpv(	const rhi::EShaderType shader_type,
