@@ -16,6 +16,7 @@ glslang
 OGLCompiler
 OSDependent
 SPIRV
+HLSL
 )
 
 add_executable(

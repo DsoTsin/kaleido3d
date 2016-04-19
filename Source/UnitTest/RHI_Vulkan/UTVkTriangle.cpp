@@ -145,7 +145,7 @@ void VkTriangleUnitTest::PreparePipeline()
 	IShaderCompilerOutput * fragSh = compile("../../Data/Test/triangle.frag", rhi::ES_Fragment);
 
 	rhi::PipelineDesc desc;
-	desc.Shaders[rhi::ES_Vertex] = vertSh->GetByteCode();
+	///desc.Shaders[rhi::ES_Vertex] = vertSh->GetByteCode();
 	desc.Shaders[rhi::ES_Fragment] = fragSh->GetByteCode();
 	desc.VertexLayout.Append(m_TriMesh->GetVertDec()[0])
 		.Append(m_TriMesh->GetVertDec()[1]);

@@ -60,7 +60,7 @@ VkShaderModule CreateShaderModule(VkDevice Device, rhi::ShaderByteCode const& Sh
 	moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	moduleCreateInfo.pNext = NULL;
 
-	moduleCreateInfo.codeSize = ShaderBytes.Count();
+	moduleCreateInfo.codeSize = ShaderBytes.Count()*sizeof(uint32);
 	moduleCreateInfo.pCode = ShaderBytes.Data();
 	moduleCreateInfo.flags = 0;
 	K3D_VK_VERIFY(vkCreateShaderModule(Device, &moduleCreateInfo, NULL, &shaderModule));
