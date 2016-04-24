@@ -1,0 +1,1 @@
+doxygen Doxygen && cd html && qhelpgenerator index.qhp

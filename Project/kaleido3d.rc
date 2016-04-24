@@ -1,0 +1,35 @@
+IDI_ICON1               ICON                    "kaleido3d.ico"
+GLFW_ICON               ICON                    "kaleido3d.ico"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,0,0,1
+ PRODUCTVERSION 0,0,0,1
+ FILEFLAGSMASK 0x3fL
+ FILEFLAGS 0x0L
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "Tsin Studio"
+            VALUE "FileDescription", "Kaleido3D Launcher"
+            VALUE "FileVersion", "0.0.0.1"
+            VALUE "InternalName", "launcher.exe"
+            VALUE "LegalCopyright", "Copyright (C) Tsin Studio 2014"
+            VALUE "OriginalFilename", "launcher.exe"
+            VALUE "ProductName", "Kaleido3D Launcher"
+            VALUE "ProductVersion", "0.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
