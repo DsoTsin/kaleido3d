@@ -3,7 +3,7 @@ include_directories(.. ../../Include)
 if(WIN32)
 add_executable(Launcher 
 	Main.cpp
-	../Core/Win32Res/win32icon.rc
+	../Platform/Windows/win32icon.rc
 )
 target_link_libraries(Launcher 
 	Core

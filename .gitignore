@@ -5,9 +5,11 @@
 *.obj
 Binary
 Lib
-build*
+**/build/**
 Build*
 Bin/*
+Source/local.properties
+
 # Visual Studio files
 debug
 release
@@ -20,9 +22,10 @@ Makefile*
 *.exp
 *.ini
 BinTmp
-
+*.iml
+**/.idea/**
 DedicatedServer/protocol/cpp/
-
+**/.gradle/**
 # Compiled Dynamic libraries
 *.so
 *.dylib
@@ -61,3 +64,5 @@ Swift/kaleido3d.xcodeproj/xcuserdata/
 .DS_Store
 xcshareddata
 /Project/xcode4
+/Project/android/local.properties
+/Project/android/gradle.properties

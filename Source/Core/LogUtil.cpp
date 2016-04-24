@@ -4,7 +4,7 @@
 #include <cstdarg>
 #include "File.h"
 #include <mutex>
-
+#include <Config/OSHeaders.h>
 #include "LogUtil.inl"
 #include "../../Data/style.css.h"
 
@@ -14,14 +14,28 @@ namespace k3d {
     static inline void DebugOut(const char * dbgBuffer) {
 #if   K3DPLATFORM_OS_WIN
         OutputDebugStringA(dbgBuffer);
-#elif K3DPLATFORM_OS_LINUX
+#elif K3DPLATFORM_OS_LINUX && !K3DPLATFORM_OS_ANDROID
         fputs(dbgBuffer, stderr);
         fflush(stderr);
+#elif K3DPLATFORM_OS_ANDROID
+        __android_log_print(ANDROID_LOG_DEFAULT, "k3d", dbgBuffer);
 #else
         //NSLog(@ "％s", dbgBuffer);
 #endif
     }
-    
+
+#if K3DPLATFORM_OS_ANDROID
+
+	android_LogPriority prios [] = {
+			ANDROID_LOG_DEBUG,
+			ANDROID_LOG_INFO,
+			ANDROID_LOG_WARN,
+			ANDROID_LOG_ERROR,
+			ANDROID_LOG_FATAL
+	};
+
+#endif
+
     void Log::SetDebugOutFunction(Log::OutPutCallBack callBack)
     {
     }
@@ -44,10 +58,16 @@ namespace k3d {
 		static char dbgStr[2048] = { 0 };
 		static char dbgBuffer[2048] = { 0 };
 		va_start(va, fmt);
+#if K3DPLATFORM_OS_ANDROID
+		::__android_log_print(ANDROID_LOG_VERBOSE, tag, fmt, va);
+#else
 		::vsprintf(dbgStr, fmt, va); //!to fix: printf %d first argument error
+#endif
 		va_end(va);
+#if !K3DPLATFORM_OS_ANDROID
 		::sprintf(dbgBuffer, "[%s]::%s\n", tag, dbgStr);
 		DebugOut(dbgBuffer);
+#endif
 	}
 
 	void Log::Out(const char * tag, std::string const & log)
@@ -59,22 +79,31 @@ namespace k3d {
 		DebugOut(outLog.c_str());
 	}
 
-	void Log::Out(LogLevel && lev, const char * tag, const char * fmt, ...)
+	void Log::Out(LogLevel const& lev, const char * tag, const char * fmt, ...)
 	{
 		va_list va;
 		static char dbgStr[2048] = { 0 };
 		static char dbgBuffer[2048] = { 0 };
 		va_start(va, fmt);
-		::vsprintf(dbgStr, fmt, va); //!to fix: printf %d first argument error
+#if K3DPLATFORM_OS_ANDROID
+		::vsprintf(dbgStr, fmt, va);
+#else
+		::vsprintf(dbgStr, fmt, va);
+#endif
 		va_end(va);
+#if !K3DPLATFORM_OS_ANDROID
 		::sprintf(dbgBuffer, "[%s]::%s\n", tag, dbgStr);
 		Log::Get().LogOutPut(lev, dbgBuffer);
+#else
+		::__android_log_print(prios[(uint32)lev], tag, dbgStr);
+#endif
 	}
 
 	void Log::LogOutPut(LogLevel lev, const char * buffer) {
-		std::lock_guard<std::mutex> lock(s_LogLock);
-		std::string logLineHead, logLineTail;
 		DebugOut(buffer);
+#ifndef K3DPLATFORM_OS_ANDROID
+		::Concurrency::Mutex::AutoLock lock(&s_LogLock);
+		std::string logLineHead, logLineTail;
 		switch (lev)
 		{
 		case LogLevel::Debug:
@@ -100,18 +129,22 @@ namespace k3d {
 		}
 		std::string line = logLineHead + Txt2Html(buffer) + logLineTail;
 		OutputStr2IODevice(s_LogFile, line.c_str());
+#endif
 	}
 
 	void Log::Destroy()
 	{
+#ifndef K3DPLATFORM_OS_ANDROID
 		if (s_LogFile) {
 			OutputStr2IODevice(s_LogFile, tail);
 			s_LogFile->Flush();
 			s_LogFile->Close();
 		}
+#endif
 	}
 
 	Log::Log() : s_LogFile(nullptr) {
+#ifndef K3DPLATFORM_OS_ANDROID
 		kString path = Core::GetExecutablePath() + KT("/log.html");
 		if (s_LogFile == nullptr)
 			s_LogFile = GetIODevice<File>();
@@ -124,6 +157,7 @@ namespace k3d {
 		styleFile.Open(stylePath.c_str(), IOWrite);
 		styleFile.Write(style_css, sizeof(style_css));
 		styleFile.Close();
+#endif
 	}
 
 }

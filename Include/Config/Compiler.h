@@ -12,3 +12,9 @@
 #if K3DCOMPILER_CLANG
 #define STD_CALL 
 #endif
+
+#if K3DCOMPILER_MSVC
+#define __K3D_FUNC__ __FUNCTION__
+#else 
+#define __K3D_FUNC__ __func__
+#endif

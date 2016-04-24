@@ -9,7 +9,6 @@
 namespace Dispatch {
 
 using String	= std::string;
-using Mutex		= std::mutex;
 using AtomicBool= std::atomic_bool;
 
 class WorkItem;

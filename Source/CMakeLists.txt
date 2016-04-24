@@ -72,6 +72,8 @@ include_directories(
 	${K3D_THIRD_PARTY}/SDL2-2.0.3/include
 	${K3D_THIRD_PARTY}/rapidjson/include
 	ThirdParty/glslang
+	${K3D_THIRD_PARTY}/EASTL/include
+	${K3D_THIRD_PARTY}/EASTL/test/packages/EABase/include/Common
 )
 
 include(${Kaleido3D_ROOT_DIR}/Project/pch.cmake)
@@ -110,6 +112,7 @@ endif()
 add_subdirectory(Tools/ShaderGen)
 add_subdirectory(ThirdParty/glslang)
 add_subdirectory(ThirdParty/Spir2Cross)
+add_subdirectory(ThirdParty/EASTL)
 
 if(WIN32)
 add_subdirectory(UnitTest)

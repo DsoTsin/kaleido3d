@@ -33,6 +33,8 @@ Utils/StringUtils.h
 Utils/StringUtils.cpp
 Utils/MD5.h
 Utils/MD5.cpp
+Utils/farmhash.h
+Utils/farmhash.cc
 )
 
 source_group(
@@ -110,9 +112,7 @@ ModuleCore.h
 ModuleCore.cpp
 Timer.h
 Timer.cpp
-Variant.h
-Win32Res/resource.h
-)
+Variant.h)
 
 source_group(
 Common FILES
@@ -138,12 +138,12 @@ set(CORE_SRCS ${CORE_SRCS} ${APP_SRCS} ${MSG_SRCS} ${IO_SRCS} ${COMMON_SRCS})
 endif()
 
 if(WIN32)
-file(GLOB WINDOWS_IMPL_SRCS "Windows/*.cpp" "Windows/*.h")
+file(GLOB WINDOWS_IMPL_SRCS "../Platform/Windows/*.cpp" "../Platform/Windows/*.h")
 source_group(
 Windows FILES
 ${WINDOWS_IMPL_SRCS}
 )
-set(CORE_SRCS ${CORE_SRCS} ${WINDOWS_IMPL_SRCS} Win32Res/resource.h)
+set(CORE_SRCS ${CORE_SRCS} ${WINDOWS_IMPL_SRCS})
 endif()
 
 if(IOS)
@@ -159,8 +159,10 @@ endif()
 
 add_library(Core ${LIB_TYPE} 
 	${CORE_SRCS}
-${IOS_IMPL_SRCS}
+	${IOS_IMPL_SRCS}
 )
 
 add_precompiled_header(Core "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Core/App.cpp")
 set_target_properties(Core PROPERTIES FOLDER "Runtime")
+
+install(TARGETS Core ARCHIVE DESTINATION lib)

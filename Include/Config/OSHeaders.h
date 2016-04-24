@@ -14,6 +14,7 @@
     #include <netinet/in.h>
     #include <sys/socket.h>
     #include <arpa/inet.h>
+    #include <pthread.h>
 /******/
     #if K3DPLATFORM_OS_IOS
         #include <sys/fcntl.h>
@@ -21,6 +22,10 @@
         #include <fcntl.h>
     #endif
     #include <sys/mman.h>
+#endif
+
+#if K3DPLATFORM_OS_ANDROID
+#include <android/log.h>
 #endif
 
 #endif

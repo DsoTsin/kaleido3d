@@ -10,9 +10,9 @@
 
 NS_K3D_D3D12_BEGIN
 
-extern K3D_API void EnumAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*);
+extern "C++" K3D_API void EnumAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*);
 
-class K3D_API DeviceAdapter : public rhi::IDeviceAdapter
+class DeviceAdapter : public rhi::IDeviceAdapter
 {
 public:
 	rhi::IDevice * GetDevice() override;
@@ -37,7 +37,7 @@ typedef DeviceAdapter::Vendor GpuVendor;
 
 class CommandContext;
 
-class K3D_API DescriptorHeapAllocator
+class DescriptorHeapAllocator
 {
 public:
 	DescriptorHeapAllocator(D3D12_DESCRIPTOR_HEAP_TYPE Type, uint32 NumDescriptorsPerHeap);
@@ -85,7 +85,7 @@ private:
 	std::mutex							m_AllocMutex;
 };
 
-class K3D_API Device : public rhi::IDevice, public std::enable_shared_from_this<Device>
+class Device : public rhi::IDevice, public std::enable_shared_from_this<Device>
 {
 public:
 	typedef Device*			Ptr;
@@ -98,13 +98,18 @@ public:
 		bool withDbg = true) override;
 
 	rhi::ICommandContext*	NewCommandContext(rhi::ECommandType)override;
-	rhi::IGpuResource*		NewGpuResource(rhi::ResourceDesc const&,uint64) override;
+	rhi::IGpuResource*		NewGpuResource(rhi::ResourceDesc const&) override;
 	rhi::ISampler*			NewSampler(const rhi::SamplerState&) override;
-	rhi::IPipelineStateObject*	NewPipelineState(rhi::EPipelineType) override;
+
+	rhi::IPipelineLayout*		NewPipelineLayout(rhi::PipelineLayoutDesc const & table) override;
+	rhi::IPipelineStateObject*	NewPipelineState(rhi::PipelineDesc const & desc, rhi::IPipelineLayout * ppl, rhi::EPipelineType) override;
 	rhi::ISyncFence*		NewFence() override;
 	rhi::IDescriptorPool *	NewDescriptorPool() override;
-	rhi::IRenderViewport *	NewRenderViewport(void * winHandle, uint32 width, uint32 height) override;
+	rhi::IRenderViewport *	NewRenderViewport(void * winHandle, rhi::GfxSetting&) override;
 	::k3d::IShaderCompiler *NewShaderCompiler() override;
+
+	rhi::IRenderTarget*		NewRenderTarget(rhi::RenderTargetLayout const & layout) override;
+
 	PtrDevice				Get()
 	{
 		return m_Inst;
@@ -144,7 +149,7 @@ protected:
 	DescriptorHeapAllocator m_SamplerDHAllocator;
 };
 
-class K3D_API D3D12RHIDeviceChild
+class D3D12RHIDeviceChild
 {
 public:
 	D3D12RHIDeviceChild(Device::Ptr pDevice) 
@@ -211,9 +216,9 @@ public:
 	explicit PipelineLayout(rhi::ShaderParamLayout const &);
 	~PipelineLayout();
 
-	void Create(rhi::ShaderParamLayout const &) override;
+	void Create(rhi::ShaderParamLayout const &);
 	// bad implemented
-	void Finalize(rhi::IDevice *)override;
+	void Finalize(rhi::IDevice *);
 
 	ID3D12RootSignature * GetRootSignature() const { return m_RootSignature.GetSignature(); }
 private:
@@ -281,7 +286,7 @@ private:
 	PtrFence m_Fence;
 };
 
-class K3D_API GpuResource : public rhi::IGpuResource, public D3D12RHIDeviceChild
+class GpuResource : public rhi::IGpuResource, public D3D12RHIDeviceChild
 {
 public:
 	explicit GpuResource(Device::Ptr pDevice) 
@@ -345,7 +350,7 @@ struct DynAlloc
 	D3D12_GPU_VIRTUAL_ADDRESS GpuAddress;	// The GPU-visible address
 };
 
-class K3D_API LinearAllocationPage : public GpuResource
+class LinearAllocationPage : public GpuResource
 {
 public:
 	LinearAllocationPage(Device::Ptr pDevice, ID3D12Resource* pResource, D3D12_RESOURCE_STATES Usage) 
@@ -382,7 +387,7 @@ enum
 	kCpuAllocatorPageSize = 0x200000	// 2MB
 };
 
-class K3D_API LinearAllocatorPageManager : public D3D12RHIDeviceChild
+class LinearAllocatorPageManager : public D3D12RHIDeviceChild
 {
 public:
 
@@ -406,7 +411,7 @@ private:
 	std::mutex m_Mutex;
 };
 
-class K3D_API LinearAllocator
+class LinearAllocator
 {
 public:
 
@@ -443,7 +448,7 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-class K3D_API Sampler : public rhi::ISampler
+class Sampler : public rhi::ISampler
 {
 	friend class CommandContext;
 public:
@@ -461,7 +466,7 @@ protected:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_hCpuDescriptorHandle;
 };
 
-class K3D_API CommandContext : public rhi::ICommandContext
+class CommandContext : public rhi::ICommandContext
 {
 	friend class Device;
 public:
@@ -476,16 +481,20 @@ public:
 	void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src) override;
 	void Execute(bool Wait) override;
 	void Reset()override;
+
 	void SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type, ID3D12DescriptorHeap* HeapPtr);
 
 	void FlushResourceBarriers();
 
 	void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
+	void BeginRendering() override {}
+	void EndRendering() override {}
 	void InsertTimeStamp(ID3D12QueryHeap* pQueryHeap, uint32_t QueryIdx);
 	void ResolveTimeStamps(ID3D12Resource* pReadbackHeap, ID3D12QueryHeap* pQueryHeap, uint32_t NumQueries);
 
-	void ClearColorBuffer(rhi::IColorBuffer* iColorBuffer)override;
+	void ClearColorBuffer(rhi::IGpuResource*, kMath::Vec4f const & color)override;
 	void ClearDepthBuffer(rhi::IDepthBuffer* iDepthBuffer)override;
+	void SetRenderTarget(rhi::IRenderTarget * rt) override;
 
 	void SetRenderTargets(
 		uint32 NumColorBuffer, rhi::IColorBuffer * ColorBuffers,
@@ -505,9 +514,11 @@ public:
 	void DrawInstanced(rhi::DrawInstanceParam)override;
 	void DrawIndexedInstanced(rhi::DrawIndexedInstancedParam)override;
 	void Dispatch(uint32 X, uint32 Y, uint32 Z) override;
-
-
+	void TransitionResourceBarrier(rhi::IGpuResource * resource,
+		rhi::EResourceState srcState, rhi::EResourceState dstState) override;
 	void SetRootSignature(const RootSignature &);
+
+	void PresentInViewport(rhi::IRenderViewport *) override {}
 
 	DirectCommandListManager & GetCommandListManager() const
 	{

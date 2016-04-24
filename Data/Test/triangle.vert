@@ -1,4 +1,4 @@
-#version 450
+#version 430
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
@@ -14,6 +14,12 @@ layout (binding = 0) uniform UBO
 } ubo;
 
 layout (location = 0) out vec3 outColor;
+
+out gl_PerVertex 
+{
+    vec4 gl_Position;   
+};
+
 
 void main() 
 {

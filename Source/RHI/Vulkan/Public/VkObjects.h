@@ -1,51 +1,95 @@
 #ifndef __VkObjects_h__
 #define __VkObjects_h__
 #pragma once
+#include <utility>  
 
 K3D_VK_BEGIN
 
+struct ImageInfo;
 
-struct K3D_API AttachmentDescription : public VkAttachmentDescription
+class RenderTargetLayout
 {
-	AttachmentDescription(VkFormat format, VkSampleCountFlagBits samples)
+public:
+	RenderTargetLayout(rhi::RenderTargetLayout const & layout);
+
+	inline uint32 GetHash() const { return m_Hash; }
+	inline const VkExtent2D& GetExtent2D() const { return m_Extent2D; }
+	inline const VkExtent3D& GetExtent3D() const { return m_Extent3D; }
+	inline const VkAttachmentDescription* GetAttachmentDescriptions() const { return m_Desc; }
+	inline uint32 GetNumColorAttachments() const { return m_NumColorAttachments; }
+	inline bool GetHasDepthStencil() const { return m_HasDepthStencil; }
+	inline bool GetHasResolveAttachments() const { return m_HasResolveAttachments; }
+	inline uint32 GetNumAttachments() const { return m_NumAttachments; }
+
+	inline const VkAttachmentReference* GetColorAttachmentReferences() const { return m_NumColorAttachments > 0 ? m_ColorReferences : nullptr; }
+	inline const VkAttachmentReference* GetResolveAttachmentReferences() const { return m_HasResolveAttachments ? m_ResolveReferences : nullptr; }
+	inline const VkAttachmentReference* GetDepthStencilAttachmentReference() const { return m_HasDepthStencil ? &m_DepthStencilReference : nullptr; }
+
+private:
+
+	union
 	{
-		format = format;
-		samples = samples;
-		loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		finalLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	}
-	AttachmentDescription() {}
-	AttachmentDescription & Format(VkFormat const & fmt) { this->format = fmt; return *this; }
-	AttachmentDescription & Samples(VkSampleCountFlagBits const & sample) { this->samples = sample; return *this; }
-	AttachmentDescription & LoadOp(VkAttachmentLoadOp const & op) { this->loadOp = op; return *this; }
-	AttachmentDescription & StoreOp(VkAttachmentStoreOp const & op) { this->storeOp = op; return *this; }
-	AttachmentDescription & StencilLoadOp(VkAttachmentLoadOp const & op) { this->stencilLoadOp = op; return *this; }
-	AttachmentDescription & StencilStoreOp(VkAttachmentStoreOp const & op) { this->stencilStoreOp = op; return *this; }
-	AttachmentDescription & InitialLayout(VkImageLayout const & layout) { this->initialLayout = layout; return *this; }
-	AttachmentDescription & FinalLayout(VkImageLayout const & layout) { this->finalLayout = layout; return *this; }
+		VkExtent3D	m_Extent3D;
+		VkExtent2D	m_Extent2D;
+	};
+
+	uint32 					m_Hash;
+	VkAttachmentReference 	m_ColorReferences[8];
+	VkAttachmentReference 	m_ResolveReferences[8];
+	VkAttachmentReference 	m_DepthStencilReference;
+	VkAttachmentDescription m_Desc[8 * 2 + 1];
+
+	uint32 					m_NumAttachments;
+	uint32 					m_NumColorAttachments;
+	bool 					m_HasDepthStencil;
+	bool 					m_HasResolveAttachments;
 };
 
 class K3D_API RenderpassAttachment
 {
 public:
+
+	struct Description : public VkAttachmentDescription
+	{
+		Description(VkFormat format, VkSampleCountFlagBits samples)
+		{
+			format = format;
+			samples = samples;
+			loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+			initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			finalLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			flags = 0;
+		}
+		Description() { flags = 0; }
+		Description & Format(VkFormat const & fmt) { this->format = fmt; return *this; }
+		Description & Samples(VkSampleCountFlagBits const & sample) { this->samples = sample; return *this; }
+		Description & LoadOp(VkAttachmentLoadOp const & op) { this->loadOp = op; return *this; }
+		Description & StoreOp(VkAttachmentStoreOp const & op) { this->storeOp = op; return *this; }
+		Description & StencilLoadOp(VkAttachmentLoadOp const & op) { this->stencilLoadOp = op; return *this; }
+		Description & StencilStoreOp(VkAttachmentStoreOp const & op) { this->stencilStoreOp = op; return *this; }
+		Description & InitialLayout(VkImageLayout const & layout) { this->initialLayout = layout; return *this; }
+		Description & FinalLayout(VkImageLayout const & layout) { this->finalLayout = layout; return *this; }
+	};
+
 	RenderpassAttachment(VkFormat fmt = VK_FORMAT_UNDEFINED, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 	virtual ~RenderpassAttachment() {}
 
 	RenderpassAttachment&			SetClearValue(const VkClearValue& value) { m_ClearValue = value; return *this; }
 	const VkClearValue&				GetClearValue() const { return m_ClearValue; }
 	const VkAttachmentDescription&	GetDescription() const { return m_Description; }
-	AttachmentDescription&			Description() { return m_Description; }
+	Description&					GetDescription() { return m_Description; }
+	VkFormat						GetFormat() const { return m_Description.format; }
+	VkImageLayout					GetFinalLayout() const { return m_Description.finalLayout; }
 
 	static RenderpassAttachment	CreateColor(VkFormat format, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 	static RenderpassAttachment	CreateDepthStencil(VkFormat format, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 
 	friend class			RenderPass;
 private:
-	AttachmentDescription	m_Description;
+	Description				m_Description;
 	VkClearValue			m_ClearValue;
 };
 
@@ -100,9 +144,13 @@ private:
 	friend class			RenderPass;
 };
 
+/**
+ * depends on RenderpassAttachment, Subpass, SubpassDependency
+ */
 class K3D_API RenderpassOptions
 {
 public:
+	using Attachments = std::vector<RenderpassAttachment>;
 	RenderpassOptions() {}
 	RenderpassOptions(VkFormat colorFormat, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 	RenderpassOptions(VkFormat colorFormat, VkFormat depthStencilFormat, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
@@ -111,6 +159,7 @@ public:
 	RenderpassOptions&				AddAttachment(const RenderpassAttachment& value) { m_Attachments.push_back(value); return *this; }
 	RenderpassOptions&				AddSubPass(const Subpass& value) { m_Subpasses.push_back(value); return *this; }
 	RenderpassOptions&				AddSubpassDependency(const SubpassDependency& value) { m_SubpassDependencies.push_back(value); return *this; }
+	Attachments const&				GetAttachments() const { return m_Attachments; }
 
 private:
 	std::vector<RenderpassAttachment>	m_Attachments;
@@ -257,12 +306,238 @@ public:
 	{
 		return
 		{
-			VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+			VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 			nullptr,
 			0
 		};
 	}
 
+};
+
+class ImageViewInfo : public VkImageViewCreateInfo
+{
+public:
+	ImageViewInfo()
+	{
+		sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		pNext = nullptr;
+		viewType = VK_IMAGE_VIEW_TYPE_2D;
+		flags = 0;
+		image = VK_NULL_HANDLE;
+		format = VK_FORMAT_UNDEFINED;
+		components = {};
+
+		subresourceRange = {};
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.levelCount = 1;
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.layerCount = 1;
+	}
+	
+	ImageViewInfo(VkFormat format_, VkImage image_, VkImageViewType viewType_ = VK_IMAGE_VIEW_TYPE_2D)
+	{
+		this->sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		this->pNext = nullptr;
+		this->viewType = viewType_;
+		this->flags = 0;
+		this->image = image_;
+		this->format = format_;
+		components = {};
+		subresourceRange = {};
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.levelCount = 1;
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.layerCount = 1;
+	}
+
+	ImageViewInfo& Format(VkFormat fmt)
+	{
+		this->format = fmt;
+		return *this;
+	}
+
+	ImageViewInfo& ViewType(VkImageViewType viewType_ = VK_IMAGE_VIEW_TYPE_2D) 
+	{ 
+		this->viewType = viewType_; 
+		return *this;
+	}
+	
+	ImageViewInfo& AspectType(VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT) 
+	{
+		this->subresourceRange.aspectMask = aspectMask;
+		return *this; 
+	}
+
+	ImageViewInfo& Image(VkImage image_)
+	{
+		this->image = image_;
+		return *this;
+	}
+
+	static ImageViewInfo CreateColorImageInfo(
+		VkFormat format, VkImage image, 
+		VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT)
+	{
+		ImageViewInfo info(format, image);
+		return info.AspectType(aspectMask);
+	}
+
+	static std::pair<VkImageView, VkImageViewCreateInfo> CreateColorImageView(
+		VkDevice device, VkFormat colorFmt, VkImage colorImage,
+		VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+
+	static ImageViewInfo CreateDepthStencilImageInfo(
+		VkFormat format, VkImage image,
+		VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)
+	{
+		ImageViewInfo info(format, image);
+		return info.AspectType(aspectMask);
+	}
+
+	static std::pair<VkImageView, VkImageViewCreateInfo> CreateDepthStencilImageView(
+		VkDevice device, VkFormat colorFmt, VkImage colorImage,
+		VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+
+	static ImageViewInfo From(ImageInfo const& info, VkImage image);
+}; 
+
+/*
+VkStructureType          sType;
+const void*              pNext;
+VkImageCreateFlags       flags;
+VkImageType              imageType;
+VkFormat                 format;
+VkExtent3D               extent;
+uint32_t                 mipLevels;
+uint32_t                 arrayLayers;
+VkSampleCountFlagBits    samples;
+VkImageTiling            tiling;
+VkImageUsageFlags        usage;
+VkSharingMode            sharingMode;
+uint32_t                 queueFamilyIndexCount;
+const uint32_t*          pQueueFamilyIndices;
+VkImageLayout            initialLayout;
+*/
+struct ImageInfo : VkImageCreateInfo
+{
+	ImageInfo()
+	{
+		sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		pNext = nullptr;
+		flags = 0;
+		imageType = VK_IMAGE_TYPE_2D;
+		format = VK_FORMAT_UNDEFINED;
+		extent = {};
+		mipLevels = 1;
+		arrayLayers = 1;
+		samples = VK_SAMPLE_COUNT_1_BIT;
+		tiling = VK_IMAGE_TILING_OPTIMAL;
+		usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		queueFamilyIndexCount = 0;
+		pQueueFamilyIndices = nullptr;
+		initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	}
+
+	ImageInfo& Format(VkFormat fmt)
+	{
+		this->format = fmt;
+		return *this;
+	}
+
+	ImageInfo& ImageType(VkImageType type)
+	{
+		this->imageType = type;
+		return *this;
+	}
+
+	ImageInfo& MipLevel(uint32 level)
+	{
+		this->mipLevels = level;
+		return *this;
+	}
+
+	ImageInfo& Layers(uint32 layers)
+	{
+		this->arrayLayers = layers;
+		return *this;
+	}
+
+	ImageInfo& SampleBits(VkSampleCountFlagBits bits)
+	{
+		this->samples = bits;
+		return *this;
+	}
+
+	ImageInfo& Dimens(uint32 width, uint32 height = 1, uint32 depth = 1)
+	{
+		this->extent = { width,height,depth };
+		if (height == 1)
+		{
+			this->imageType = VK_IMAGE_TYPE_1D;
+		}
+		else if (depth == 1) 
+		{
+			this->imageType = VK_IMAGE_TYPE_2D;
+		}
+		else
+		{
+			this->imageType = VK_IMAGE_TYPE_3D;
+		}
+		return *this;
+	}
+
+	ImageInfo& Usage(VkImageUsageFlagBits bits)
+	{
+		this->usage = bits;
+		return *this;
+	}
+
+	ImageInfo& Tiling(VkImageTiling tile)
+	{
+		this->tiling = tile;
+		return *this;
+	}
+
+	ImageInfo& InitialLayout(VkImageLayout layout)
+	{
+		this->initialLayout = layout;
+		return *this;
+	}
+
+	VkImageViewType GuessViewType() const
+	{
+		VkImageViewType type = VK_IMAGE_VIEW_TYPE_1D;
+		if (this->arrayLayers > 1)
+		{
+			if (this->imageType == VK_IMAGE_TYPE_2D)
+			{
+				type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+			}
+			else if (this->imageType == VK_IMAGE_TYPE_1D)
+			{
+				type = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+			}
+		}
+		else
+		{
+			if (this->imageType == VK_IMAGE_TYPE_2D)
+			{
+				type = VK_IMAGE_VIEW_TYPE_2D;
+			}
+			else if (this->imageType == VK_IMAGE_TYPE_1D)
+			{
+				type = VK_IMAGE_VIEW_TYPE_1D;
+			}
+			else
+			{
+				type = VK_IMAGE_VIEW_TYPE_3D;
+			}
+		}
+		return type;
+	}
+
+	static ImageInfo FromRHI(rhi::TextureDesc const & desc);
 };
 
 K3D_VK_END

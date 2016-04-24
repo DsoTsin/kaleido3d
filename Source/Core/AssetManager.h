@@ -2,8 +2,6 @@
 #define __k3dk3dAssetManager_h__
 #pragma once
 
-#include <KTL/ThreadPool.hpp>
-#include <KTL/Semaphore.hpp>
 #include <KTL/Singleton.hpp>
 #include <Interface/IIODevice.h>
 #include <Core/Mesh.h>
@@ -44,9 +42,9 @@ namespace k3d {
 		/// \param path
 		void AddSearchPath(const kchar *path);
 
-		auto AsyncLoadObject(const kchar * objPath, ObjectLoadListener* listener);
+		//auto AsyncLoadObject(const kchar * objPath, ObjectLoadListener* listener);
 
-		void CommitAsynResourceTask(const kchar *fileName,
+		/*void CommitAsynResourceTask(const kchar *fileName,
 			BytesPackage & bp,
 			std::semaphore & sp,
 			std::function<void()> callback);
@@ -55,7 +53,7 @@ namespace k3d {
 			const kchar *fileName,
 			BytesPackage & bp,
 			std::semaphore & sp
-			);
+			);*/
 
 		void CommitAsynResourceTask(
 			const kchar *fileName,
@@ -110,7 +108,7 @@ namespace k3d {
 		static	kString	 s_envAssetPath;
 
 		std::vector<kString>    m_SearchPaths;
-		std::thread_pool*        m_pThreadPool;
+		//std::thread_pool*        m_pThreadPool;
 
 		MapMesh                 m_MeshMap;
 		MapImage                m_ImageMap;

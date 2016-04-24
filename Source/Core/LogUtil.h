@@ -3,11 +3,12 @@
 #define __k3dDbg_h__
 #include "Utils/StringUtils.h"
 #include <KTL/Singleton.hpp>
-#include <mutex>
+#include "Thread/ConditionVariable.h"
 
 struct IIODevice;
 
-namespace k3d {
+namespace k3d
+{
 
 	enum class LogLevel
 	{
@@ -30,14 +31,14 @@ namespace k3d {
 	public:
 		static void Out(const char * tag, const char *fmt, ...);
 		static void Out(const char * tag, std::string const & log);
-		static void Out(LogLevel && log, const char * tag, const char *fmt, ...);
+		static void Out(LogLevel const& log, const char * tag, const char *fmt, ...);
         
         typedef void (*OutPutCallBack)(const char *);
         static void SetDebugOutFunction(OutPutCallBack callBack);
 
 	private:
-		std::mutex				s_LogLock;
-		IIODevice *				s_LogFile;
+		::Concurrency::Mutex			s_LogLock;
+		IIODevice *						s_LogFile;
 		friend class					LogUtilInitializer;
 
 	protected:
@@ -63,5 +64,8 @@ namespace k3d {
 		::k3d::Log::Out(LogLevel::Error,"Assert", "args is" ##__VA_ARGS__); \
 		__debugbreak(); \
     }
+
+#define KLOG(Level, TAG, ...) \
+	::k3d::Log::Out(::k3d::LogLevel::Level, #TAG, __VA_ARGS__);
 
 #endif

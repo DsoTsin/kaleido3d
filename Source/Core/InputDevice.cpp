@@ -2,7 +2,9 @@
 #include "InputDevice.h"
 
 #if K3DPLATFORM_OS_WIN
-#include "Windows/InputDeviceImpl.h"
+#include "../Platform/Windows/InputDeviceImpl.h"
+#elif K3DPLATFORM_OS_ANDROID
+#include "../Platform/Android/InputDeviceImpl.h"
 #endif
 
 namespace k3d

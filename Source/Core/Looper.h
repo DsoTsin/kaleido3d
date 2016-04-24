@@ -32,7 +32,7 @@ namespace k3d {
 
 
     typedef std::shared_ptr<Handler> spHandler;
-    typedef std::shared_ptr<std::thread> spThread;
+    typedef std::shared_ptr<::Concurrency::Thread> spThread;
   
   protected:
     static thread_local Looper sMyLooper;

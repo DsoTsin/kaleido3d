@@ -1,9 +1,7 @@
 #include "VkCommon.h"
 #include "Public/VkRHI.h"
-#include "Tools/ShaderGen/ShaderCompiler.h"
-#include "Base/vulkantools.h"
-#include "Base/vulkandebug.h"
 #include "Private/VkUtils.h"
+#include "Public/VkConfig.h"
 
 K3D_VK_BEGIN
 
@@ -13,36 +11,102 @@ rhi::IDevice * DeviceAdapter::GetDevice()
 }
 
 Device::Device() 
-	: m_pPhysicDevice(nullptr)
+	: m_pGpu(nullptr)
+	, m_Device(VK_NULL_HANDLE)
 {
 }
 
 Device::~Device()
 {
+	Destroy();
+}
+
+void Device::Destroy()
+{
+	if (VK_NULL_HANDLE == m_Device)
+		return;
+	for (auto pll : m_CachedPipelineLayout)
+	{
+		pll.second->~PipelineLayout();
+	}
+	m_CachedPipelineLayout.clear();
+
+	for (auto dsl : m_CachedDescriptorSetLayout)
+	{
+		dsl.second->~DescriptorSetLayout();
+	}
+
+	for (auto alloc : m_CachedDescriptorPool)
+	{
+		alloc.second->~DescriptorAllocator();
+	}
+
+	m_CachedDescriptorSetLayout.clear();
+	m_PendingPass.~vector();
 	m_ResourceManager->~ResourceManager();
 	m_ContextPool->~CommandContextPool();
+
 	vkDestroyDevice(m_Device, nullptr);
-	Log::Out(LogLevel::Info, "Device", "Destroying..");
+	VKLOG(Info, "Device-Destroyed");
+	m_Device = VK_NULL_HANDLE;
 }
 
 rhi::IDevice::Result
 Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 {
-	m_pPhysicDevice = static_cast<DeviceAdapter*>(pAdapter)->m_pPDevice;
-	VkPhysicalDevice& physicalDevice = *static_cast<DeviceAdapter*>(pAdapter)->m_pPDevice;
+	m_pGpu = static_cast<DeviceAdapter*>(pAdapter)->m_pGpu;
+	VkPhysicalDevice& Gpu = *static_cast<DeviceAdapter*>(pAdapter)->m_pGpu;
+	vkGetPhysicalDeviceMemoryProperties(Gpu, &m_MemoryProperties);
+	VkResult err = CreateDevice(Gpu, withDbg, &m_Device);
+	if (err)
+	{
+		VKLOG(Fatal, "Device-Create: Could not create Vulkan Device : %s.", ErrorString(err).c_str());
+		return rhi::IDevice::DeviceNotFound;
+	}
+	else 
+	{
+		LoadVulkan(RHIRoot::GetInstance(), m_Device);
+#if K3DPLATFORM_OS_WIN
+		if (withDbg)
+		{
+			SetupDebugging(RHIRoot::GetInstance(), VK_DEBUG_REPORT_ERROR_BIT_EXT |
+				VK_DEBUG_REPORT_WARNING_BIT_EXT |
+				VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT, nullptr);
+		}
+#endif
+		m_ResourceManager = std::make_unique<ResourceManager>(this, 1024, 1024);
+		m_ContextPool = std::make_unique<CommandContextPool>(this);
+		InitCmdQueue(VK_QUEUE_GRAPHICS_BIT, m_GfxQueueIndex, 0);
+		return rhi::IDevice::DeviceFound;
+	}
+}
+
+rhi::IRenderTarget * 
+Device::NewRenderTarget(rhi::RenderTargetLayout const & layout)
+{
+	return new RenderTarget(this, layout);
+}
+
+void Device::InitCmdQueue(VkQueueFlags queueTypes, uint32 queueFamilyIndex, uint32 queueIndex)
+{
+	m_DefCmdQueue = std::make_shared<CommandQueue>(this, queueTypes, queueFamilyIndex, queueIndex);
+}
+
+VkResult Device::CreateDevice(VkPhysicalDevice gpu, bool withDebug, VkDevice * pDevice)
+{
 	uint32_t graphicsQueueIndex = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &m_QueueCount, NULL);
+	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &m_QueueCount, NULL);
 	K3D_ASSERT(m_QueueCount >= 1);
-	Log::Out(LogLevel::Info, "Device", "PhysicDeviceQueue count = %d.", m_QueueCount);
+	VKLOG(Info, "Device-PhysicDeviceQueue count = %d.", m_QueueCount);
 	std::vector<VkQueueFamilyProperties> queueProps;
 	queueProps.resize(m_QueueCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &m_QueueCount, queueProps.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &m_QueueCount, queueProps.data());
 	for (graphicsQueueIndex = 0; graphicsQueueIndex < m_QueueCount; graphicsQueueIndex++)
 	{
 		if (queueProps[graphicsQueueIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
 			m_GfxQueueIndex = graphicsQueueIndex;
-			Log::Out(LogLevel::Info, "Device", "graphicsQueueIndex(%d) queueFlags(%d).", graphicsQueueIndex, queueProps[graphicsQueueIndex].queueFlags);
+			VKLOG(Info, "Device-graphicsQueueIndex(%d) queueFlags(%d).", graphicsQueueIndex, queueProps[graphicsQueueIndex].queueFlags);
 			break;
 		}
 	}
@@ -63,32 +127,19 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 	deviceCreateInfo.pEnabledFeatures = NULL;
 
-#if _DEBUG
-	deviceCreateInfo.enabledLayerCount = vkDebug::validationLayerCount;
-	deviceCreateInfo.ppEnabledLayerNames = vkDebug::validationLayerNames;
-#endif
+	if (withDebug)
+	{
+		deviceCreateInfo.enabledLayerCount = (uint32)RHIRoot::s_LayerNames.size();
+		deviceCreateInfo.ppEnabledLayerNames = RHIRoot::s_LayerNames.data();
+	}
 
 	if (enabledExtensions.size() > 0)
 	{
 		deviceCreateInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 	}
-	VkResult err = vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &m_Device);
-	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &m_MemoryProperties);
-
-	if (err)
-	{
-		Log::Out(LogLevel::Fatal, "Device", "Create: Could not create Vulkan Device : %s.", vkTools::errorString(err).c_str());
-		return rhi::IDevice::DeviceNotFound;
-	}
-	else {
-		m_ResourceManager.swap(std::make_unique<ResourceManager>(this, 1024, 1024));
-		m_ContextPool.swap(std::make_unique<CommandContextPool>(this));
-		vkGetDeviceQueue(m_Device, graphicsQueueIndex, 0, &m_DefaultQueue);
-		return rhi::IDevice::DeviceFound;
-	}
+	return vkCreateDevice(gpu, &deviceCreateInfo, nullptr, pDevice);
 }
-
 
 bool Device::FindMemoryType(uint32_t typeBits, VkFlags requirementsMask, uint32_t *typeIndex) const
 {
@@ -112,16 +163,7 @@ bool Device::FindMemoryType(uint32_t typeBits, VkFlags requirementsMask, uint32_
 rhi::ICommandContext*	
 Device::NewCommandContext(rhi::ECommandType Type)
 {
-	rhi::ICommandContext * commandContext = nullptr;
-	switch (Type)
-	{
-	case rhi::ECMD_Graphics:
-		commandContext = m_ContextPool->RequestContext();
-		break;
-	case rhi::ECMD_Compute:
-		break;
-	}
-	return commandContext;
+	return m_ContextPool->RequestContext();
 }
 
 rhi::ISampler*			
@@ -130,27 +172,52 @@ Device::NewSampler(const rhi::SamplerState&)
 	return nullptr;
 }
 
-rhi::IPipelineStateObject*	
-Device::NewPipelineState(rhi::EPipelineType type)
+rhi::IPipelineLayout *
+Device::NewPipelineLayout(rhi::PipelineLayoutDesc const & table)
 {
-	rhi::IPipelineStateObject * pso = nullptr;
-	switch (type)
+	// Hash the table parameter here, 
+	// Lookup the layout by hash code
+	rhi::PipelineLayoutKey key = HashPipelineLayoutDesc(table);
+	if (m_CachedPipelineLayout.find(key) == m_CachedPipelineLayout.end())
 	{
-	case rhi::EPSO_Graphics:
-		pso = new PipelineStateObject(this);
-		break;
-	case rhi::EPSO_Compute:
-		pso = new PipelineStateObject(this);
-		break;
+		m_CachedPipelineLayout[key] = new PipelineLayout(this, table);;
 	}
-	return pso;
+	return m_CachedPipelineLayout[key];
+}
+
+DescriptorAllocator * 
+Device::NewDescriptorAllocator(uint32 maxSets, BindingArray const & bindings)
+{
+	uint32 key = util::Hash32((const char*)bindings.Data(), bindings.Count() * sizeof(VkDescriptorSetLayoutBinding));
+	if (m_CachedDescriptorPool.find(key) == m_CachedDescriptorPool.end())
+	{
+		DescriptorAllocator::Options options = {};
+		m_CachedDescriptorPool[key] = new DescriptorAllocator(this, options, maxSets, bindings);
+	}
+	return m_CachedDescriptorPool[key];
+}
+
+DescriptorSetLayout * 
+Device::NewDescriptorSetLayout(BindingArray const & bindings)
+{
+	uint32 key = util::Hash32((const char*)bindings.Data(), bindings.Count() * sizeof(VkDescriptorSetLayoutBinding));
+	if (m_CachedDescriptorSetLayout.find(key) == m_CachedDescriptorSetLayout.end()) 
+	{
+		m_CachedDescriptorSetLayout[key] = new DescriptorSetLayout(this, bindings);
+	}
+	return m_CachedDescriptorSetLayout[key];
 }
 
 rhi::IPipelineStateObject*	
-Device::CreatePipelineStateObject(rhi::PipelineDesc const & desc)
+Device::NewPipelineState(rhi::PipelineDesc const & desc, rhi::IPipelineLayout * ppl, rhi::EPipelineType type)
 {
-	PipelineStateObject * pso = new PipelineStateObject(this, desc);
-	return pso;
+	return CreatePipelineStateObject(desc, ppl);
+}
+
+rhi::IPipelineStateObject*	
+Device::CreatePipelineStateObject(rhi::PipelineDesc const & desc, rhi::IPipelineLayout * ppl)
+{
+	return new PipelineStateObject(this, desc, static_cast<PipelineLayout*>(ppl));
 }
 
 rhi::ISyncFence * 
@@ -160,15 +227,18 @@ Device::NewFence()
 }
 
 rhi::IGpuResource*
-Device::NewGpuResource(rhi::ResourceDesc const& Desc,uint64 Size) 
+Device::NewGpuResource(rhi::ResourceDesc const& Desc) 
 {
 	rhi::IGpuResource * resource = nullptr;
 	switch (Desc.Type)
 	{
 	case rhi::EGT_Buffer:
-		resource = new Buffer(this, Size);
+		resource = new Buffer(this, Desc);
 		break;
 	case rhi::EGT_Texture1D:
+		break;
+	case rhi::EGT_Texture2D:
+		resource = new Texture(this, Desc);
 		break;
 	default:
 		break;
@@ -183,9 +253,9 @@ Device::NewDescriptorPool()
 }
 
 rhi::IRenderViewport * 
-Device::NewRenderViewport(void * winHandle, uint32 width, uint32 height)
+Device::NewRenderViewport(void * winHandle, rhi::GfxSetting& setting)
 {
-	return new RenderViewport(this, winHandle, width, height);
+	return new RenderViewport(this, winHandle, setting);
 }
 
 PtrCmdAlloc Device::NewCommandAllocator(bool transient)
@@ -198,9 +268,16 @@ PtrSemaphore Device::NewSemaphore()
 	return std::make_shared<Semaphore>(this);
 }
 
-k3d::IShaderCompiler * Device::NewShaderCompiler()
+::k3d::IShaderCompiler *
+Device::NewShaderCompiler()
 {
 	return CreateShaderCompiler(::k3d::EShaderLang::GLSL);
+}
+
+SwapChain * 
+Device::NewSwapChain(rhi::GfxSetting const & setting)
+{
+	return nullptr;
 }
 
 K3D_VK_END

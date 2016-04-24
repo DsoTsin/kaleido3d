@@ -1,7 +1,6 @@
 #include "Kaleido3D.h"
 #include "App.h"
 #include "ModuleCore.h"
-#include "Window.h"
 #include "Message.h"
 
 namespace k3d {
@@ -66,7 +65,8 @@ namespace k3d {
 		return AppStatus::Destroyed;
 	}
 
-	namespace Core {
+	namespace Core
+	{
 
 		uint32 RunApplication(App & app, kString const & appName)
 		{
@@ -75,5 +75,14 @@ namespace k3d {
 			return (uint32) app.Run();
 		}
 
+	}
+
+	void App::OnWindowCreated(void * param) {
+#if K3DPLATFORM_OS_ANDROID
+		if(!m_Window)
+		{
+			m_Window = MakeAndroidWindow((ANativeWindow*)param);
+		}
+#endif
 	}
 }

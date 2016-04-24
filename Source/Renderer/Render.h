@@ -75,6 +75,7 @@ namespace render
 		~RenderContext();
 
 		rhi::IDevice * GetDevice() { return m_pDevice; }
+		rhi::IRenderViewport* GetViewport() { return m_RenderVp; }
 
 	protected:
 		RHIType					m_RhiType;

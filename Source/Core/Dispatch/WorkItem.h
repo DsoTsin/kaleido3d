@@ -5,7 +5,7 @@ namespace Dispatch {
 
 	class WorkQueue;
 
-	class K3D_API WorkItem {
+	class WorkItem {
 	public:
 		WorkItem();
 		virtual ~WorkItem();

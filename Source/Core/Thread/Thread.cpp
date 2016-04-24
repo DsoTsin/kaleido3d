@@ -2,7 +2,7 @@
 #include "Thread.h"
 
 #include <functional>
-#include "Windows.h"
+#include <Config/OSHeaders.h>
 #include "ConditionVariable.h"
 
 #ifdef Yield
@@ -25,7 +25,11 @@ namespace Concurrency {
 
 	void Thread::SleepForMilliSeconds(uint32_t millisecond)
 	{
+#if K3DPLATFORM_OS_WIN
 		::Sleep(millisecond);
+#else
+		::usleep(millisecond*1000);
+#endif
 	}
 
 	/*void Thread::Yield()
@@ -35,7 +39,11 @@ namespace Concurrency {
 
 	uint32_t Thread::GetId()
 	{
+#if K3DPLATFORM_OS_WIN
 		return ::GetCurrentThreadId();
+#else
+		return (uint32_t)pthread_self();
+#endif
 	}
 
 	Thread::Thread()
@@ -78,6 +86,15 @@ namespace Concurrency {
 				s_ThreadMap[tid] = this;
 			}
 		}
+#else
+        if(0 == (u_long)m_ThreadHandle)
+		{
+			typedef void* (threadfun)(void*);
+			pthread_attr_t attr;
+			pthread_attr_init(&attr);
+			pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+			pthread_create((pthread_t*)&m_ThreadHandle, nullptr, Run, this);
+		}
 #endif
 	}
 
@@ -85,14 +102,21 @@ namespace Concurrency {
 	void Thread::Join()
 	{
 		if (m_ThreadHandle != nullptr) {
+#if K3DPLATFORM_OS_WIN
 			::WaitForSingleObject(m_ThreadHandle, INFINITE);
+#else
+            void* ret;
+            pthread_join((pthread_t)m_ThreadHandle, &ret);
+#endif
 		}
 	}
 
 	void Thread::Terminate()
 	{
 		if (m_ThreadHandle != nullptr) {
+#if K3DPLATFORM_OS_WIN
 			::TerminateThread(m_ThreadHandle, 0);
+#endif
 		}
 	}
 
@@ -107,14 +131,18 @@ namespace Concurrency {
 	}
 
 	std::string  Thread::GetCurrentThreadName() {
+#if K3DPLATFORM_OS_WIN
 		uint32 tid = (uint32)::GetCurrentThreadId();
+#else
+        uint32 tid = (uint32)pthread_self();
+#endif
 		if (s_ThreadMap[tid] != nullptr) {
 			return s_ThreadMap[tid]->GetName();
 		}
 		return "Anonymous Thread";
 	}
 
-	void Thread::Run(void *data)
+	void* Thread::Run(void *data)
 	{
 		Thread* thr = reinterpret_cast<Thread*>(data);
 		if (thr != nullptr)
@@ -122,7 +150,13 @@ namespace Concurrency {
 			Call call = thr->m_ThreadCallBack;
 			call();
 			thr->m_ThreadStatus = ThreadStatus::Finish;
+#if K3DPLATFORM_OS_WIN
 			::ExitThread(0);
+#else
+            int ret = 0;
+            pthread_exit(&ret);
+#endif
 		}
+		return thr;
 	}
 }

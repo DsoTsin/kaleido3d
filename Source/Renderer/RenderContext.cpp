@@ -2,6 +2,8 @@
 #if K3DPLATFORM_OS_WIN
 #include <RHI/D3D12/DXCommon.h>
 #include <RHI/D3D12/Public/D3D12RHI.h>
+#endif
+#ifndef K3DPLATFORM_OS_MAC
 #include <RHI/Vulkan/VkCommon.h>
 #include <RHI/Vulkan/Public/VkRHI.h>
 #endif
@@ -19,7 +21,9 @@ namespace render
 	PFNRHIEnumFunc s_RHIEnumFunction[] = {
 		nullptr,
 		reinterpret_cast<PFNRHIEnumFunc>(::k3d::vk::EnumAllDeviceAdapter),
+#if K3DPLATFORM_OS_WIN
 		reinterpret_cast<PFNRHIEnumFunc>(::k3d::d3d12::EnumAllDeviceAdapter)
+#endif
 	};
 
 
@@ -44,8 +48,11 @@ namespace render
 	{
 		if (!m_RenderVp)
 		{
-			m_RenderVp = m_pDevice->NewRenderViewport(hostWindow->GetHandle(), 1920, 1080);
-			m_RenderVp->InitViewport(nullptr, nullptr, 0,0,rhi::EPF_RGBA8Unorm);
+			rhi::GfxSetting setting{ 
+				1920, 1080, rhi::EPF_RGBA8Unorm, 
+				rhi::EPF_D32Float, true, 2 };
+			m_RenderVp = m_pDevice->NewRenderViewport(hostWindow->GetHandle(), setting);
+			m_RenderVp->InitViewport(nullptr, nullptr, setting);
 		}
 	}
 

@@ -1,17 +1,24 @@
 #include "VkCommon.h"
 #include "VkObjects.h"
+#include "Private/VkEnums.h"
 
 K3D_VK_BEGIN
 
+RenderTargetLayout::RenderTargetLayout(rhi::RenderTargetLayout const &layout)
+{
+
+}
+
 RenderpassAttachment::RenderpassAttachment(VkFormat fmt, VkSampleCountFlagBits samples)
-	: m_Description{ fmt, samples }
 {
 	m_Description.LoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
 		.StoreOp(VK_ATTACHMENT_STORE_OP_STORE)
 		.StencilLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
 		.StencilStoreOp(VK_ATTACHMENT_STORE_OP_STORE)
 		.InitialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-		.FinalLayout(VK_IMAGE_LAYOUT_UNDEFINED);
+		.FinalLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+		.Format(fmt)
+		.Samples(samples);
 
 	m_ClearValue.color.float32[0] = 0.0f;
 	m_ClearValue.color.float32[1] = 0.0f;
@@ -24,14 +31,14 @@ RenderpassAttachment::RenderpassAttachment(VkFormat fmt, VkSampleCountFlagBits s
 RenderpassAttachment RenderpassAttachment::CreateColor(VkFormat format, VkSampleCountFlagBits samples)
 {
 	RenderpassAttachment result(format);
-	result.Description().Samples(samples).FinalLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	result.GetDescription().Samples(samples).FinalLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	return result;
 }
 
 RenderpassAttachment RenderpassAttachment::CreateDepthStencil(VkFormat format, VkSampleCountFlagBits samples)
 {
 	RenderpassAttachment result(format);
-	result.Description().Samples(samples).FinalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	result.GetDescription().Samples(samples).FinalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 	return result;
 }
 
@@ -172,6 +179,54 @@ ImageMemoryBarrierParams::ImageMemoryBarrierParams(VkImage image, VkImageLayout 
 	m_DstStageMask = dstStageMask;
 }
 
+ImageInfo ImageInfo::FromRHI(rhi::TextureDesc const & desc)
+{
+	ImageInfo info;
+	info.Format(g_FormatTable[desc.Format])
+		.MipLevel(desc.MipLevels)
+		.Layers(desc.Layers)
+		.Dimens(desc.Width, desc.Height, desc.Depth);
+	return info;
+}
 
+
+std::pair<VkImageView, VkImageViewCreateInfo> ImageViewInfo::CreateColorImageView(VkDevice device, VkFormat colorFmt, VkImage colorImage, VkImageAspectFlags aspectMask)
+{
+	VkImageView imageView = VK_NULL_HANDLE;
+	VkImageViewCreateInfo info = CreateColorImageInfo(colorFmt, colorImage);
+	K3D_ASSERT(0 != info.subresourceRange.aspectMask);
+	if (VK_IMAGE_ASPECT_COLOR_BIT == info.subresourceRange.aspectMask)
+	{
+		info.components.r = VK_COMPONENT_SWIZZLE_R;
+		info.components.g = VK_COMPONENT_SWIZZLE_G;
+		info.components.b = VK_COMPONENT_SWIZZLE_B;
+		info.components.a = VK_COMPONENT_SWIZZLE_A;
+	}
+	K3D_VK_VERIFY(vkCreateImageView(device, &info, nullptr, &imageView));
+	return std::make_pair(std::move(imageView), std::move(info));
+}
+
+std::pair<VkImageView, VkImageViewCreateInfo> ImageViewInfo::CreateDepthStencilImageView(VkDevice device, VkFormat colorFmt, VkImage colorImage, VkImageAspectFlags aspectMask)
+{
+	VkImageView imageView = VK_NULL_HANDLE;
+	VkImageViewCreateInfo info = CreateDepthStencilImageInfo(colorFmt, colorImage);
+	K3D_ASSERT(0 != info.subresourceRange.aspectMask);
+	K3D_VK_VERIFY(vkCreateImageView(device, &info, nullptr, &imageView));
+	return  std::make_pair(std::move(imageView), std::move(info));
+}
+
+ImageViewInfo ImageViewInfo::From(ImageInfo const & info, VkImage image)
+{
+	ImageViewInfo imageViewInfo;
+	imageViewInfo.Image(image).ViewType(info.GuessViewType())
+		.Format(info.format);
+
+	imageViewInfo.subresourceRange.baseArrayLayer = 0;
+	imageViewInfo.subresourceRange.layerCount = info.arrayLayers;
+	imageViewInfo.subresourceRange.baseMipLevel = 0;
+	imageViewInfo.subresourceRange.levelCount = info.mipLevels;
+
+	return imageViewInfo;
+}
 
 K3D_VK_END

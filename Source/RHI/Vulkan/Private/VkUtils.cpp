@@ -4,24 +4,108 @@
 
 K3D_VK_BEGIN
 
-DescriptorAllocator::DescriptorAllocator(Device::Ptr pDevice)
-	: DeviceChild(pDevice)
-{
-	K3D_VK_VERIFY(vkCreateDescriptorPool(GetRawDevice(), /*&descPoolCreateInfo*/nullptr, NULL, &m_Pool));
-}
-
-DescriptorAllocator::~DescriptorAllocator()
-{
-	vkDestroyDescriptorPool(GetRawDevice(), m_Pool, nullptr);
-	Log::Out(LogLevel::Info, "DescriptorAllocator", "destroying vkDestroyDescriptorPool...");
-}
-
-VkDeviceSize calcAlignedOffset(VkDeviceSize offset, VkDeviceSize align)
+VkDeviceSize CalcAlignedOffset(VkDeviceSize offset, VkDeviceSize align)
 {
 	VkDeviceSize n = offset / align;
 	VkDeviceSize r = offset % align;
 	VkDeviceSize result = (n + (r > 0 ? 1 : 0)) * align;
 	return result;
+}
+
+VkImageAspectFlags DetermineAspectMask(VkFormat format)
+{
+	VkImageAspectFlags result = 0;
+	switch (format)
+	{
+	case VK_FORMAT_D16_UNORM:
+	case VK_FORMAT_X8_D24_UNORM_PACK32:
+	case VK_FORMAT_D32_SFLOAT:
+	{
+		result = VK_IMAGE_ASPECT_DEPTH_BIT;
+	}
+	break;
+	case VK_FORMAT_S8_UINT:
+	{
+		result = VK_IMAGE_ASPECT_STENCIL_BIT;
+	}
+	break;
+	case VK_FORMAT_D16_UNORM_S8_UINT:
+	case VK_FORMAT_D24_UNORM_S8_UINT:
+	case VK_FORMAT_D32_SFLOAT_S8_UINT:
+	{
+		result = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+	}
+	break;
+	default:
+	{
+		result = VK_IMAGE_ASPECT_COLOR_BIT;
+	}
+	break;
+	}
+	return result;
+}
+
+std::string ErrorString(VkResult errorCode)
+{
+	switch (errorCode)
+	{
+#define VK_RES_STR(r) case VK_ ##r: return #r
+		VK_RES_STR(NOT_READY);
+		VK_RES_STR(TIMEOUT);
+		VK_RES_STR(EVENT_SET);
+		VK_RES_STR(EVENT_RESET);
+		VK_RES_STR(INCOMPLETE);
+		VK_RES_STR(ERROR_OUT_OF_HOST_MEMORY);
+		VK_RES_STR(ERROR_OUT_OF_DEVICE_MEMORY);
+		VK_RES_STR(ERROR_INITIALIZATION_FAILED);
+		VK_RES_STR(ERROR_DEVICE_LOST);
+		VK_RES_STR(ERROR_MEMORY_MAP_FAILED);
+		VK_RES_STR(ERROR_LAYER_NOT_PRESENT);
+		VK_RES_STR(ERROR_EXTENSION_NOT_PRESENT);
+		VK_RES_STR(ERROR_INCOMPATIBLE_DRIVER);
+#undef VK_RES_STR
+	default:
+		return "UNKNOWN_ERROR";
+	}
+}
+
+VkBool32 GetSupportedDepthFormat(VkPhysicalDevice physicalDevice, VkFormat * depthFormat)
+{
+	// Since all depth formats may be optional, we need to find a suitable depth format to use
+	// Start with the highest precision packed format
+	std::vector<VkFormat> depthFormats = {
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
+		VK_FORMAT_D32_SFLOAT,
+		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM
+	};
+
+	for (auto& format : depthFormats)
+	{
+		VkFormatProperties formatProps;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProps);
+		// Format must support depth stencil attachment for optimal tiling
+		if (formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+		{
+			*depthFormat = format;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+rhi::PipelineLayoutKey HashPipelineLayoutDesc(rhi::PipelineLayoutDesc const & desc)
+{
+	rhi::PipelineLayoutKey key;
+	key.BindingKey = util::Hash32((const char*)desc.Bindings.Data(),
+		desc.Bindings.Count()*sizeof(shaderbinding::Binding));
+	key.SetKey = util::Hash32((const char*)desc.Sets.Data(),
+		desc.Sets.Count()*sizeof(shaderbinding::Set));
+	key.UniformKey = util::Hash32((const char*)desc.Uniforms.Data(),
+		desc.Uniforms.Count()*sizeof(shaderbinding::Uniform));
+	return key;
 }
 
 PtrCmdAlloc CommandAllocator::CreateAllocator(uint32 queueFamilyIndex, bool transient, Device::Ptr device)
@@ -35,7 +119,6 @@ CommandAllocator::~CommandAllocator()
 	Destroy();
 }
 
-
 void CommandAllocator::Initialize()
 {
 	VkCommandPoolCreateInfo createInfo = {};
@@ -44,7 +127,7 @@ void CommandAllocator::Initialize()
 	createInfo.queueFamilyIndex = m_FamilyIndex;
 	createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-	if (m_Transient) 
+	if (m_Transient)
 	{
 		createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 	}
@@ -54,7 +137,7 @@ void CommandAllocator::Initialize()
 
 void CommandAllocator::Destroy()
 {
-	if (VK_NULL_HANDLE == m_Pool) 
+	if (VK_NULL_HANDLE == m_Pool)
 	{
 		return;
 	}
@@ -70,262 +153,52 @@ CommandAllocator::CommandAllocator(uint32 queueFamilyIndex, bool transient, Devi
 	Initialize();
 }
 
-FrameBuffer::FrameBuffer(Device::Ptr pDevice, VkRenderPass renderPass, FrameBuffer::Option const& op)
-	: DeviceChild(pDevice)
-	, m_RenderPass(renderPass)
-	, m_Width(op.Width)
-	, m_Height(op.Height)
-{
-	VkFramebufferCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	createInfo.pNext = nullptr;
-	createInfo.renderPass = m_RenderPass;
-	createInfo.attachmentCount = static_cast<uint32_t>(op.Attachments.size());
-	createInfo.pAttachments = op.Attachments.data();
-	createInfo.width = m_Width;
-	createInfo.height = m_Height;
-	createInfo.layers = 1;
-	createInfo.flags = 0;
-	K3D_VK_VERIFY(vkCreateFramebuffer(GetRawDevice(), &createInfo, nullptr, &m_FrameBuffer));
-}
-
-FrameBuffer::~FrameBuffer()
-{
-	if (VK_NULL_HANDLE == m_FrameBuffer)
-	{
-		return;
-	}
-	vkDestroyFramebuffer(GetRawDevice(), m_FrameBuffer, nullptr);
-	m_FrameBuffer = VK_NULL_HANDLE;
-}
-
-RenderPass::RenderPass(Device::Ptr pDevice, RenderpassOptions const & options)
+RenderTarget::RenderTarget(Device::Ptr pDevice, rhi::RenderTargetLayout const & Layout)
 	: DeviceChild(pDevice)
 {
-	Initialize(options);
 }
 
-RenderPass::~RenderPass()
+RenderTarget::RenderTarget(Device::Ptr pDevice, SpTexture texture, SpFramebuffer framebuffer, VkRenderPass renderpass)
+	: DeviceChild(pDevice)
+	, m_RenderTexture(texture)
+	, m_Framebuffer(framebuffer)
+	, m_Renderpass(renderpass)
 {
-	Destroy();
+	m_AcquireSemaphore = PtrSemaphore(new Semaphore(pDevice));
 }
 
-void RenderPass::BeginRender(const PtrContext & context, const PtrFrameBuffer & framebuffer)
-{
-	m_GfxContext = context;
-	m_FrameBuffer = framebuffer;
-
-	mSubpass = 0;
-	//vk::context()->pushRenderPass(this->shared_from_this());
-	//vk::context()->pushSubPass(mSubpass);
-
-	// Start the command buffer
-	context->Begin();
-	//vk::context()->pushCommandBuffer(mCommandBuffer);
-
-	// Tranmsfer uniform data
-	// vk::context()->transferPendingUniformBuffer(mCommandBuffer, VK_ACCESS_HOST_WRITE_BIT, VK_ACCESS_UNIFORM_READ_BIT, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-
-
-	rhi::ViewportDesc desc{ 1.0f*m_FrameBuffer->GetWidth(), 1.0f*m_FrameBuffer->GetHeight() };
-	context->SetViewport(desc);
-	VkRect2D ra = {};
-	ra.offset = {0,0};
-	ra.extent = { m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight() };
-	context->SetScissorRects(1, &ra);
-
-	//// Begin the render pass
-	//const auto& clearValues = getAttachmentClearValues();
-	VkRenderPassBeginInfo renderPassBegin;
-	renderPassBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBegin.pNext = NULL;
-	renderPassBegin.renderPass = m_RenderPass;
-	renderPassBegin.framebuffer = m_FrameBuffer->m_FrameBuffer;
-	renderPassBegin.renderArea = ra;
-	//renderPassBegin.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	//renderPassBegin.pClearValues = clearValues.empty() ? nullptr : clearValues.data();
-	context->BeginRenderPass(&renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-void RenderPass::EndRender()
-{
-	// End render pass
-	m_GfxContext->EndRenderPass();
-
-	// End the command buffer
-	m_GfxContext->End();
-	//vk::context()->popCommandBuffer();
-
-	//// Process the command buffer
-	m_GfxContext->SubmitAndWait(nullptr, nullptr, nullptr);
-	//vk::context()->getGraphicsQueue()->waitIdle();
-
-	//// Pop them
-	//vk::context()->popSubPass();
-	//vk::context()->popRenderPass();
-
-	//// Clear these vars
-	//mFramebuffer.reset();
-	//mCommandBuffer.reset();
-}
-
-void RenderPass::BeginRenderExplicit(const VkCommandBuffer & cmdBuf, const PtrFrameBuffer & framebuffer)
+RenderTarget::~RenderTarget()
 {
 }
 
-void RenderPass::EndRenderExplicit()
+VkFramebuffer RenderTarget::GetFramebuffer() const
 {
+	return m_Framebuffer->Get();
 }
 
-void RenderPass::NextSubpass()
+VkRenderPass RenderTarget::GetRenderpass() const
 {
-	m_GfxContext->NextSubpass(VK_SUBPASS_CONTENTS_INLINE);
-	++mSubpass;
-	//vk::context()->setSubpass(mSubpass);
+	return m_Renderpass;
 }
 
-void RenderPass::Initialize(RenderpassOptions const & options)
+SpTexture RenderTarget::GetTexture() const
 {
-	if (VK_NULL_HANDLE != m_RenderPass)
-	{
-		return;
-	}
-
-	m_Options = options;
-
-	K3D_ASSERT(options.m_Attachments.size() > 0);
-	K3D_ASSERT(options.m_Subpasses.size() > 0);
-
-	// Populate attachment descriptors
-	const size_t numAttachmentDesc = options.m_Attachments.size();
-	mAttachmentDescriptors.resize(numAttachmentDesc);
-	mAttachmentClearValues.resize(numAttachmentDesc);
-	for (size_t i = 0; i < numAttachmentDesc; ++i) {
-		mAttachmentDescriptors[i] = options.m_Attachments[i].GetDescription();
-		mAttachmentClearValues[i] = options.m_Attachments[i].GetClearValue();
-	}
-
-	// Populate attachment references
-	const size_t numSubPasses = options.m_Subpasses.size();
-	std::vector<Subpass::AttachReferences> subPassAttachmentRefs(numSubPasses);
-	for (size_t i = 0; i < numSubPasses; ++i) {
-		const auto& subPass = options.m_Subpasses[i];
-
-		// Color attachments
-		{
-			// Allocate elements for color attachments
-			const size_t numColorAttachments = subPass.m_ColorAttachments.size();
-			subPassAttachmentRefs[i].Color.resize(numColorAttachments);
-			subPassAttachmentRefs[i].Resolve.resize(numColorAttachments);
-
-			// Populate color and resolve attachments
-			for (size_t j = 0; j < numColorAttachments; ++j) {
-				// color
-				uint32_t colorAttachmentIndex = subPass.m_ColorAttachments[j];
-				VkImageLayout colorImageLayout = mAttachmentDescriptors[colorAttachmentIndex].initialLayout;;
-				subPassAttachmentRefs[i].Color[j] = {};
-				subPassAttachmentRefs[i].Color[j].attachment = colorAttachmentIndex;
-				subPassAttachmentRefs[i].Color[j].layout = colorImageLayout;
-				// resolve
-				uint32_t resolveAttachmentIndex = subPass.m_ResolveAttachments[j];
-				subPassAttachmentRefs[i].Resolve[j] = {};
-				subPassAttachmentRefs[i].Resolve[j].attachment = resolveAttachmentIndex;
-				subPassAttachmentRefs[i].Resolve[j].layout = colorImageLayout; // Not a mistake, this is on purpose
-			}
-		}
-
-		// Depth/stencil attachment
-		std::vector<VkAttachmentReference> depthStencilAttachmentRef;
-		if (!subPass.m_DepthStencilAttachment.empty()) {
-			// Allocate elements for depth/stencil attachments
-			subPassAttachmentRefs[i].Depth.resize(1);
-
-			// Populate depth/stencil attachments
-			uint32_t attachmentIndex = subPass.m_DepthStencilAttachment[0];
-			subPassAttachmentRefs[i].Depth[0] = {};
-			subPassAttachmentRefs[i].Depth[0].attachment = attachmentIndex;
-			subPassAttachmentRefs[i].Depth[0].layout = mAttachmentDescriptors[attachmentIndex].initialLayout;
-		}
-
-		// Preserve attachments
-		if (!subPass.m_PreserveAttachments.empty()) {
-			subPassAttachmentRefs[i].Preserve = subPass.m_PreserveAttachments;
-		}
-	}
-
-	// Populate sub passes
-	std::vector<VkSubpassDescription> subPassDescs(numSubPasses);
-	for (size_t i = 0; i < numSubPasses; ++i) {
-		const auto& colorAttachmentRefs = subPassAttachmentRefs[i].Color;
-		const auto& resolveAttachmentRefs = subPassAttachmentRefs[i].Resolve;
-		const auto& depthStencilAttachmentRef = subPassAttachmentRefs[i].Depth;
-		const auto& preserveAttachmentRefs = subPassAttachmentRefs[i].Preserve;
-
-		bool noResolves = true;
-		for (const auto& attachRef : resolveAttachmentRefs) {
-			if (VK_ATTACHMENT_UNUSED != attachRef.attachment) {
-				noResolves = false;
-				break;
-			}
-		}
-
-		subPassDescs[i] = {};
-		auto& desc = subPassDescs[i];
-		desc.pipelineBindPoint = options.m_Subpasses[i].m_PipelineBindPoint;
-		desc.flags = 0;
-		desc.inputAttachmentCount = 0;
-		desc.pInputAttachments = nullptr;
-		desc.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
-		desc.pColorAttachments = colorAttachmentRefs.empty() ? nullptr : colorAttachmentRefs.data();
-		desc.pResolveAttachments = (resolveAttachmentRefs.empty() || noResolves) ? nullptr : resolveAttachmentRefs.data();
-		desc.pDepthStencilAttachment = depthStencilAttachmentRef.empty() ? nullptr : depthStencilAttachmentRef.data();
-		desc.preserveAttachmentCount = static_cast<uint32_t>(preserveAttachmentRefs.size());
-		desc.pPreserveAttachments = preserveAttachmentRefs.empty() ? nullptr : preserveAttachmentRefs.data();
-	}
-
-	// Cache the subpass sample counts
-	for (auto& subpass : m_Options.m_Subpasses) {
-		VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
-		// Look at color attachments first..
-		if (!subpass.m_ColorAttachments.empty()) {
-			uint32_t attachmentIndex = subpass.m_ColorAttachments[0];
-			sampleCount = m_Options.m_Attachments[attachmentIndex].m_Description.samples;
-		}
-		// ..and then look at depth attachments
-		if ((VK_SAMPLE_COUNT_1_BIT == sampleCount) && (!subpass.m_DepthStencilAttachment.empty())) {
-			uint32_t attachmentIndex = subpass.m_DepthStencilAttachment[0];
-			sampleCount = m_Options.m_Attachments[attachmentIndex].m_Description.samples;
-		}
-		// Cache it
-		mSubpassSampleCounts.push_back(sampleCount);
-	}
-
-	std::vector<VkSubpassDependency> dependencies;
-	for (auto& subpassDep : m_Options.m_SubpassDependencies) {
-		dependencies.push_back(subpassDep.m_Dependency);
-	}
-
-	// Create render pass
-	VkRenderPassCreateInfo renderPassCreateInfo = {};
-	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassCreateInfo.pNext = nullptr;
-	renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(mAttachmentDescriptors.size());
-	renderPassCreateInfo.pAttachments = &(mAttachmentDescriptors[0]);
-	renderPassCreateInfo.subpassCount = static_cast<uint32_t>(subPassDescs.size());
-	renderPassCreateInfo.pSubpasses = subPassDescs.empty() ? nullptr : subPassDescs.data();
-	renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
-	renderPassCreateInfo.pDependencies = dependencies.empty() ? nullptr : dependencies.data();
-	K3D_VK_VERIFY(vkCreateRenderPass(GetRawDevice(), &renderPassCreateInfo, nullptr, &m_RenderPass));
+	return m_RenderTexture;
 }
 
-void RenderPass::Destroy()
+VkRect2D RenderTarget::GetRenderArea() const
 {
-	if (VK_NULL_HANDLE == m_RenderPass)
-	{
-		return;
-	}
-	vkDestroyRenderPass(GetRawDevice(), m_RenderPass, nullptr);
-	m_RenderPass = VK_NULL_HANDLE;
+	VkRect2D renderArea = {};
+	renderArea.offset = { 0, 0 };
+	renderArea.extent = { m_Framebuffer->GetWidth(), m_Framebuffer->GetHeight() };
+	return renderArea;
 }
+
+rhi::IGpuResource * RenderTarget::GetBackBuffer()
+{
+	return m_RenderTexture.get();
+}
+
 
 K3D_VK_END
+

@@ -1,4 +1,5 @@
 #pragma once
+#include "Kaleido3D.h"
 
 namespace Concurrency {
 

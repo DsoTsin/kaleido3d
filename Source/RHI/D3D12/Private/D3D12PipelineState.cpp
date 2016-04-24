@@ -173,11 +173,3 @@ void PipelineState::SetRenderTargetFormats(UINT NumRTVs, const DXGI_FORMAT * RTV
 }
 
 NS_K3D_D3D12_END
-
-namespace rhi
-{
-	IPipelineLayout* CreatePipelineLayout(ShaderParamLayout const &Layout)
-	{
-		return new ::k3d::d3d12::PipelineLayout(Layout);
-	}
-}

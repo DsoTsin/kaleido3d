@@ -10,7 +10,7 @@ class D3D12Viewport : public D3D12RHIDeviceChild, public rhi::IRenderViewport
 public:
 	D3D12Viewport(rhi::IDevice* pDevice, void* WindowHandle) : D3D12RHIDeviceChild(static_cast<Device::Ptr>(pDevice)) {}
 
-	D3D12Viewport(Device::Ptr pDevice, HWND WindowHandle, uint32 Width, uint32 Height);
+	D3D12Viewport(Device::Ptr pDevice, HWND WindowHandle, rhi::GfxSetting&);
 
 	~D3D12Viewport()
 	{
@@ -19,8 +19,7 @@ public:
 	bool							InitViewport(
 										void *windowHandle, 
 										rhi::IDevice * pDevice, 
-										uint32 width, uint32 height, 
-										rhi::EPixelFormat rtFmt);
+										rhi::GfxSetting&);
 
 	void							Resize(uint32 Width, uint32 Height);
 	bool							Present(bool VSync = true) override;
@@ -29,8 +28,12 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE		GetBackBufferHandle() const { return m_BackBuffersHandle[GetBackBufferIndex()]; }
 	SIZE_T							GetBackBufferIndex() const { return m_SwapChain->GetCurrentBackBufferIndex(); }
 
+	rhi::IRenderTarget*				GetRenderTarget(uint32 index) override;
 	PtrSwapChain					GetSwapChain() const { return m_SwapChain; }
 
+
+	uint32							GetSwapChainIndex() override { return m_SwapChain->GetCurrentBackBufferIndex(); }
+	uint32							GetSwapChainCount() override { return DefaultNumBackBuffers; }
 
 private:
 	K3D_DISCOPY(D3D12Viewport);

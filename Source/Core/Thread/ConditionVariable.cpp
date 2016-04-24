@@ -1,21 +1,43 @@
 #include "Kaleido3D.h"
 #include "ConditionVariable.h"
-#include "../LogUtil.h"
-#if K3DPLATFORM_OS_WIN
 #include <Config/OSHeaders.h>
-#endif
 
 namespace Concurrency {
 	struct MutexPrivate {
+#if K3DPLATFORM_OS_WIN
 		CRITICAL_SECTION CS;
+#else
+		pthread_mutex_t mMutex;
+#endif
 		MutexPrivate() {
+#if K3DPLATFORM_OS_WIN
 			InitializeCriticalSection(&CS);
+#else
+			pthread_mutex_init(&mMutex, NULL);
+#endif
 		}
+
+		~MutexPrivate() {
+#if K3DPLATFORM_OS_WIN
+//			InitializeCriticalSection(&CS);
+#else
+			pthread_mutex_destroy(&mMutex);
+#endif
+		}
+
 		void Lock() {
+#if K3DPLATFORM_OS_WIN
 			EnterCriticalSection(&CS);
+#else
+            pthread_mutex_lock(&mMutex);
+#endif
 		}
 		void UnLock() {
+#if K3DPLATFORM_OS_WIN
 			LeaveCriticalSection(&CS);
+#else
+			pthread_mutex_unlock(&mMutex);
+#endif
 		}
 	};
 
@@ -39,21 +61,46 @@ namespace Concurrency {
 	}
 
 	struct ConditionVariablePrivate {
+#if K3DPLATFORM_OS_WIN
 		CONDITION_VARIABLE CV;
+#else
+		pthread_cond_t mCond;
+#endif
 		ConditionVariablePrivate() {
+#if K3DPLATFORM_OS_WIN
 			InitializeConditionVariable(&CV);
+#else
+			pthread_cond_init(&mCond, NULL);
+#endif
 		}
 		~ConditionVariablePrivate() {
+#if K3DPLATFORM_OS_WIN
+#else
+			pthread_cond_destroy(&mCond);
+#endif
 		}
-		void Wait(MutexPrivate * mutex, UINT time)
+
+		void Wait(MutexPrivate * mutex, uint32 time)
 		{
+#if K3DPLATFORM_OS_WIN
 			::SleepConditionVariableCS(&CV, &(mutex->CS), time);
+#else
+			pthread_cond_wait(&mCond, &mutex->mMutex);
+#endif
 		}
 		void Notify() {
+#if K3DPLATFORM_OS_WIN
 			::WakeConditionVariable(&CV);
+#else
+			pthread_cond_signal(&mCond);
+#endif
 		}
 		void NotifyAll() {
+#if K3DPLATFORM_OS_WIN
 			::WakeAllConditionVariable(&CV);
+#else
+			pthread_cond_broadcast(&mCond);
+#endif
 		}
 	};
 

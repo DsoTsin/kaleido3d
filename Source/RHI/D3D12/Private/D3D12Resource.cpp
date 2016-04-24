@@ -26,7 +26,7 @@ D3D12_GPU_VIRTUAL_ADDRESS GpuResource::GetGpuVirtualAddress() const
 }
 
 rhi::IGpuResource*
-Device::NewGpuResource(rhi::ResourceDesc const& Desc,uint64 Size)
+Device::NewGpuResource(rhi::ResourceDesc const& Desc)
 {
 	return nullptr;
 }

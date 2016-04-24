@@ -4,9 +4,9 @@ ${Kaleido3D_ROOT_DIR}/Source/RHI/D3D12
 ${DXSDK_INCLUDE_DIR}
 )
 
-#if(BUILD_SHARED)
+if(BUILD_SHARED)
 	add_definitions(-DBUILD_SHARED_LIB)
-#endif()
+endif()
 
 _add_package_VulkanSDK()
 
@@ -32,3 +32,5 @@ RHI_D3D12
 )
 
 set_target_properties(Render PROPERTIES FOLDER "Runtime")
+
+install(TARGETS Render ARCHIVE DESTINATION lib)

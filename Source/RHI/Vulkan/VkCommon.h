@@ -7,7 +7,7 @@
 
 #include <Kaleido3D.h>
 #include <Math/kMath.hpp>
-#include <vulkan/vulkan.h>
+#include <RHI/Vulkan/Public/DynVulkanLoader.h>
 #include <RHI/IRHI.h>
 #include <string>
 #include <vector>
@@ -16,11 +16,13 @@
 #include <Core/LogUtil.h>
 #include <Core/Thread/Thread.h>
 
+#define VKLOG(level, ...) KLOG(level, kaleido3d::VulkanRHI, __VA_ARGS__)
+#define VKRHI_METHOD_TRACE VKLOG(Info, __K3D_FUNC__);
 
 #define K3D_VK_VERIFY(expr) \
 	do { \
 		if ((expr) != VK_SUCCESS) { \
-		Log::Out (LogLevel::Fatal, "VKRHI_ASSERT", "failed "## #expr ##" %s@%d.", __FILE__, __LINE__); \
+		Log::Out (LogLevel::Fatal, "VKRHI_ASSERT", "failed " K3D_STRINGIFY(expr) " %s@%d.", __FILE__, __LINE__); \
 		throw; \
 		}\
 	} while (0);

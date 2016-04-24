@@ -5,13 +5,15 @@
 namespace k3d
 {
 	class Message;
+	class App;
 
 	enum class WindowMode {
 		NORMAL,
 		FULLSCREEN
 	};
 
-	class K3D_API IWindow {
+	class K3D_API IWindow
+	{
 	public:
 		typedef std::shared_ptr<IWindow> Ptr;
 
@@ -41,5 +43,9 @@ namespace k3d
 	};
 
 	extern IWindow::Ptr MakePlatformWindow(const kchar *windowName, int width, int height);
+
+#if K3DPLATFORM_OS_ANDROID
+	extern IWindow::Ptr MakeAndroidWindow(void * window);
+#endif
 }
 #endif

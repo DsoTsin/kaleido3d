@@ -1,6 +1,8 @@
 #include "VkCommon.h"
 #include "Public/VkRHI.h"
 #include "VkUtils.h"
+#include "VkEnums.h"
+#include <algorithm>
 
 K3D_VK_BEGIN
 
@@ -11,18 +13,32 @@ Resource::Ptr Resource::Map(uint64 offset, uint64 size)
 	return ptr;
 }
 
-
 Resource::~Resource()
 {
-	Log::Out(LogLevel::Info, "Resource", "Destroying Resource..");
-	vkFreeMemory(GetRawDevice(), m_DeviceMem, nullptr);
+	VKLOG(Info, "Resource-Destroying Resource..");
+	//vkFreeMemory(GetRawDevice(), m_DeviceMem, nullptr);
+}
+
+Buffer::Buffer(Device::Ptr pDevice, rhi::ResourceDesc const &desc)
+: Resource(pDevice)
+{
+	m_Usage = g_ResourceViewFlag[desc.ViewType];
+	Create(desc.Size);
 }
 
 Buffer::~Buffer()
 {
-	Log::Out(LogLevel::Info, "Buffer", "Destroying Resource..");
-	vkDestroyBufferView(GetRawDevice(), m_BufferView, nullptr);
-	vkDestroyBuffer(GetRawDevice(), m_Buffer, nullptr);
+	VKLOG(Info, "Buffer-Destroying Resource..");
+	if (VK_NULL_HANDLE != m_BufferView)
+	{
+		vkDestroyBufferView(GetRawDevice(), m_BufferView, nullptr);
+		m_BufferView = VK_NULL_HANDLE;
+	}
+	if (VK_NULL_HANDLE != m_Buffer)
+	{
+		vkDestroyBuffer(GetRawDevice(), m_Buffer, nullptr);
+		m_Buffer = VK_NULL_HANDLE;
+	}
 }
 
 void Buffer::Create(size_t size)
@@ -52,23 +68,93 @@ void Buffer::Create(size_t size)
 	K3D_VK_VERIFY(vkBindBufferMemory(GetRawDevice(), m_Buffer, m_DeviceMem, m_AllocationOffset));
 }
 
+Texture::Texture(Device::Ptr pDevice, rhi::TextureDesc const &desc)
+: Resource(pDevice)
+{
+	Create(desc);
+}
+
+void Texture::Create(rhi::TextureDesc const & desc)
+{
+	m_ImageInfo = ImageInfo::FromRHI(desc);
+	K3D_VK_VERIFY(vkCreateImage(GetRawDevice(), &m_ImageInfo, nullptr, &m_Image));
+	m_ImageViewInfo = ImageViewInfo::From(m_ImageInfo, m_Image);
+	K3D_VK_VERIFY(vkCreateImageView(GetRawDevice(), &m_ImageViewInfo, nullptr, &m_ImageView));
+
+	ResourceManager::Allocation alloc = GetDevice()->GetMemoryManager()->AllocateImage(m_Image, false, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+	K3D_ASSERT(VK_NULL_HANDLE != alloc.Memory);
+
+	m_DeviceMem = alloc.Memory;
+	m_AllocationOffset = alloc.Offset;
+	m_AllocationSize = alloc.Size;
+
+	K3D_VK_VERIFY(vkBindImageMemory(GetRawDevice(), m_Image, m_DeviceMem, m_AllocationOffset));
+}
+
+Texture::Texture(Device::Ptr pDevice, rhi::ResourceDesc const & Desc)
+	: Resource(pDevice)
+{
+	Create(Desc.TextureDesc);
+}
+
 Texture::~Texture()
 {
-	Log::Out(LogLevel::Info, "Texture", "Destroying Texture..");
-	vkDestroyImageView(GetRawDevice(), m_ImageView, nullptr);
-	vkDestroyImage(GetRawDevice(), m_Image, nullptr);
+	if (GetRawDevice() == VK_NULL_HANDLE)
+		return;
+	if (VK_NULL_HANDLE != m_ImageView)
+	{
+		vkDestroyImageView(GetRawDevice(), m_ImageView, nullptr);
+		m_ImageView = VK_NULL_HANDLE;
+	}
+	if (VK_NULL_HANDLE != m_Image && m_SelfOwn)
+	{
+		vkDestroyImage(GetRawDevice(), m_Image, nullptr);
+		m_Image = VK_NULL_HANDLE;
+	}
+	VKLOG(Info, "Texture-Destroyed..");
+}
+
+SpTexture Texture::CreateFromSwapChain(VkImage image, VkImageView view, VkImageViewCreateInfo info, Device::Ptr pDevice)
+{
+	return std::make_shared<Texture>(image, view, info, pDevice, false);
+}
+
+SpTexture Texture::CreateRenderTexture(Device::Ptr pDevice, rhi::TextureDesc const & desc)
+{
+	return SpTexture(new Texture(pDevice, desc));
+}
+
+void Texture::Create()
+{
+	VkImageCreateInfo imageCreateInfo = {};
+	/*imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageCreateInfo.pNext = nullptr;
+	imageCreateInfo.imageType = mImageType;
+	imageCreateInfo.format = mFormat.mInternalFormat;
+	imageCreateInfo.extent = mExtent;
+	imageCreateInfo.mipLevels = mFormat.mMipLevels;
+	imageCreateInfo.arrayLayers = mFormat.mArrayLayers;
+	imageCreateInfo.samples = mFormat.mSamples;
+	imageCreateInfo.tiling = mFormat.mTiling;
+	imageCreateInfo.usage = mFormat.mUsage;
+	imageCreateInfo.flags = mFormat.mCreateFlags;
+	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageCreateInfo.queueFamilyIndexCount = 0;
+	imageCreateInfo.pQueueFamilyIndices = nullptr;
+	imageCreateInfo.initialLayout = mFormat.mInitialLayout;*/
+	K3D_VK_VERIFY(vkCreateImage(GetRawDevice(), &imageCreateInfo, nullptr, &m_Image));
 }
 
 template<typename VkObject>
 ResourceManager::Allocation
-ResourceManager::Pool<VkObject>::Allocate(const typename ResDesc<VkObject>& objDesc)
+ResourceManager::Pool<VkObject>::Allocate(const typename ResourceManager::ResDesc<VkObject>& objDesc)
 {
 	ResourceManager::Allocation result = {};
 	const VkMemoryRequirements& memReqs = objDesc.MemoryRequirements;
 	if (HasAvailable(memReqs))
 	{
 		const VkDeviceSize initialOffset = m_Offset;
-		const VkDeviceSize alignedOffset = calcAlignedOffset(initialOffset, memReqs.alignment);
+		const VkDeviceSize alignedOffset = CalcAlignedOffset(initialOffset, memReqs.alignment);
 		const VkDeviceSize allocatedSize = memReqs.size;
 		result.Memory = m_Memory;
 		result.Offset = alignedOffset;
@@ -87,7 +173,7 @@ ResourceManager::Pool<VkObjectT>::Pool(uint32 memTypeIndex, VkDeviceMemory mem, 
 
 template<typename VkObject>
 std::unique_ptr< ResourceManager::Pool<VkObject> >
-ResourceManager::Pool<VkObject>::Create(VkDevice device, const VkDeviceSize poolSize, const typename ResDesc<VkObject>& objDesc)
+ResourceManager::Pool<VkObject>::Create(VkDevice device, const VkDeviceSize poolSize, const typename ResourceManager::ResDesc<VkObject>& objDesc)
 {
 	std::unique_ptr< ResourceManager::Pool<VkObject> > result;
 	const uint32_t memoryTypeIndex = objDesc.MemoryTypeIndex;
@@ -107,11 +193,12 @@ ResourceManager::Pool<VkObject>::Create(VkDevice device, const VkDeviceSize pool
 template <typename VkObjectT>
 bool ResourceManager::Pool<VkObjectT>::HasAvailable(VkMemoryRequirements memReqs) const
 {
-	VkDeviceSize alignedOffst = calcAlignedOffset(m_Offset, memReqs.alignment);
+	VkDeviceSize alignedOffst = CalcAlignedOffset(m_Offset, memReqs.alignment);
 #ifdef min
 #undef min
-	VkDeviceSize remaining = m_Size - std::min(alignedOffst, m_Size);
 #endif
+
+	VkDeviceSize remaining = m_Size - std::min(alignedOffst, m_Size);
 	return memReqs.size <= remaining;
 }
 
@@ -130,7 +217,7 @@ ResourceManager::PoolManager<VkObjectT>::~PoolManager()
 template<typename VkObjectT>
 void ResourceManager::PoolManager<VkObjectT>::Destroy()
 {
-	std::lock_guard<std::mutex> lock(m_Mutex);
+	::Concurrency::Mutex::AutoLock lock(&m_Mutex);
 	for (auto& pool : m_Pools) {
 		vkFreeMemory(GetRawDevice(), pool->m_Memory, nullptr);
 	}
@@ -139,9 +226,9 @@ void ResourceManager::PoolManager<VkObjectT>::Destroy()
 
 template<typename VkObjectT>
 ResourceManager::Allocation
-ResourceManager::PoolManager<VkObjectT>::Allocate(const typename ResDesc<VkObjectT>& objDesc)
+ResourceManager::PoolManager<VkObjectT>::Allocate(const typename ResourceManager::ResDesc<VkObjectT>& objDesc)
 {
-	std::lock_guard<std::mutex> lock(m_Mutex);
+	::Concurrency::Mutex::AutoLock lock(&m_Mutex);
 	ResourceManager::Allocation result;
 	if (objDesc.MemoryRequirements.size > m_PoolSize)
 	{

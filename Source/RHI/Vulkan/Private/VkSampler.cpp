@@ -1,13 +1,12 @@
 #include "VkCommon.h"
 #include "Public/VkRHI.h"
-#include "Base/vulkantools.h"
 
 K3D_VK_BEGIN
 
 Sampler::Sampler(Device::Ptr pDevice)
 	: DeviceChild(pDevice)
 {
-	VkSamplerCreateInfo samplerInfo = vkTools::initializers::samplerCreateInfo();
+	VkSamplerCreateInfo samplerInfo = {};
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
 	samplerInfo.minFilter = VK_FILTER_LINEAR;
 	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
@@ -28,7 +27,7 @@ Sampler::Sampler(Device::Ptr pDevice)
 
 Sampler::~Sampler()
 {
-	Log::Out(LogLevel::Fatal, "Sampler", "Destroying ...");
+	VKLOG(Info, "Sampler-Destroying ...");
 	vkDestroySampler(GetRawDevice(), m_Sampler, nullptr);
 }
 

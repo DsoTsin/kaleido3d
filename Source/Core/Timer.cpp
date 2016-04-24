@@ -6,7 +6,7 @@
 #ifdef K3DPLATFORM_OS_WIN
 #include <Windows.h>
 #include <intrin.h>
-#elif defined(K3DPLATFORM_OS_LINUX)
+#elif defined(K3DPLATFORM_OS_LINUX) && !defined(K3DPLATFORM_OS_ANDROID)
 #include <time.h>
 ///
 /// \brief rdtsc for x64 machine
@@ -28,9 +28,9 @@ static int64 QueryFrequency()
 
 #endif
 
+static int64 gFrequency = 0;
 
 #ifdef K3DPLATFORM_OS_WIN 
-static int64 gFrequency = 0;
 
 static int64 GetPerformanceFrequency()
 {
@@ -88,7 +88,7 @@ namespace k3d {
 	{
 #ifdef K3DPLATFORM_OS_WIN
 		gFrequency = GetPerformanceFrequency();
-#elif defined(K3DPLATFORM_OS_LINUX)
+#elif defined(K3DPLATFORM_OS_LINUX) && !defined(K3DPLATFORM_OS_ANDROID)
 		frequency = QueryFrequency();
 #endif
 	}
@@ -116,12 +116,16 @@ namespace k3d {
 
 	void Timer::BeginTimer()
 	{
+#if defined(K3DPLATFORM_OS_WIN)
 		m_BaseTime = __rdtsc();
+#endif
 	}
 
 	int64 Timer::EndTimer()
 	{
+#if defined(K3DPLATFORM_OS_WIN)
 		m_OffSetTime = __rdtsc() - m_BaseTime;
+#endif
 		return m_OffSetTime;
 	}
 

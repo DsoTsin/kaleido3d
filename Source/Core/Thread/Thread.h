@@ -1,5 +1,6 @@
 #pragma once 
 #include "ThreadCommon.h"
+#include "Kaleido3D.h"
 #include <functional>
 
 namespace Concurrency {
@@ -43,7 +44,7 @@ namespace Concurrency {
 
 	private:
 
-		static void STD_CALL Run(void*);
+		static void* STD_CALL Run(void*);
 		static std::map<uint32, Thread*>	s_ThreadMap;
 
 	};

@@ -74,3 +74,5 @@ target_link_libraries(
 
 add_precompiled_header(RHI_D3D12 "DXCommon.h" "${Kaleido3D_ROOT_DIR}/Source/RHI/D3D12" "${Kaleido3D_ROOT_DIR}/Source/RHI/D3D12/RHI.cpp")
 set_target_properties(RHI_D3D12 PROPERTIES FOLDER "RHI")
+
+install(TARGETS RHI_D3D12 ARCHIVE DESTINATION lib)

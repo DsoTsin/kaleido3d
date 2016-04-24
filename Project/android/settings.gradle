@@ -1,0 +1,7 @@
+include ':Core'
+include ':Renderer'
+include ':RHI_Vulkan'
+include ':ShaderCompiler'
+include ':Glslang'
+include ':Spir2Cross'
+include ':Triangle'

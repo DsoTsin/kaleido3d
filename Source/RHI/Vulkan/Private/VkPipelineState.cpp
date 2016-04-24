@@ -1,28 +1,19 @@
 #include "VkCommon.h"
 #include "Public/VkRHI.h"
 #include "VkEnums.h"
+#include "VkUtils.h"
+
+#include <set>
 
 K3D_VK_BEGIN
 
-/**
-* @class	PipelineLayout
-*/
-void PipelineLayout::Create(rhi::ShaderParamLayout const & ParamLayout)
-{
-
-}
-
-void PipelineLayout::Finalize(rhi::IDevice *)
-{
-	//vkCreatePipelineLayout()
-}
-
-PipelineStateObject::PipelineStateObject(Device::Ptr pDevice, rhi::PipelineDesc const & desc)
+PipelineStateObject::PipelineStateObject(Device::Ptr pDevice, rhi::PipelineDesc const & desc, PipelineLayout * ppl)
 	: DeviceChild(pDevice)
 	, m_Pipeline(VK_NULL_HANDLE)
 	, m_PipelineCache(VK_NULL_HANDLE)
 	, m_RenderPass(VK_NULL_HANDLE)
 	, m_GfxCreateInfo{}
+	, m_PipelineLayout(ppl)
 {
 	memset(&m_GfxCreateInfo, 0, sizeof(m_GfxCreateInfo));
 	InitWithDesc(desc);
@@ -42,9 +33,7 @@ PipelineStateObject::PipelineStateObject(Device* pDevice)
 
 PipelineStateObject::~PipelineStateObject()
 {
-	Log::Out(LogLevel::Info, "PipelineStateObject", "Destroying..");
-	vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
-	vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
+	Destroy();
 }
 
 
@@ -234,6 +223,7 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	rasterizationState.depthClampEnable = desc.Rasterizer.DepthClipEnable ? VK_TRUE : VK_FALSE;
 	rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 	rasterizationState.depthBiasEnable = VK_FALSE;
+	rasterizationState.lineWidth = 1.0f;
 	rasterizationState.pNext = NULL;
 
 	// Init DepthStencilState
@@ -259,20 +249,26 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	colorBlendState.attachmentCount = 1;
 	colorBlendState.pAttachments = blendAttachmentState;
 	colorBlendState.pNext = NULL;
-
+	struct VIADLess {
+		bool operator() (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const {
+			return lhs.binding < rhs.binding || lhs.stride < rhs.stride || lhs.inputRate < rhs.inputRate;
+		}
+	};
+	std::set <VkVertexInputBindingDescription, VIADLess> bindings;
 	// Init VertexLayout
 	for (uint32 i = 0; i < desc.VertexLayout.Count(); i++)
 	{
 		rhi::VertexDeclaration const& vertDec = desc.VertexLayout[i];
 		VkVertexInputBindingDescription bindingDesc = { vertDec.BindID, vertDec.Stride, VK_VERTEX_INPUT_RATE_VERTEX };
 		VkVertexInputAttributeDescription attribDesc = { vertDec.AttributeIndex, vertDec.BindID, g_VertexFormatTable[vertDec.Format], vertDec.OffSet };
-		m_BindingDescriptions.push_back(bindingDesc);
+		bindings.insert(bindingDesc);
 		m_AttributeDescriptions.push_back(attribDesc);
 	}
+	m_BindingDescriptions.assign(bindings.begin(), bindings.end());
 
 	VkPipelineVertexInputStateCreateInfo vertexInputState = {};
 	vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputState.vertexBindingDescriptionCount = (uint32)m_BindingDescriptions.size();
+	vertexInputState.vertexBindingDescriptionCount = m_BindingDescriptions.size();
 	vertexInputState.pVertexBindingDescriptions = m_BindingDescriptions.data();
 	vertexInputState.vertexAttributeDescriptionCount = (uint32)m_AttributeDescriptions.size();
 	vertexInputState.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
@@ -287,9 +283,10 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	std::vector<VkDynamicState> dynamicStateEnables;
 	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
+	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicState.pDynamicStates = dynamicStateEnables.data();
-	dynamicState.dynamicStateCount = dynamicStateEnables.size();
+	dynamicState.dynamicStateCount = (uint32)dynamicStateEnables.size();
 
 	VkPipelineMultisampleStateCreateInfo msInfo = {};
 	msInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -310,13 +307,27 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	this->m_GfxCreateInfo.pMultisampleState = &msInfo;
 	this->m_GfxCreateInfo.pViewportState = &vpInfo;
 
-	m_RenderPass = GetDevice()->GetTopPass();
+	m_RenderPass = RHIRoot::GetViewport(0)->GetRenderPass();
 
 	this->m_GfxCreateInfo.renderPass = m_RenderPass;
-	this->m_GfxCreateInfo.layout = VK_NULL_HANDLE;
+	this->m_GfxCreateInfo.layout = m_PipelineLayout->m_PipelineLayout;
 
 	// Finalize
 	Finalize();
+}
+
+void PipelineStateObject::Destroy()
+{
+	for (auto iter : m_ShaderStageInfos)
+	{
+		if(iter.module)
+		{
+			vkDestroyShaderModule(GetRawDevice(), iter.module, nullptr);
+		}
+	}
+	vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
+	vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
+	VKLOG(Info, "PipelineStateObject-Destroyed..");
 }
 
 K3D_VK_END

@@ -161,7 +161,7 @@ Device::NewSampler(const rhi::SamplerState&)
 	return nullptr;
 }
 
-rhi::IPipelineStateObject*	Device::NewPipelineState(rhi::EPipelineType type)
+rhi::IPipelineStateObject*	Device::NewPipelineState(rhi::PipelineDesc const & desc, rhi::IPipelineLayout * ppl, rhi::EPipelineType type)
 {
 	PipelineState * pipeline = nullptr;
 	switch (type)
@@ -185,6 +185,17 @@ rhi::ISyncFence * Device::NewFence()
 
 rhi::IDescriptorPool *
 Device::NewDescriptorPool()
+{
+	return nullptr;
+}
+
+rhi::IPipelineLayout * Device::NewPipelineLayout(rhi::PipelineLayoutDesc const & table)
+{
+	return nullptr;
+}
+
+rhi::IRenderTarget* 
+Device::NewRenderTarget(rhi::RenderTargetLayout const &)
 {
 	return nullptr;
 }
@@ -277,8 +288,10 @@ void DescriptorHeapAllocator::FreeHeapSlot(D3D12_CPU_DESCRIPTOR_HANDLE Offset, S
 		}
 	}
 
-	if (!bFound) {
-		if (heapEntry.m_FreeList.empty()) {
+	if (!bFound) 
+	{
+		if (heapEntry.m_FreeList.empty()) 
+		{
 			m_FreeHeaps.push_back(index);
 		}
 		heapEntry.m_FreeList.push_back(newRange);
@@ -286,9 +299,9 @@ void DescriptorHeapAllocator::FreeHeapSlot(D3D12_CPU_DESCRIPTOR_HANDLE Offset, S
 }
 
 rhi::IRenderViewport *
-Device::NewRenderViewport(void * winHandle, uint32 width, uint32 height)
+Device::NewRenderViewport(void * winHandle, rhi::GfxSetting& setting)
 {
-	return new D3D12Viewport(this, (HWND)winHandle, width, height);
+	return new D3D12Viewport(this, (HWND)winHandle, setting);
 }
 
 IShaderCompiler * Device::NewShaderCompiler()

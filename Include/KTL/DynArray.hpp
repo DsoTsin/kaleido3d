@@ -4,6 +4,7 @@
 
 #include "Config/PlatformTypes.h"
 #include <malloc.h>
+#include <string.h>
 
 #ifdef DYNARRAY_TEST_CASE
 #include <iostream>
@@ -39,10 +40,11 @@ namespace k3d
 	class DynArray
 	{
 	public:
+
 		DynArray() : m_ElementCount(0), m_ElementIndex(0), m_Capacity(4), m_pElement(nullptr)
 		{
 			m_pElement = (ElementType*)m_Allocator.Allocate(m_Capacity*sizeof(ElementType));
-			//memset(m_pElement, 0, m_Capacity*sizeof(ElementType));
+			memset(m_pElement, 0, m_Capacity*sizeof(ElementType));
 		}
 
 		DynArray(DynArray && rhs) : m_ElementCount(0), m_ElementIndex(0), m_pElement(nullptr)
@@ -86,14 +88,14 @@ namespace k3d
 			}
 		}
 
-		/*void Construct()
+		void Construct()
 		{
-		for (uint32 i = 0; i < m_ElementCount; i++)
-		{
-		typedef ElementType ElementTypeType;
-		m_pElement[i].ElementTypeType::ElementTypeType();
+			for (uint32 i = 0; i < m_ElementCount; i++)
+			{
+				typedef ElementType ElementTypeType;
+				m_pElement[i].ElementTypeType::ElementTypeType();
+			}
 		}
-		}*/
 
 		void Deconstruct()
 		{
@@ -135,7 +137,7 @@ namespace k3d
 				m_Allocator.DeAllocate(m_pElement);
 			}
 			m_pElement = (ElementType*)m_Allocator.Allocate(m_Capacity*sizeof(ElementType));
-			memcpy(m_pElement, rhs.m_pElement, rhs.m_ElementCount * sizeof(ElementType));
+			::memcpy(m_pElement, rhs.m_pElement, rhs.m_ElementCount * sizeof(ElementType));
 			return *this;
 		}
 
@@ -189,12 +191,40 @@ namespace k3d
 			return m_ElementCount;
 		}
 
+#ifndef DISABLE_STD_INTERFACE
+
+		typedef ElementType value_type;
+		typedef value_type* iterator;
+		typedef value_type const * const_iterator;
+
+		const_iterator begin() const
+		{
+			return m_pElement;
+		}
+
+		const_iterator end() const
+		{
+			return m_pElement + m_ElementCount;
+		}
+
+		iterator begin()
+		{
+			return m_pElement;
+		}
+
+		iterator end()
+		{
+			return m_pElement + m_ElementCount;
+		}
+
+#endif
+
 	private:
 
 		void ReAdjust(uint32 NewElementCount)
 		{
 			ElementType* pElement = (ElementType*)m_Allocator.Allocate(NewElementCount*sizeof(ElementType));
-			memmove(pElement, m_pElement, m_ElementCount*sizeof(ElementType));
+			::memcpy(pElement, m_pElement, m_ElementCount*sizeof(ElementType));
 			m_Capacity = NewElementCount;
 			m_Allocator.DeAllocate(m_pElement);
 			m_pElement = pElement;
@@ -238,7 +268,7 @@ struct B
 	~B()
 	{
 		std::cout << "deconstructB " << msg_ << std::endl;
-	}
+		}
 	const char *msg_;
 		};
 
@@ -249,6 +279,14 @@ int main()
 	ints.Append(5).Append(6).Append(7).Append(0).Append(8);
 	std::cout << ints[3] << std::endl;
 	ints[3] = 0;
+
+	std::cout << "for begin - end test start-----" << std::endl;
+	for (auto& iter : ints)
+	{
+		std::cout << iter << std::endl;
+	}
+	std::cout << "for begin - end test end-----" << std::endl;
+
 	std::cout << ints[3] << std::endl;
 	std::cout << ints.Count() << std::endl;
 	{

@@ -20,5 +20,4 @@ macro(add_example EXAMPLE_NAME)
 endmacro()
 
 add_example("02-CommandBundle" 
-	"02-CommandBundle/CommandBundle.cpp"
-	../Core/Win32Res/win32icon.rc)
+	"02-CommandBundle/CommandBundle.cpp")

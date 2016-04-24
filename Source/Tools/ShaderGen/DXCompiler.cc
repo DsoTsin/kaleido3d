@@ -1,4 +1,6 @@
 #include "ShaderCompiler.h"
+
+#if K3DPLATFORM_OS_WIN
 #include "DXCompiler.h"
 #include <d3dcompiler.h>
 #include <wrl/client.h>
@@ -43,3 +45,4 @@ namespace k3d {
 
 
 }
+#endif

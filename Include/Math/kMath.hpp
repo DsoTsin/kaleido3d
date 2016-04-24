@@ -323,28 +323,28 @@ protected:
   RowType data[ _Row ];
 };
 
-template <typename T, int _N>
+template <typename T, int N>
 class tMatrixNxN;
 
-template <typename T, int _N>
+template <typename T, int NCol>
 class tMatrixNxN{
 public:
   typedef T value_type;
-  enum { N = _N };
-  typedef tVectorN<T, _N> RowType;
+  enum { N = NCol };
+  typedef tVectorN<T, NCol> RowType;
   KFORCE_INLINE tMatrixNxN() {}
   KFORCE_INLINE tMatrixNxN( const tMatrixNxN& that ) { Assign( that ); }
 
-  KFORCE_INLINE RowType& operator [] ( int index ) { assert( index < _N && "tMatrixNxN : index < _N -- Failed !" );    return data[ index ]; }
-  KFORCE_INLINE const RowType operator [] ( int index ) const { assert( index < _N && "tMatrixNxN : index < _N -- Failed !" ); return data[ index ]; }
+  KFORCE_INLINE RowType& operator [] ( int index ) { assert( index < N && "tMatrixNxN : index < N -- Failed !" );    return data[ index ]; }
+  KFORCE_INLINE const RowType operator [] ( int index ) const { assert( index < NCol && "tMatrixNxN : index < N -- Failed !" ); return data[ index ]; }
 
 //  friend KFORCE_INLINE tMatrixNxN operator * (const tMatrixNxN &a, const tMatrixNxN &b);
 //  friend KFORCE_INLINE tMatrixNxN operator * (const tMatrixNxN &a, const RowType &b);
 //  friend KFORCE_INLINE tMatrixNxN operator * (const RowType &a, const tMatrixNxN &b);
   friend KFORCE_INLINE tMatrixNxN Transpose( const tMatrixNxN &a ){
-      tMatrixNxN<T, _N> result;
-      for ( int i = 0; i < _N; i++ )
-        for ( int j = 0; j < _N; j++ )
+      tMatrixNxN<T, NCol> result;
+      for ( int i = 0; i < NCol; i++ )
+        for ( int j = 0; j < NCol; j++ )
           result[ i ][ j ] = a[ j ][ i ];
       return result;
 
@@ -360,28 +360,28 @@ protected:
   KFORCE_INLINE void Assign( const tMatrixNxN& that )
   {
     int n;
-    for ( n = 0; n < _N; n++ )
+    for ( n = 0; n < NCol; n++ )
       data[ n ] = that.data[ n ];
   }
 
-  RowType data[ _N ];
+  RowType data[ NCol ];
 };
 
-//! \fn	template <typename T, int _N> KFORCE_INLINE tMatrixNxN<T, _N> operator+ (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+//! \fn	template <typename T, int N> KFORCE_INLINE tMatrixNxN<T, N> operator+ (const tMatrixNxN<T, N> &a, const tMatrixNxN<T, N> &b)
 //! \brief	Addition operator.
 //! \tparam	T 	Generic type parameter.
-//! \tparam	_N	Type of the n.
-//! \param	a	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
-//! \param	b	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
+//! \tparam	N	Type of the n.
+//! \param	a	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
+//! \param	b	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
 //! \return	The result of the operation.
-template <typename T, int _N>
-KFORCE_INLINE tMatrixNxN<T, _N> operator - (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+template <typename T, int N>
+KFORCE_INLINE tMatrixNxN<T, N> operator - (const tMatrixNxN<T, N> &a, const tMatrixNxN<T, N> &b)
 {
-  tMatrixNxN<T, _N> result;
-  //tMatrixNxN<T, _N> bt = Transpose( b );//this line is too expensive
-  for (int i = 0; i < _N; i++)
+  tMatrixNxN<T, N> result;
+  //tMatrixNxN<T, N> bt = Transpose( b );//this line is too expensive
+  for (int i = 0; i < N; i++)
   {
-    for (int j = 0; j < _N; j++)
+    for (int j = 0; j < N; j++)
     {
       result[i][j] += a[i][j] - b[i][j];
     }
@@ -389,21 +389,21 @@ KFORCE_INLINE tMatrixNxN<T, _N> operator - (const tMatrixNxN<T, _N> &a, const tM
   return result;
 }
 
-//! \fn	template <typename T, int _N> KFORCE_INLINE tMatrixNxN<T, _N> operator+ (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+//! \fn	template <typename T, int N> KFORCE_INLINE tMatrixNxN<T, N> operator+ (const tMatrixNxN<T, N> &a, const tMatrixNxN<T, N> &b)
 //! \brief	Addition operator of Two Matrices.
 //! \tparam	T 	Generic type parameter.
-//! \tparam	_N	Type of the n.
-//! \param	a	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
-//! \param	b	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
+//! \tparam	N	Type of the n.
+//! \param	a	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
+//! \param	b	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
 //! \return	The result of the operation.
-template <typename T, int _N>
-KFORCE_INLINE tMatrixNxN<T, _N> operator + (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+template <typename T, int N>
+KFORCE_INLINE tMatrixNxN<T, N> operator + (const tMatrixNxN<T, N> &a, const tMatrixNxN<T, N> &b)
 {
-  tMatrixNxN<T, _N> result;
-  //tMatrixNxN<T, _N> bt = Transpose( b );//this line is too expensive
-  for (int i = 0; i < _N; i++)
+  tMatrixNxN<T, N> result;
+  //tMatrixNxN<T, N> bt = Transpose( b );//this line is too expensive
+  for (int i = 0; i < N; i++)
   {
-    for (int j = 0; j < _N; j++)
+    for (int j = 0; j < N; j++)
     {
       result[i][j] += a[i][j] + b[i][j];
     }
@@ -411,24 +411,24 @@ KFORCE_INLINE tMatrixNxN<T, _N> operator + (const tMatrixNxN<T, _N> &a, const tM
   return result;
 }
 
-//! \fn	template <typename T, int _N> KFORCE_INLINE tMatrixNxN<T, _N> operator* (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+//! \fn	template <typename T, int N> KFORCE_INLINE tMatrixNxN<T, N> operator* (const tMatrixNxN<T, N> &a, const tMatrixNxN<T, N> &b)
 //! \brief	Multiplication of Two tMatrixes.
 //! \tparam	T 	Generic type parameter.
-//! \tparam	_N	Type of the n.
-//! \param	a	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
-//! \param	b	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
+//! \tparam	N	Type of the n.
+//! \param	a	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
+//! \param	b	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
 //! \return	The result of the operation.
-template <typename T, int _N>
-KFORCE_INLINE tMatrixNxN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tMatrixNxN<T, _N> &b)
+template <typename T, int N>
+KFORCE_INLINE tMatrixNxN<T, N> operator * (const tMatrixNxN<T, N> &a, const tMatrixNxN<T, N> &b)
 {
-  tMatrixNxN<T, _N> result;
-  //tMatrixNxN<T, _N> bt = Transpose( b );//this line is too expensive
-  for ( int i = 0; i < _N; i++ )
+  tMatrixNxN<T, N> result;
+  //tMatrixNxN<T, N> bt = Transpose( b );//this line is too expensive
+  for ( int i = 0; i < N; i++ )
   {
-    for ( int j = 0; j < _N; j++ )
+    for ( int j = 0; j < N; j++ )
     {
       T sum = T( 0.0 );
-      for ( int n = 0; n < _N; n++ )
+      for ( int n = 0; n < N; n++ )
         sum += a[ i ][ j ] * b[ j ][ n ];
       //    result[ i ][ j ] = DotProduct( a[ i ], b[ j ] );//meta-programming doesn't optimize much
       result[ i ][ j ] = sum;
@@ -437,40 +437,40 @@ KFORCE_INLINE tMatrixNxN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tM
   return result;
 }
 
-//! \fn	template <typename T, int _N> KFORCE_INLINE tVectorN<T, _N> operator* (const tMatrixNxN<T, _N> &a, const tVectorN<T, _N> &b)
+//! \fn	template <typename T, int N> KFORCE_INLINE tVectorN<T, N> operator* (const tMatrixNxN<T, N> &a, const tVectorN<T, N> &b)
 //! \brief	Multiplication Of tMatrixNN and tVector.
 //! \tparam	T 	Generic type parameter.
-//! \tparam	_N	Type of the n.
-//! \param	a	The const tMatrixNxN&lt;T,_N&gt; &amp; to process.
-//! \param	b	The const tVectorN&lt;T,_N&gt; &amp; to process.
+//! \tparam	N	Type of the n.
+//! \param	a	The const tMatrixNxN&lt;T,N&gt; &amp; to process.
+//! \param	b	The const tVectorN&lt;T,N&gt; &amp; to process.
 //! \return	The result of the operation.
-template <typename T, int _N>
-KFORCE_INLINE tVectorN<T, _N> operator * (const tMatrixNxN<T, _N> &a, const tVectorN<T, _N> &b)
+template <typename T, int N>
+KFORCE_INLINE tVectorN<T, N> operator * (const tMatrixNxN<T, N> &a, const tVectorN<T, N> &b)
 {
-  tVectorN<T, _N> result;
+  tVectorN<T, N> result;
 
-  for ( int i = 0; i < _N; i++ )
+  for ( int i = 0; i < N; i++ )
   {
     result[ i ] = DotProduct( a[ i ], b );
   }
   return result;
 }
 
-//! \fn	template <typename T, int _N> KFORCE_INLINE std::ostream & operator<< (std::ostream & os, const tVectorN<T, _N> &vec)
-//! \brief	&lt;&lt;&lt;typename T,int _N&gt; casting operator.
+//! \fn	template <typename T, int N> KFORCE_INLINE std::ostream & operator<< (std::ostream & os, const tVectorN<T, N> &vec)
+//! \brief	&lt;&lt;&lt;typename T,int N&gt; casting operator.
 //! \param [in,out]	os	The operating system.
 //! \param	vec					The vector.
 //! \return	The result of the operation.
-template <typename T, int _N>
-KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tVectorN<T, _N> &vec)
+template <typename T, int N>
+KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tVectorN<T, N> &vec)
 {
-  os << "Vector" << _N << ":\n";
-  for ( int i = 0; i < _N; i++ )
+  os << "Vector" << N << ":\n";
+  for ( int i = 0; i < N; i++ )
   {
     if ( i == 0 )
       os << "\t";
     os << vec[ i ];
-    if ( i == _N - 1 )
+    if ( i == N - 1 )
       os << std::endl;
     else
       os << ", ";
@@ -498,17 +498,17 @@ KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tMatrixMxN<T,
   return os;
 }
 
-template <typename T, int _N>
-KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tMatrixNxN<T, _N> &mat)
+template <typename T, int N>
+KFORCE_INLINE std::ostream & operator << (std::ostream & os, const tMatrixNxN<T, N> &mat)
 {
-  os << "Mat" << _N << ":\n";
-  for ( int i = 0; i < _N; i++ )
-    for ( int j = 0; j < _N; j++ )
+  os << "Mat" << N << ":\n";
+  for ( int i = 0; i < N; i++ )
+    for ( int j = 0; j < N; j++ )
     {
       if ( j == 0 )
         os << "\t";
       os << mat[ i ][ j ];
-      if ( j == _N - 1 )
+      if ( j == N - 1 )
         os << std::endl;
       else
         os << ", ";
@@ -561,8 +561,8 @@ public:
     data[ 3 ].init( raw_data + 12 );
   }
 
-  RowType& operator [] ( int index ) { assert( index < 4 && "tMatrixNxN : index < _N -- Failed !" );    return data[ index ]; }
-  const RowType operator [] ( int index ) const { assert( index < 4 && "tMatrixNxN : index < _N -- Failed !" ); return data[ index ]; }
+  RowType& operator [] ( int index ) { assert( index < 4 && "tMatrixNxN : index < N -- Failed !" );    return data[ index ]; }
+  const RowType operator [] ( int index ) const { assert( index < 4 && "tMatrixNxN : index < N -- Failed !" ); return data[ index ]; }
 
   operator const T* () const
   {

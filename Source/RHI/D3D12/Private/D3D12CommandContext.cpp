@@ -43,6 +43,10 @@ void CommandContext::CopyBuffer(rhi::IGpuResource & Dest, rhi::IGpuResource & Sr
 {
 }
 
+void CommandContext::SetRenderTarget(rhi::IRenderTarget *)
+{
+}
+
 void CommandContext::SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type, ID3D12DescriptorHeap* HeapPtr)
 {
 
@@ -123,7 +127,7 @@ void CommandContext::TransitionResource(GpuResource & Resource, D3D12_RESOURCE_S
 	}
 }
 
-void CommandContext::ClearColorBuffer(rhi::IColorBuffer * iColorBuffer)
+void CommandContext::ClearColorBuffer(rhi::IGpuResource*, kMath::Vec4f const & )
 {
 }
 
@@ -196,6 +200,10 @@ void CommandContext::DrawIndexedInstanced(rhi::DrawIndexedInstancedParam Param)
 void CommandContext::Dispatch(uint32 X, uint32 Y, uint32 Z)
 {
 	m_CommandList->Dispatch(X, Y, Z);
+}
+
+void CommandContext::TransitionResourceBarrier(rhi::IGpuResource * resource, rhi::EResourceState srcState, rhi::EResourceState dstState)
+{
 }
 
 void CommandContext::SetRootSignature(const RootSignature &RootSig)

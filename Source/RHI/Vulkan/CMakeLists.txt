@@ -12,25 +12,13 @@ endif()
 	add_definitions(-DBUILD_SHARED_LIB)
 #endif()
 
-set(VKTSBASE_SRCS
-Base/vulkantools.h
-Base/vulkantools.cpp
-Base/vulkandebug.h
-Base/vulkandebug.cpp
-Base/vulkanswapchain.hpp
-)
-
-source_group(
-	Base FILES
-	${VKTSBASE_SRCS}
-)
-
 set(RHI_HEADERS
 	../IRHI.h
 	Public/VkRHI.h
 	VkCommon.h
 	Public/VkObjects.h
 	Public/VkObjects.cpp
+	Public/DynVulkanLoader.h
 )
 
 set(RHI_IMPL_SRCS
@@ -42,7 +30,14 @@ set(RHI_IMPL_SRCS
 	Private/VkResource.cpp
 	Private/VkPipelineState.cpp
 	Private/VkSampler.cpp
+	Private/VkPipelineLayout.cpp
+	Private/VkDescriptor.cpp
+	Private/VkSwapChain.cpp
+	Private/VkFrameBuffer.cpp
+	private/VkRenderPass.cpp
+	Private/VkDebug.cpp
 	Public/VkRHI.cpp
+	Public/DynVulkanLoader.cpp
 )
 
 source_group(
@@ -59,14 +54,14 @@ add_library(RHI_Vulkan  ${LIB_TYPE}
 	${VKRHI_SRC_LIST} 
 	${RHI_HEADERS}
 	${RHI_IMPL_SRCS}
-	${VKTSBASE_SRCS}
 )
 
 target_link_libraries(
 	RHI_Vulkan
 	Core Engine ShaderCompiler
-	${VULKAN_LIB}
 )
 
 add_precompiled_header(RHI_Vulkan "VkCommon.h" "${Kaleido3D_ROOT_DIR}/Source/RHI/Vulkan" "${Kaleido3D_ROOT_DIR}/Source/RHI/Vulkan/Public/VkRHI.cpp")
 set_target_properties(RHI_Vulkan PROPERTIES FOLDER "RHI")
+
+install(TARGETS RHI_Vulkan ARCHIVE DESTINATION lib)

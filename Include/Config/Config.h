@@ -27,7 +27,8 @@
     #define _CRT_SECURE_NO_WARNINGS 1
   #endif
 	#define KRESTRICT __restrict
-  #define KFORCE_INLINE __forceinline
+	#define KFORCE_INLINE __forceinline
+	#define FARMHASH_NO_BUILTIN_EXPECT
 #endif
 #endif
 

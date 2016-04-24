@@ -21,7 +21,7 @@ namespace k3d {
 
 	kString AssetManager::s_envAssetPath;
 
-	AssetManager::AssetManager() : m_pThreadPool(nullptr)
+	AssetManager::AssetManager()/* : m_pThreadPool(nullptr) */
 	{
 		m_IsLoading = false;
 		m_HasPendingObject = false;
@@ -30,8 +30,8 @@ namespace k3d {
 
 	void AssetManager::Init()
 	{
-		if (m_pThreadPool == nullptr)
-			m_pThreadPool = new std::thread_pool(2);
+		/*if (m_pThreadPool == nullptr)
+			m_pThreadPool = new std::thread_pool(2);*/
 
 		Log::Out("AssetManager"," Initialized With two workers.");
 
@@ -52,11 +52,11 @@ namespace k3d {
 
 	void AssetManager::Shutdown()
 	{
-		if (m_pThreadPool)
+		/*if (m_pThreadPool)
 		{
 			delete m_pThreadPool;
 			m_pThreadPool = nullptr;
-		}
+		}*/
 		Log::Out("AssetManager", "Shutdown.");
 	}
 
@@ -81,106 +81,106 @@ namespace k3d {
 		}
 	}
 
-	void AssetManager::CommitAsynResourceTask(
-		const kchar *fileName,
-		BytesPackage &bp,
-		std::semaphore &sp,
-		std::function<void()> callback)
-	{
-		auto result = m_pThreadPool->enqueue(
-			[&bp, &sp](const kchar *name, std::function<void()> _callback)
-		{
-			//    ++m_NumPendingObject;
-			MemMapFile file;
-			bool opened = file.Open(name, IORead);
-			assert(opened == true);
-			if (opened)
-			{
-				int64 bytes_length = file.GetSize();
-				bp.Bytes.assign(bytes_length + 1, '\0');
-				//bp.Bytes.assign()
-				file.Read((char*)&bp.Bytes[0], bytes_length);
-				file.Close();
+	//void AssetManager::CommitAsynResourceTask(
+	//	const kchar *fileName,
+	//	BytesPackage &bp,
+	//	std::semaphore &sp,
+	//	std::function<void()> callback)
+	//{
+	//	auto result = m_pThreadPool->enqueue(
+	//		[&bp, &sp](const kchar *name, std::function<void()> _callback)
+	//	{
+	//		//    ++m_NumPendingObject;
+	//		MemMapFile file;
+	//		bool opened = file.Open(name, IORead);
+	//		assert(opened == true);
+	//		if (opened)
+	//		{
+	//			int64 bytes_length = file.GetSize();
+	//			bp.Bytes.assign(bytes_length + 1, '\0');
+	//			//bp.Bytes.assign()
+	//			file.Read((char*)&bp.Bytes[0], bytes_length);
+	//			file.Close();
 
-				_callback();
-			}
-			else
-			{
-				Log::Out(LogLevel::Error, "AssetManager", "CommitAsynResourceTask failed. Cannot find file %s.", name);
-			}
-			sp.notify();
+	//			_callback();
+	//		}
+	//		else
+	//		{
+	//			Log::Out(LogLevel::Error, "AssetManager", "CommitAsynResourceTask failed. Cannot find file %s.", name);
+	//		}
+	//		sp.notify();
 
-			//    --m_NumPendingObject;
-		},
-			fileName,
-			callback
-			);
-	}
+	//		//    --m_NumPendingObject;
+	//	},
+	//		fileName,
+	//		callback
+	//		);
+	//}
 
-	auto AssetManager::AsyncLoadObject(const kchar * objPath, ObjectLoadListener* listener)
-	{
-		auto result = m_pThreadPool->enqueue([&listener](const kchar *path) {
-			AssetManager::SpIODevice asset = OpenAsset(path, IORead, true);
-			std::shared_ptr<MemMapFile> file = std::static_pointer_cast<MemMapFile>(asset);
-			int64 bufferSize = file->GetSize();
-			(void)bufferSize;
-			//char * buf = (char*)::scalable_malloc(bufferSize);
-			listener->OnLoad();
-		}, objPath);
-		return result;
-	}
+	//auto AssetManager::AsyncLoadObject(const kchar * objPath, ObjectLoadListener* listener)
+	//{
+	//	auto result = m_pThreadPool->enqueue([&listener](const kchar *path) {
+	//		AssetManager::SpIODevice asset = OpenAsset(path, IORead, true);
+	//		std::shared_ptr<MemMapFile> file = std::static_pointer_cast<MemMapFile>(asset);
+	//		int64 bufferSize = file->GetSize();
+	//		(void)bufferSize;
+	//		//char * buf = (char*)::scalable_malloc(bufferSize);
+	//		listener->OnLoad();
+	//	}, objPath);
+	//	return result;
+	//}
 
-	void AssetManager::CommitAsynResourceTask(const kchar *fileName, BytesPackage &bp, std::semaphore &sp)
-	{
-		auto result = m_pThreadPool->enqueue(
-			[&bp, &sp](const kchar *name)
-		{
-			//    ++m_NumPendingObject;
-			MemMapFile file;
-			bool opened = file.Open(name, IORead);
-			if (opened)
-			{
-				int bytes_length = (int)file.GetSize();
-				bp.Bytes.reserve(bytes_length);
-				file.Read((char*)&bp.Bytes[0], bytes_length);
-				file.Close();
-			}
-			else
-			{
-				Log::Out(LogLevel::Error, "AssetManager", "CommitSynResourceTask failed. Cannot find file %s.", name);
-			}
-			sp.notify();
-			//    --m_NumPendingObject;
-		},
-			fileName
-			);
-	}
+	//void AssetManager::CommitAsynResourceTask(const kchar *fileName, BytesPackage &bp, std::semaphore &sp)
+	//{
+	//	auto result = m_pThreadPool->enqueue(
+	//		[&bp, &sp](const kchar *name)
+	//	{
+	//		//    ++m_NumPendingObject;
+	//		MemMapFile file;
+	//		bool opened = file.Open(name, IORead);
+	//		if (opened)
+	//		{
+	//			int bytes_length = (int)file.GetSize();
+	//			bp.Bytes.reserve(bytes_length);
+	//			file.Read((char*)&bp.Bytes[0], bytes_length);
+	//			file.Close();
+	//		}
+	//		else
+	//		{
+	//			Log::Out(LogLevel::Error, "AssetManager", "CommitSynResourceTask failed. Cannot find file %s.", name);
+	//		}
+	//		sp.notify();
+	//		//    --m_NumPendingObject;
+	//	},
+	//		fileName
+	//		);
+	//}
 
 	void AssetManager::CommitAsynResourceTask(const kchar *fileName, BytesPackage &bp, std::atomic<bool> &finished)
 	{
-		auto result = m_pThreadPool->enqueue(
-			[&bp, &finished](const kchar *name)
-		{
-			//    ++m_NumPendingObject;
-			MemMapFile file;
-			bool opened = file.Open(name, IORead);
-			if (opened)
-			{
-				int bytes_length = (int)file.GetSize();
-				bp.Bytes.reserve(bytes_length);
-				file.Read((char*)&bp.Bytes[0], bytes_length);
-				file.Close();
-			}
-			else
-			{
-				Log::Out(LogLevel::Error, "AssetManager", "CommitSynResourceTask failed. Cannot find file %s.", name);
-			}
-			finished.store(true, std::memory_order_release);
+		//auto result = m_pThreadPool->enqueue(
+		//	[&bp, &finished](const kchar *name)
+		//{
+		//	//    ++m_NumPendingObject;
+		//	MemMapFile file;
+		//	bool opened = file.Open(name, IORead);
+		//	if (opened)
+		//	{
+		//		int bytes_length = (int)file.GetSize();
+		//		bp.Bytes.reserve(bytes_length);
+		//		file.Read((char*)&bp.Bytes[0], bytes_length);
+		//		file.Close();
+		//	}
+		//	else
+		//	{
+		//		Log::Out(LogLevel::Error, "AssetManager", "CommitSynResourceTask failed. Cannot find file %s.", name);
+		//	}
+		//	finished.store(true, std::memory_order_release);
 
-			//    --m_NumPendingObject;
-		},
-			fileName
-			);
+		//	//    --m_NumPendingObject;
+		//},
+		//	fileName
+		//	);
 	}
 
 	void AssetManager::CommitSynResourceTask(const kchar *fileName, BytesPackage &bp)

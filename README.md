@@ -1,4 +1,4 @@
-Introduction [![Build status](https://ci.appveyor.com/api/projects/status/bkqv6wbtyr4538hf?svg=true)](https://ci.appveyor.com/project/TsinStudio/kaleido3d)
+Introduction 
 =========
 
 
@@ -9,31 +9,35 @@ Introduction [![Build status](https://ci.appveyor.com/api/projects/status/bkqv6w
 >* Modern Graphics Renderer (`Metal`, `Vulkan`, `Direct3D 12`)
 >* **`Maya`** Digital Content Creation Tools
 >* **Task-Oriented**, support `multi-thread` rendering 
-
+>* Support Windows, Android, iOS, MacOS & Linux.
 
 ----------
 
-Build Required
+Prerequisites
 =========
 
-> **Compiler Required:**
+> **Windows:** [![Build status](https://ci.appveyor.com/api/projects/status/bkqv6wbtyr4538hf?svg=true)](https://ci.appveyor.com/project/TsinStudio/kaleido3d)
 > 
->* [CMake 2.8+][1]
->* Visual Studio **2013** Update 3 +
->* Clang 3.4 +
->* G++ 4.8 +
->* [ThirdParty][4] `Git mirror on CSDN`
->* [VulkanSDK][9]
+>* [CMake 3.4 or later][1]
+>* Visual Studio **2015** or later
+>* [ThirdParty][8] `Git mirror on Github`
+>* Win10
 
-> **Platform Required:**
+
+> **Android:** [![Build Status](https://travis-ci.org/TsinStudio/kaleido3d.svg?branch=master)](https://travis-ci.org/TsinStudio/kaleido3d)
 > 
->* Win10(D3D12) or OS X EI Capitan(Metal)
->* `Vulkan support WindowsXP+, Linux and Android`.
->
-> **Generate Documents:**
+>* Android Studio 2.1 or later.
+>* Android SDK N-preview or later.
+>* NDK r12 beta or later.
+>* [ThirdParty][8] `Git mirror on Github`
+
+
+
+> **MacOS/iOS:**
 > 
->* cd Document and run makedoc.bat
-> 
+>* XCode 7 or later.
+>* OS X EI Captain or later.
+
 
 ----------
 
@@ -42,7 +46,7 @@ Build Instructions:
 
 >* **Windows**: make.bat
 >* **Mac OS X**: make.command
-
+>* **Android**: cd Project/android && gradle
 
 RHI Threading Model:
 =========

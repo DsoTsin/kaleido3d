@@ -27,6 +27,16 @@ namespace k3d
 			EUnknown
 		};
 
+		enum class EBindType
+		{
+			EUndefined		= 0,
+			EBlock			= 0x1,
+			ESampler		= 0x1 << 1,
+			EStorageImage	= 0x1 << 2,
+			EStorageBuffer	= 0x1 << 3,
+			EConstants		= 0x000000010
+		};
+
 		struct Attribute
 		{
 			std::string	VarName;
@@ -39,17 +49,112 @@ namespace k3d
 
 		struct Uniform
 		{
+			Uniform() : VarType(EDataType::EUnknown), VarOffset(0), VarSzArray(0) {}
+			
+			Uniform(EDataType type, std::string const & name, uint32 offset, uint32 szArray=0) 
+				: VarName(name), VarType(type)
+				, VarOffset(offset), VarSzArray(szArray) {}
+			
+			virtual ~Uniform() {}
 
+			EDataType	VarType;
+			std::string VarName;
+			uint32		VarOffset;
+			uint32		VarSzArray;
+		};
+
+		class Constant : public Uniform 
+		{
+		public:
+
+			Constant() {}
+			~Constant() override {}
+
+		};
+
+		struct Binding
+		{
+			EBindType			VarType;
+			std::string			VarName;
+			rhi::EShaderType	VarStage;
+			uint32				VarNumber;
+
+			Binding& operator=(Binding const& rhs)
+			{
+				this->VarType = rhs.VarType;
+				this->VarName = rhs.VarName;
+				this->VarStage = rhs.VarStage;
+				this->VarNumber = rhs.VarNumber;
+				return *this;
+			}
+		};
+		
+		struct Set
+		{
+			typedef uint32 VarIndex;
+		};
+
+		struct BindingTable
+		{
+			DynArray<Binding>		Bindings;
+			DynArray<Uniform>		Uniforms;
+			DynArray<Set::VarIndex>	Sets;
+
+			BindingTable& Add(Binding && binding)
+			{
+				this->Bindings.Append(binding);
+				return *this;
+			}
+
+			BindingTable& Add(Uniform && uniform)
+			{
+				this->Uniforms.Append(uniform);
+				return *this;
+			}
+
+			BindingTable& AddSet(Set::VarIndex const& set) 
+			{
+				this->Sets.Append(set);
+				return *this;
+			}
 		};
 	}
 
+	class Shader
+	{
+	public:
+		enum 
+		{
+			EBinary,
+			ESource
+		};
+
+		Shader() : m_SrcType(EBinary), m_Type(rhi::EShaderType::ShaderTypeNum) {}
+
+		Shader(std::string const & source, rhi::EShaderType type) 
+			: m_SrcType(ESource), m_Type(type), m_Source(source) 
+		{
+		}
+		
+		virtual ~Shader() {}
+
+	protected:
+		uint32				m_SrcType;
+		rhi::EShaderType	m_Type;
+		std::string			m_Source;
+		rhi::ShaderByteCode m_ByteCodes;
+	};
+	
 	class IShaderCompilerOutput
 	{
 	public:
+		using Attributes = std::vector<shaderbinding::Attribute>;
 		virtual const char*					GetErrorMsg() const = 0;
 		virtual const char*					GetShaderBytes() const = 0;
 		virtual const uint32				GetByteCount() const = 0;
 		virtual const rhi::ShaderByteCode&	GetByteCode() const = 0;
+		virtual shaderbinding::BindingTable GetBindingTable() const = 0;
+		virtual const Attributes &			GetAttributes() const = 0;
 		virtual								~IShaderCompilerOutput() {}
 	};
 
@@ -76,8 +181,7 @@ namespace k3d
 	class K3D_API IShaderCompiler
 	{
 	public:
-		virtual void Reflect(const char* byteCode, uint32 length) {}
-		virtual IShaderCompilerOutput * Compile(ShaderCompilerOption const& option, const char * source) = 0;
+		virtual IShaderCompilerOutput*	Compile(ShaderCompilerOption const& option, const char * source) = 0;
 		virtual ~IShaderCompiler() {}
 	};
 }

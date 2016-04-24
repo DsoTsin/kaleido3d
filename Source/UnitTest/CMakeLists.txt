@@ -49,7 +49,6 @@ set(UNITTEST_DEPENDS
 	OGLCompiler
 	OSDependent
 	SPIRV
-	${VULKAN_LIB}
 	${DXSDK_LIBRARIES}
 	winmm
 	comctl32
@@ -63,29 +62,21 @@ macro(add_unittest EXAMPLE_NAME)
 endmacro()
 
 add_unittest(
-	UnitTestRHIDevice
-	../Core/Win32Res/win32icon.rc
-	RHI_D3D12/Main.cpp
-	RHI_D3D12/UnitTestRHIDevice.h
-	RHI_D3D12/UnitTestRHIDevice.cpp
+	1.Device
+	../Platform/Windows/win32icon.rc
+	1.Device/Main.cpp
+	1.Device/UnitTestRHIDevice.h
+	1.Device/UnitTestRHIDevice.cpp
 )
 
 add_unittest(
-	UnitTestRHICommandContext
-	../Core/Win32Res/win32icon.rc
-	RHI_D3D12/UnitTestRHICommandContext.h
-	RHI_D3D12/UnitTestRHICommandContext.cpp
-	RHI_D3D12/Main.cpp
+	2.SwapChainPresent
+	../Platform/Windows/win32icon.rc
+	2.SwapChain/SwapChainPresent.cpp
 )
 
 add_unittest(
-	UTVkTriangle
-	../Core/Win32Res/win32icon.rc
-	RHI_Vulkan/UTVkTriangle.cpp
-)
-
-add_unittest(
-	UTVkSwapChainPresent
-	../Core/Win32Res/win32icon.rc
-	RHI_Vulkan/UTVkSwapChainPresent.cpp
+	3.Triangle
+	../Platform/Windows/win32icon.rc
+	3.Triangle/Triangle.cpp
 )

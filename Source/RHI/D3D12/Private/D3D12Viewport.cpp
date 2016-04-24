@@ -1,32 +1,32 @@
 #include "DXCommon.h"
 #include "Public/D3D12Viewport.h"
+#include "D3D12Enums.h"
 #include <Core/LogUtil.h>
 
 NS_K3D_D3D12_BEGIN
 
-D3D12Viewport::D3D12Viewport(Device::Ptr pDevice, HWND WindowHandle, uint32 Width, uint32 Height)
+D3D12Viewport::D3D12Viewport(Device::Ptr pDevice, HWND WindowHandle, rhi::GfxSetting &setting)
 	: D3D12RHIDeviceChild(pDevice)
 	, m_WindowHandle(WindowHandle)
 {
 	m_SwapChainDesc.OutputWindow = WindowHandle;
 
-	m_SwapChainDesc.BufferDesc.Width = Width;
-	m_SwapChainDesc.BufferDesc.Height = Height;
-	m_SwapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	m_SwapChainDesc.BufferDesc.Width = setting.Width;
+	m_SwapChainDesc.BufferDesc.Height = setting.Height;
+	m_SwapChainDesc.BufferDesc.Format = g_DXGIFormatTable[setting.ColorFormat];
 
 	m_SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	m_SwapChainDesc.BufferCount = DefaultNumBackBuffers;
+	m_SwapChainDesc.BufferCount = setting.BackBufferCount;
 
 	m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	m_SwapChainDesc.Windowed = TRUE;
-	Log::Out(LogLevel::Info, "D3D12Viewport", "D3D12_Initialized: width(%d), height(%d).", Width, Height);
+	Log::Out(LogLevel::Info, "D3D12Viewport", "D3D12_Initialized: width(%d), height(%d).", setting.Width, setting.Height);
 }
 
 bool D3D12Viewport::InitViewport(
 	void *windowHandle, 
 	rhi::IDevice * pDevice, 
-	uint32 width, uint32 height, 
-	rhi::EPixelFormat rtFmt)
+	rhi::GfxSetting& setting)
 {
 	PtrGIFactory Factory = GetParentDeviceRef().GetDXGIFactory();
 	ID3D12CommandQueue * pCmdQueue = GetParentDeviceRef().GetDefaultContext()
@@ -58,6 +58,11 @@ bool D3D12Viewport::Present(bool VSync)
 {
 	m_SwapChain->Present(1, 0);
 	return false;
+}
+
+rhi::IRenderTarget * D3D12Viewport::GetRenderTarget(uint32 index)
+{
+	return nullptr;
 }
 
 NS_K3D_D3D12_END
