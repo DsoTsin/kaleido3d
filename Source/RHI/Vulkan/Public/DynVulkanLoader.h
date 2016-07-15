@@ -193,4 +193,12 @@ namespace dynlib
 
 extern int LoadVulkan(VkInstance instance, VkDevice device);
 
+namespace vkCmd
+{
+	 VkResult  QueueSubmit(VkQueue Queue, uint32 SubmitCount, const VkSubmitInfo* Submits, VkFence Fence);
+	 VkResult  CreateDescriptorSetLayout(VkDevice Device, const VkDescriptorSetLayoutCreateInfo* CreateInfo, const VkAllocationCallbacks* Allocator, VkDescriptorSetLayout* SetLayout);
+	 VkResult  CreateGraphicsPipelines(VkDevice Device, VkPipelineCache PipelineCache, uint32 CreateInfoCount, const VkGraphicsPipelineCreateInfo* CreateInfos, const VkAllocationCallbacks* Allocator, VkPipeline* Pipelines);
+}
+
+
 #endif

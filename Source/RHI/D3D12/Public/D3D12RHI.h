@@ -320,7 +320,7 @@ public:
 	void*						Map(uint64 start, uint64 size) override;
 	void						UnMap() override;
 	D3D12_GPU_VIRTUAL_ADDRESS	GetGpuVirtualAddress() const;
-
+	uint64						GetResourceSize() const override { return -1; }
 	friend class CommandContext;
 
 protected:
@@ -478,7 +478,7 @@ public:
 	void Initialize();
 
 	void Detach(rhi::IDevice *) override;
-	void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src) override;
+	void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src, ::k3d::DynArray<rhi::BufferRegion> const& Regions) override;
 	void Execute(bool Wait) override;
 	void Reset()override;
 

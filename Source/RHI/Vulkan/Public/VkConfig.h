@@ -8,11 +8,12 @@ K3D_VK_BEGIN
 
 namespace 
 {
-	int g_ValidationLayerCount = 1;
+	int g_ValidationLayerCount = 2;
 	
 	const char *g_ValidationLayerNames[] =
 	{
-		"VK_LAYER_LUNARG_standard_validation"
+		"VK_LAYER_LUNARG_standard_validation",
+		"VK_LAYER_RENDERDOC_Capture"
 	};
 
 }

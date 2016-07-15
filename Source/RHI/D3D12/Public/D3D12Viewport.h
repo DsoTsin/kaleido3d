@@ -35,6 +35,9 @@ public:
 	uint32							GetSwapChainIndex() override { return m_SwapChain->GetCurrentBackBufferIndex(); }
 	uint32							GetSwapChainCount() override { return DefaultNumBackBuffers; }
 
+	uint32							GetWidth() const override { return 0; }
+	uint32							GetHeight() const override { return 0; }
+
 private:
 	K3D_DISCOPY(D3D12Viewport);
 

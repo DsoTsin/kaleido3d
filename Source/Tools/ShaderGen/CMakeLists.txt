@@ -3,6 +3,8 @@
 	add_definitions(-DBUILD_SHARED_LIB)
 #endif()
 
+add_definitions(-DUSE_GLSLANG=1)
+
 include_directories(${K3D_THIRD_PARTY}/Spir2Cross)
 
 set(HEADERS DXCompiler.h GLSLCompiler.h ShaderCompiler.h)

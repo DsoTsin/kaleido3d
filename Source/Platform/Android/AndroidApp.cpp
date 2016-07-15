@@ -47,7 +47,7 @@ namespace k3d
 
     void *App::OnSaveInstanceState(ANativeActivity *activity, size_t *outLen) {
         App *app = RetrieveApp(activity);
-        app->WriteCmd(APP_CMD_SAVE_STATE);
+        //app->WriteCmd(APP_CMD_SAVE_STATE);
     }
 
     void App::OnWindowFocusChanged(ANativeActivity *activity, int focused) {
@@ -57,8 +57,12 @@ namespace k3d
 
     void App::OnNativeWindowCreated(ANativeActivity *activity, ANativeWindow *window) {
         App *app = RetrieveApp(activity);
-        app->WriteCmd(APP_CMD_INIT_WINDOW);
+//        app->WriteCmd(APP_CMD_INIT_WINDOW);
+        ::Concurrency::Mutex::AutoLock autoLock(&app->m_Mutex);
+        app->m_PendingWindow = window;
+        KLOG(Info, kaleido3d::App, "Window inited.. thread=%s", ::Concurrency::Thread::GetCurrentThreadName().c_str());
         app->OnWindowCreated(window);
+        app->m_CondiVar.NotifyAll();
     }
 
     void App::OnNativeWindowDestroyed(ANativeActivity *activity, ANativeWindow *window) {
@@ -69,14 +73,26 @@ namespace k3d
     void App::OnInputQueueCreated(ANativeActivity *activity, AInputQueue *queue)
     {
         App * app = RetrieveApp(activity);
-        app->WriteCmd(APP_CMD_INPUT_CHANGED);
-        AInputQueue_attachLooper(queue, app->m_Looper, 1, NULL, NULL);
-        app->m_InputQueue = queue;
+        app->SetInputQueue(queue);
     }
 
     void App::OnInputQueueDestroyed(ANativeActivity *activity, AInputQueue *queue)
     {
 
+    }
+
+    void App::SetInputQueue(AInputQueue *queue) {
+        ::Concurrency::Mutex::AutoLock autoLock(&m_Mutex);
+        m_PendingInputQueue = queue;
+        m_InputQueue = m_PendingInputQueue;
+        KLOG(Info, kaleio3d::App,"Attaching input queue to looper");
+        AInputQueue_attachLooper(m_InputQueue,
+                                 m_Looper, LOOPER_ID_INPUT, NULL,
+                                 this); // associate with ALooperPoll
+//        WriteCmd(APP_CMD_INPUT_CHANGED);
+//        while(m_PendingInputQueue!=m_InputQueue) {
+//            m_CondiVar.Wait(&m_Mutex);
+//        }
     }
 
     void App::WriteCmd(int8_t cmd)
@@ -122,10 +138,10 @@ namespace k3d
                 KLOG(Info, kaleio3d::App,"APP_CMD_INPUT_CHANGED\n");
                 {
                     ::Concurrency::Mutex::AutoLock autoLock(&m_Mutex);
-                    if (m_InputQueue != NULL)
-                    {
-                        AInputQueue_detachLooper(m_InputQueue);
-                    }
+//                    if (m_InputQueue != NULL)
+//                    {
+//                        AInputQueue_detachLooper(m_InputQueue);
+//                    }
                     m_InputQueue = m_PendingInputQueue;
                     if (m_InputQueue != NULL)
                     {
@@ -139,13 +155,11 @@ namespace k3d
                 break;
 
             case APP_CMD_INIT_WINDOW:
-                KLOG(Info, kaleio3d::App,"APP_CMD_INIT_WINDOW\n");
+                KLOG(Info, kaleio3d::App,"APP_CMD_INIT_WINDOW");
                 {
                     ::Concurrency::Mutex::AutoLock autoLock(&m_Mutex);
-//                pthread_mutex_lock(&android_app->mutex);
-//                android_app->window = android_app->m_PendingWindow;
-//                pthread_cond_broadcast(&android_app->cond);
-//                pthread_mutex_unlock(&android_app->mutex);
+                    m_Window = MakeAndroidWindow(m_PendingWindow);
+                    m_CondiVar.NotifyAll();
                 }
                 break;
 
@@ -159,26 +173,17 @@ namespace k3d
             case APP_CMD_PAUSE:
             case APP_CMD_STOP:
                 KLOG(Info, kaleio3d::App,"activityState=%d\n", cmd);
-
                 {
                     ::Concurrency::Mutex::AutoLock autoLock(&m_Mutex);
-//                pthread_mutex_lock(&android_app->mutex);
-//                  activityState = cmd;
-//                pthread_cond_broadcast(&android_app->cond);
-//                pthread_mutex_unlock(&android_app->mutex);
                 }
                 break;
 
             case APP_CMD_CONFIG_CHANGED:
                 KLOG(Info, kaleio3d::App,"APP_CMD_CONFIG_CHANGED\n");
-//                AConfiguration_fromAssetManager(android_app->config,
-//                                                android_app->activity->assetManager);
-//                print_cur_config(android_app);
                 break;
 
             case APP_CMD_DESTROY:
                 KLOG(Info, kaleio3d::App,"APP_CMD_DESTROY\n");
-//                android_app->destroyRequested = 1;
                 break;
         }
     }
@@ -189,22 +194,22 @@ namespace k3d
         {
             case APP_CMD_TERM_WINDOW:
                 KLOG(Info, kaleio3d::App,"APP_CMD_TERM_WINDOW\n");
-//                pthread_mutex_lock(&android_app->mutex);
-//                android_app->window = NULL;
-//                pthread_cond_broadcast(&android_app->cond);
-//                pthread_mutex_unlock(&android_app->mutex);
+                {
+                    ::Concurrency::Mutex::AutoLock autoLock(&m_Mutex);
+                    m_Window = nullptr;
+                    m_CondiVar.NotifyAll();
+                }
                 break;
 
             case APP_CMD_SAVE_STATE:
                 KLOG(Info, kaleio3d::App,"APP_CMD_SAVE_STATE\n");
-//                pthread_mutex_lock(&android_app->mutex);
-//                android_app->stateSaved = 1;
-//                pthread_cond_broadcast(&android_app->cond);
-//                pthread_mutex_unlock(&android_app->mutex);
+                {
+                    ::Concurrency::Mutex::AutoLock autoLock(&m_Mutex);
+                    stateSaved = 1;
+                    m_CondiVar.NotifyAll();
+                }
                 break;
-
             case APP_CMD_RESUME:
-//                free_saved_state(android_app);
                 break;
         }
     }
@@ -233,7 +238,7 @@ namespace k3d
 
 namespace __android_internal
 {
-
+    k3d::App* g_App = nullptr;
     static void appDestroy(k3d::App *android_app);
 
     static void* appEntry(void *param) {
@@ -241,7 +246,6 @@ namespace __android_internal
         app->m_Config = AConfiguration_new();
         AConfiguration_fromAssetManager(app->m_Config, app->m_Activity->assetManager);
 
-        // Add readpipe to Looper
         ALooper* looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
         ALooper_addFd(looper, app->m_MsgRead, LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, NULL, app);
         app->m_Looper = looper;
@@ -251,7 +255,9 @@ namespace __android_internal
         app->m_CondiVar.NotifyAll();
         app->m_Mutex.UnLock();
 
-        app->OnInit();
+        while(!app->OnInit()) {
+            app->m_CondiVar.Wait(&app->m_Mutex);
+        }
         app->Run();
 
         appDestroy(app);
@@ -264,6 +270,7 @@ namespace __android_internal
             k3d::App *androidApp,
             void *savedState, size_t savedStateSize)
     {
+        g_App = androidApp;
         androidApp->m_Activity = activity;
         if (savedState != NULL) {
             androidApp->m_SavedState = malloc(savedStateSize);
@@ -282,7 +289,7 @@ namespace __android_internal
         androidApp->m_Thread = new Concurrency::Thread([androidApp]()
         {
             appEntry(androidApp);
-        }, "Entry");
+        }, "k3d::appEntry");
         androidApp->m_Thread->Start();
 
         {

@@ -66,7 +66,7 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 	else 
 	{
 		LoadVulkan(RHIRoot::GetInstance(), m_Device);
-#if K3DPLATFORM_OS_WIN
+#if K3DPLATFORM_OS_WIN && _DEBUG
 		if (withDbg)
 		{
 			SetupDebugging(RHIRoot::GetInstance(), VK_DEBUG_REPORT_ERROR_BIT_EXT |

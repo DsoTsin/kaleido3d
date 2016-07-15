@@ -144,7 +144,7 @@ VkResult RHIRoot::Initializer::CreateInstance(bool enableValidation, std::string
 	{
 		for (auto prop : s_LayerProps)
 		{
-			if (strcmp(prop.layerName, g_ValidationLayerNames[0]) == 0)
+			if (strcmp(prop.layerName, g_ValidationLayerNames[0]) == 0 || strcmp(prop.layerName, g_ValidationLayerNames[1])==0)
 			{
 				s_LayerNames.push_back(prop.layerName);
 				instanceCreateInfo.enabledLayerCount = s_LayerNames.size();

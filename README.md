@@ -28,7 +28,7 @@ Prerequisites
 > 
 >* Android Studio 2.1 or later.
 >* Android SDK N-preview or later.
->* NDK r12 beta or later.
+>* NDK r12 or later.
 >* [ThirdParty][8] `Git mirror on Github`
 
 
@@ -41,7 +41,7 @@ Prerequisites
 
 ----------
 
-Build Instructions:
+Build Instructions
 =========
 
 >* **Windows**: make.bat
@@ -62,18 +62,23 @@ RHIQueues[Global]
 rhi::PipelineDesc pipelineDesc = {shaders, raster, depthStencil...};
 rhi::IPipelineState pState = device->NewPipelineState(pipelineDesc);
 
-rhi::ICommandContext cmd = CommandContext::Begin(pDevice, pQueue);
-cmd.BindPipeline(pState);
-cmd.BindDescriptorTable(pTable);
-cmd.SetRenderTarget/SetRenderPass();
-for(obj : scene)
-{
-	cmd.SetIndexBuffer(obj->ibo);
-	cmd.SetVertexBuffer(obj->vbo);
-	cmd.DrawIndex()/ExecuteCmdBuf();
-}
-cmd.End();
-cmd.FlushAndWait();
+rhi::ICommandContext* gfxCmd = CommandContext::Begin(pDevice, pQueue);
+
+		gfxCmd->Begin();
+		gfxCmd->SetPipelineLayout(m_pl);
+		rhi::Rect rect{ 0,0, (long)m_Viewport->GetWidth(), (long)m_Viewport->GetHeight() };
+		gfxCmd->SetRenderTarget(pRT);
+		gfxCmd->SetScissorRects(1, &rect);
+		gfxCmd->SetViewport(rhi::ViewportDesc(m_Viewport->GetWidth(), m_Viewport->GetHeight()));
+		gfxCmd->SetPipelineState(0, m_pPso);
+		gfxCmd->SetIndexBuffer(m_TriMesh->IBO());
+		gfxCmd->SetVertexBuffer(0, m_TriMesh->VBO());
+		gfxCmd->DrawIndexedInstanced(rhi::DrawIndexedInstancedParam(3, 1));
+		gfxCmd->EndRendering();
+		gfxCmd->TransitionResourceBarrier(pRT->GetBackBuffer(), rhi::ERS_RenderTarget, rhi::ERS_Present);
+		gfxCmd->End();
+		
+gfxCmd->FlushAndWait();
 
 --
 
@@ -82,7 +87,39 @@ swapChain.Present(pQueue, pImage, pWindow[, semaphore])
 
 ```
 
-Directories:
+Current Status
+========
+
+- RHI(Render Hardware Interface)
+
+	* [x] Vulkan backend **ready**.
+	* [ ] DirectX 12 backend **WIP**
+	* [ ] Metal backend **WIP**
+
+- Core.Platform
+
+	* [x] Windows implementation ready.
+	* [ ] Android's **still buggy**.
+	* [ ] iOS/MacOS not initialized.
+
+- Tools
+	
+	* [x] HLSL ShaderCompiler (D3DCompiler & GLSLANG)
+	* [x] Maya exporter.
+
+- Planned Samples
+	
+	* [x] Triangle(vk)
+	* [ ] Textured Cube 
+	* [ ] Shadow Mapping
+	* [ ] Physically Based Shading
+	* [ ] Deferred Shading
+	* [ ] Multi-thread Rendering
+	* [ ] Multi-GPU/CrossAdapter Rendering
+
+---
+
+Directories
 =========
 
 * **Source:** 
@@ -101,16 +138,27 @@ Directories:
 		*  [ProtoBuf][5]
 		*  [Intel Thread Building Blocks][6]
 		*  [glslang][7]
+		*  LuaJIT
+		*  spir2cross
+		*  DXSDK
 * **Include**
 	*  Interface
 	*  SIMD Math Library
-	* Template Library
+	*  Template Library
 
 
 > Note: This project is under MIT License.
 	
 ----------
 
+Samples
+=======
+
+## 1.Triangle
+
+![Triangle Screenshot](Document/images/sample_triangle.png)
+
+---
 
 Contact
 =========

@@ -18,7 +18,7 @@ namespace rhi
 		virtual uint64				GetResourceLocation() const	{ return 0; }
 		virtual EResourceState		GetUsageState() const		{ return ERS_Unknown; }
 		virtual EGpuResourceType	GetResourceType() const		{ return ResourceTypeNum; }
-		virtual uint64				GetResourceSize() const		{ return 0; }
+		virtual uint64				GetResourceSize() const = 0;
 	};
 
 	struct IDescriptor
@@ -77,7 +77,9 @@ namespace rhi
 	struct IRenderTarget
 	{
 		virtual ~IRenderTarget() {}
-		virtual IGpuResource* GetBackBuffer() = 0;
+		virtual void			SetClearColor(kMath::Vec4f clrColor) = 0;
+		virtual void			SetClearDepthStencil(float depth, uint32 stencil) = 0;
+		virtual IGpuResource*	GetBackBuffer() = 0;
 	};
 
 	/**
@@ -160,6 +162,7 @@ namespace rhi
 		virtual IRenderViewport *			NewRenderViewport(void * winHandle, GfxSetting &) = 0;
 		virtual IRenderTarget *				NewRenderTarget(RenderTargetLayout const&) = 0;
 		virtual ::k3d::IShaderCompiler *	NewShaderCompiler() = 0;
+		virtual void						WaitIdle() {}
 	};
 
 	struct K3D_API IRenderViewport
@@ -184,6 +187,9 @@ namespace rhi
 
 		virtual uint32				GetSwapChainCount() = 0;
 		virtual uint32				GetSwapChainIndex() = 0;
+
+		virtual uint32				GetWidth() const = 0;
+		virtual uint32				GetHeight() const = 0;
 	};
 
 	/*
@@ -223,7 +229,7 @@ namespace rhi
 		virtual ~ICommandContext() {}
 
 		virtual void Detach(IDevice *) = 0;
-		virtual void CopyBuffer(IGpuResource& Dest, IGpuResource& Src) = 0;
+		virtual void CopyBuffer(IGpuResource& Dest, IGpuResource& Src, ::k3d::DynArray<BufferRegion> const& Regions) = 0;
 		virtual void Execute(bool Wait) = 0;
 		virtual void Reset() = 0;
 		virtual void TransitionResourceBarrier(IGpuResource * resource, EResourceState srcState, EResourceState dstState) = 0;

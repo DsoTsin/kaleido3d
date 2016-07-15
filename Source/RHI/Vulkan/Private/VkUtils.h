@@ -50,6 +50,8 @@ public:
 	}
 	~Semaphore() { vkDestroySemaphore(GetRawDevice(), m_Semaphore, nullptr); }
 
+	VkSemaphore	GetNativeHandle() const { return m_Semaphore; }
+
 private:
 	friend class SwapChain;
 	friend class CommandContext;

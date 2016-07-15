@@ -100,7 +100,7 @@ namespace k3d
 
     IWindow::Ptr MakeAndroidWindow(void* window)
     {
-        KLOG(Info, "%s \tfile@ %s \tline@ %d", __K3D_FUNC__, __FILE__, __LINE__);
+        KLOG(Info, kaleido3d::App, "[MakeAndroidWindow] file:%s line:%d", __FILE__, __LINE__);
         return IWindow::Ptr(new AndroidWindow( (ANativeWindow*) window ));
     }
 }

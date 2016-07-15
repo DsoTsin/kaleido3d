@@ -1,6 +1,23 @@
 apply plugin: 'com.android.model.library'
 
+//Properties properties = new Properties()
+//properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//def ndkDir = properties.getProperty('ndk.dir')
+//def shadercLibPath = file(ndkDir).absolutePath + "/sources/third_party/shaderc"
+//def stlType = "gnustl_static"
+
 model {
+
+//    repositories {
+//        libs(PrebuiltLibraries) {
+//            shaderc {
+//                headers.srcDir "${shadercLibPath}/include"
+//                binaries.withType(StaticLibraryBinary) {
+//                    staticLibraryFile = file("${shadercLibPath}/libs/${stlType}/${targetPlatform.getName()}/libshaderc.a")
+//                }
+//            }
+//        }
+//    }
 
     android {
         compileSdkVersion = "android-23"
@@ -34,6 +51,8 @@ model {
         cppFlags.add("-I${file("../../../Include")}".toString())
         cppFlags.add("-D VK_USE_PLATFORM_ANDROID_KHR")
         cppFlags.add("-DK3DPLATFORM_OS_ANDROID=1")
+        cppFlags.add("-DUSE_SHADERC=0")
+        cppFlags.add("-DUSE_GLSLANG=1")
         cppFlags.add("-fexceptions")
     }
 
@@ -53,6 +72,7 @@ model {
                     project ":Core" linkage "shared"
                     project ":Glslang" linkage "static"
                     project ":Spir2Cross" linkage "static"
+                    //library "shaderc" linkage "static"
                 }
                 source {
                     srcDir '../../../Source/Tools/ShaderGen'
@@ -73,7 +93,6 @@ model {
 
     android.productFlavors {
         create("all") {
-            ndk.abiFilters.add("armeabi-v7a")
             ndk.abiFilters.add("arm64-v8a")
         }
     }

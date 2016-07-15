@@ -1,7 +1,10 @@
+#if USE_GLSLANG
 #include "SPIRV/GlslangToSpv.h"
-#include <vulkan/vulkan.h>
-
+#else
+#include <shaderc/shaderc.hpp>
+#endif
 #include "Kaleido3D.h"
+#include <algorithm>
 #include <Core/LogUtil.h>
 
 #include "GLSLCompiler.h"
@@ -14,8 +17,9 @@ namespace k3d {
 	{
 		return glslToSpv(option.ShaderType, source);
 	}
-	
+#if USE_GLSLANG
 	using namespace ::glslang;
+#endif
 	using namespace shaderbinding;
 
 	EDataType spirTypeToGlslAttributeDataType(const spir2cross::SPIRType& spirType)
@@ -254,15 +258,16 @@ namespace k3d {
 		auto&    typeInfo = backCompiler->get_type(res.type_id);
 		bool     isPushConstant = (spv::StorageClassPushConstant == backCompiler->get_storage_class(res.id));
 		bool     isBlock = (0 != (backCompiler->get_decoration_mask(typeInfo.self) & kBlockMask));
-		uint32 typeId = ((!isPushConstant && isBlock) ? res.type_id : res.id);
+		uint32 	typeId = ((!isPushConstant && isBlock) ? res.type_id : res.id);
 
 		auto            bindingType = isPushConstant ? EBindType::EConstants : EBindType::EBlock;
 		std::string     bindingName = backCompiler->get_name(res.id);
 		uint32			bindingNumber = backCompiler->get_decoration(res.id, spv::DecorationBinding);
 		uint32			bindingSet = backCompiler->get_decoration(res.id, spv::DecorationDescriptorSet);
 		rhi::EShaderType bindingStage = shaderType;
-		Binding			binding{ bindingType, bindingName, bindingStage, bindingNumber };
-		outUniformLayout->Add(std::move(binding)).AddSet(bindingSet);
+//		Binding			binding;
+		outUniformLayout->AddBinding({ bindingType, bindingName, bindingStage, bindingNumber })
+				.AddSet(bindingSet);
 
 		for (uint32 index = 0; index < typeInfo.member_types.size(); ++index) {
 			std::string memberName = backCompiler->get_member_name(res.type_id, index);
@@ -273,7 +278,7 @@ namespace k3d {
 			EDataType	memberDataType = spirTypeToGlslUniformDataType(memberTypeInfo);
 
 			std::string uniformName = bindingName + "." + memberName;
-			outUniformLayout->Add({ memberDataType, uniformName, memberOffset, memberArraySize });
+			outUniformLayout->AddUniform({ memberDataType, uniformName, memberOffset, memberArraySize });
 		}
 
 		// Block size
@@ -311,7 +316,7 @@ namespace k3d {
 			uint32              bindingSet = backCompiler->get_decoration(res.id, spv::DecorationDescriptorSet);
 			rhi::EShaderType	bindingStage = shaderStage;
 
-			outUniformLayout->Add({ EBindType::ESampler, bindingName, bindingStage, bindingNumber }).AddSet(bindingSet);
+			outUniformLayout->AddBinding({ EBindType::ESampler, bindingName, bindingStage, bindingNumber }).AddSet(bindingSet);
 			//outUniformLayout->addSet(bindingSet, CHANGES_DONTCARE);
 		}
 
@@ -322,7 +327,7 @@ namespace k3d {
 			uint32					bindingSet = backCompiler->get_decoration(res.id, spv::DecorationDescriptorSet);
 			rhi::EShaderType		bindingStage = shaderStage;
 
-			outUniformLayout->Add({ EBindType::EStorageImage, bindingName, bindingStage, bindingNumber }).AddSet(bindingSet);
+			outUniformLayout->AddBinding({ EBindType::EStorageImage, bindingName, bindingStage, bindingNumber }).AddSet(bindingSet);
 		}
 
 		// Extract storage buffers from all shader stages - but probably only just compute
@@ -332,7 +337,7 @@ namespace k3d {
 			uint32					bindingSet = backCompiler->get_decoration(res.id, spv::DecorationDescriptorSet);
 			rhi::EShaderType		bindingStage = shaderStage;
 
-			outUniformLayout->Add({ EBindType::EStorageBuffer, bindingName, bindingStage, bindingNumber }).AddSet(bindingSet);
+			outUniformLayout->AddBinding({ EBindType::EStorageBuffer, bindingName, bindingStage, bindingNumber }).AddSet(bindingSet);
 		}
 
 		// Extract push constants from all shader stages
@@ -340,7 +345,7 @@ namespace k3d {
 			extractBlock(shaderStage, res, backCompiler, outUniformLayout);
 		}
 	}
-
+#if USE_GLSLANG
 	void initResources(TBuiltInResource &resources)
 	{
 		resources.maxLights = 32;
@@ -462,11 +467,56 @@ namespace k3d {
 			return EShLangVertex;
 		}
 	}
+#else
+
+	struct shader_type_mapping {
+		rhi::EShaderType vkshader_type;
+		shaderc_shader_kind   shaderc_type;
+	};
+	static const shader_type_mapping shader_map_table[] = {
+			{
+					rhi::ES_Vertex,
+					shaderc_glsl_vertex_shader
+			},
+			{
+					rhi::ES_Hull,
+					shaderc_glsl_tess_control_shader
+			},
+			{
+					rhi::ES_Domain,
+					shaderc_glsl_tess_evaluation_shader
+			},
+			{
+					rhi::ES_Geometry,
+					shaderc_glsl_geometry_shader},
+			{
+					rhi::ES_Fragment,
+					shaderc_glsl_fragment_shader
+			},
+			{
+					rhi::ES_Compute,
+					shaderc_glsl_compute_shader
+			},
+	};
+	shaderc_shader_kind MapShadercType(rhi::EShaderType vkShader) {
+		for (auto shader : shader_map_table) {
+			if (shader.vkshader_type == vkShader) {
+				return shader.shaderc_type;
+			}
+		}
+		assert(false);
+		return shaderc_glsl_infer_from_source;
+	}
+#endif
+
+
 
 	GLSLOutput* glslToSpv(
 		const rhi::EShaderType shader_type,
 		const char *pshader)
 	{
+		GLSLOutput * output = nullptr;
+#if USE_GLSLANG
 		glslang::TProgram& program = *new glslang::TProgram;
 		const char *shaderStrings[1];
 		TBuiltInResource Resources;
@@ -481,7 +531,6 @@ namespace k3d {
 		shaderStrings[0] = pshader;
 		shader->setStrings(shaderStrings, 1);
 
-		GLSLOutput * output = nullptr;
 		if (!shader->parse(&Resources, 100, false, messages)) {
 			puts(shader->getInfoLog());
 			puts(shader->getInfoDebugLog());
@@ -501,9 +550,26 @@ namespace k3d {
 		}
 		std::vector<unsigned int> spirv;
 		glslang::GlslangToSpv(*program.getIntermediate(stage), spirv);
+#else
+		// On Android, use shaderc instead.
+		shaderc::Compiler compiler;
+		shaderc::SpvCompilationResult module =
+				compiler.CompileGlslToSpv(pshader, strlen(pshader),
+										  MapShadercType(shader_type),
+										  "shader");
+		if (module.GetCompilationStatus() !=
+			shaderc_compilation_status_success) {
+//			KLOG(Error, "Error: Id=%d, Msg=%s",
+//				 module.GetCompilationStatus(),
+//				 module.GetErrorMessage().c_str());
+			return nullptr;
+		}
+		std::vector<unsigned int> spirv;
+		spirv.assign(module.cbegin(), module.cend());
+#endif
 
 		auto backCompiler = std::unique_ptr<spir2cross::CompilerGLSL>(new spir2cross::CompilerGLSL(spirv));
-		K3D_ASSERT(backCompiler);		
+		K3D_ASSERT(backCompiler);
 
 		rhi::ShaderByteCode bc(spirv.data(), spirv.size());
 		output = new GLSLOutput(std::move(bc));
@@ -520,20 +586,24 @@ namespace k3d {
 
 	static void sInitializeGlSlang()
 	{
+#if USE_GLSLANG
 		static bool sGlSlangIntialized = false;
 		if (!sGlSlangIntialized) {
 			glslang::InitializeProcess();
 			sGlSlangIntialized = true;
 		}
+#endif
 	}
 
 	static void sFinializeGlSlang()
 	{
+#if USE_GLSLANG
 		static bool sGlSlangFinalized = false;
 		if (!sGlSlangFinalized) {
 			glslang::FinalizeProcess();
 			//sGlSlangFinalized = true;
 		}
+#endif
 	}
 
 	GLSLCompiler::GLSLCompiler()

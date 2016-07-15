@@ -33,8 +33,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
 	const char * pLayerPrefix,
 	const char * pMessage, void * pUserData)
 {
-	VKLOG(Debug, "[%s]\t%s\t[location] %d ", pLayerPrefix, pMessage, location);
-	return VK_FALSE;
+#if K3DPLATFORM_OS_WIN
+	static char msg[4096] = { 0 };
+	snprintf(msg, 4096, "[%s]\t%s\t[location] %d \n", pLayerPrefix, pMessage, location);
+//	VKLOG(Debug, "[%s]\t%s\t[location] %d ", pLayerPrefix, pMessage, location);
+	OutputDebugStringA(msg);
+#endif
+	return VK_TRUE;
 }
 
 void SetupDebugging(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportCallbackEXT callBack)

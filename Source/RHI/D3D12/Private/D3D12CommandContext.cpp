@@ -39,7 +39,7 @@ void CommandContext::Detach(rhi::IDevice *)
 
 }
 
-void CommandContext::CopyBuffer(rhi::IGpuResource & Dest, rhi::IGpuResource & Src)
+void CommandContext::CopyBuffer(rhi::IGpuResource & Dest, rhi::IGpuResource & Src, ::k3d::DynArray<rhi::BufferRegion> const& Regions)
 {
 }
 

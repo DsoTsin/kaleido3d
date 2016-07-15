@@ -74,22 +74,17 @@ void DescriptorAllocator::Initialize(uint32 maxSets, BindingArray const& binding
 		}
 	}
 
-	DynArray<VkDescriptorPoolSize> typeCounts;
+	std::vector<VkDescriptorPoolSize> typeCounts;
 	for (const auto &mc : mappedCounts)
 	{
-		VkDescriptorPoolSize entry = {};
-		entry.type = mc.first;
-		entry.descriptorCount = mc.second;
-		typeCounts.Append(entry);
+		typeCounts.push_back({ mc.first, mc.second });
 	}
 
-	VkDescriptorPoolCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	createInfo.pNext = nullptr;
+	VkDescriptorPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 	createInfo.flags = m_Options.CreateFlags;
-	createInfo.maxSets = maxSets;
-	createInfo.poolSizeCount = typeCounts.Count();
-	createInfo.pPoolSizes = typeCounts.Count()==0 ? nullptr : typeCounts.Data();
+	createInfo.maxSets = 1;
+	createInfo.poolSizeCount = typeCounts.size();
+	createInfo.pPoolSizes = typeCounts.size()==0 ? nullptr : typeCounts.data();
 	K3D_VK_VERIFY(vkCreateDescriptorPool(GetRawDevice(), &createInfo, NULL, &m_Pool));
 }
 
@@ -116,12 +111,10 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 void DescriptorSetLayout::Initialize(BindingArray const & bindings)
 {
-	VkDescriptorSetLayoutCreateInfo createInfo = {};
-    createInfo.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    createInfo.pNext		= nullptr;
+	VkDescriptorSetLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     createInfo.bindingCount	= bindings.Count();
     createInfo.pBindings	= bindings.Count()==0 ? nullptr : bindings.Data();
-    K3D_VK_VERIFY(vkCreateDescriptorSetLayout( GetRawDevice(), &createInfo, nullptr, &m_DescriptorSetLayout ));
+    K3D_VK_VERIFY(vkCmd::CreateDescriptorSetLayout( GetRawDevice(), &createInfo, nullptr, &m_DescriptorSetLayout ));
 }
 
 void DescriptorSetLayout::Destroy()
@@ -169,9 +162,7 @@ void DescriptorSet::Update(uint32 bindSet, rhi::IGpuResource * gpuResource)
 void DescriptorSet::Initialize( VkDescriptorSetLayout layout, BindingArray const & bindings)
 {
 	std::vector<VkDescriptorSetLayout> layouts = { layout };
-	VkDescriptorSetAllocateInfo allocInfo = {};
-	allocInfo.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.pNext					= nullptr;
+	VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	allocInfo.descriptorPool		= m_DescriptorAllocator->m_Pool;
 	allocInfo.descriptorSetCount	= static_cast<uint32_t>( layouts.size() );
 	allocInfo.pSetLayouts			= layouts.empty() ? nullptr : layouts.data();
@@ -180,9 +171,7 @@ void DescriptorSet::Initialize( VkDescriptorSetLayout layout, BindingArray const
 
 	for (auto& binding : m_Bindings)
 	{
-		VkWriteDescriptorSet entry = {};
-		entry.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		entry.pNext = NULL;
+		VkWriteDescriptorSet entry = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		entry.dstSet = m_DescriptorSet;
 		entry.descriptorCount = 1;
 		entry.dstArrayElement = 0;

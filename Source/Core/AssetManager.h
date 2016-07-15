@@ -1,5 +1,5 @@
-#ifndef __k3dk3dAssetManager_h__
-#define __k3dk3dAssetManager_h__
+#ifndef __AssetManager_h__
+#define __AssetManager_h__
 #pragma once
 
 #include <KTL/Singleton.hpp>
@@ -9,7 +9,8 @@
 #include <memory>
 
 
-namespace k3d {
+namespace k3d
+{
 	class	Image;
 	class	Shader;
 	struct	ObjectLoadListener;
@@ -19,6 +20,13 @@ namespace k3d {
 	struct BytesPackage
 	{
 		std::vector<kByte> Bytes;
+	};
+
+	struct IAsset
+	{
+		virtual ~IAsset() {}
+		virtual uint64	GetLength() = 0;
+		virtual const void*	GetBuffer() = 0;
 	};
 
 	/// AssetManager
@@ -93,7 +101,6 @@ namespace k3d {
 		typedef std::unordered_map<string, std::shared_ptr<Image> > MapImage;
 		typedef MapImage::iterator MapImageIter;
 
-
 		AssetManager();
 
 	public:
@@ -101,9 +108,9 @@ namespace k3d {
 
 		static SpIODevice		OpenAsset(const kchar * assetPath, IOFlag openFlag = IORead, bool fast = false);
 
-		static kString		AssetPath(const kchar * assetRelativePath);
+		static kString			AssetPath(const kchar * assetRelativePath);
 
-
+        static IAsset * 		Open(const char* path);
 	protected:
 		static	kString	 s_envAssetPath;
 

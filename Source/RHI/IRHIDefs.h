@@ -10,7 +10,7 @@
 namespace rhi
 {
 	/**
-	 * Global Enums 
+	 * Global Enums
 	 * Must Start with 'E'
 	 **/
 
@@ -28,18 +28,18 @@ namespace rhi
 		EPSO_Graphics
 	};
 
-    enum EPixelFormat
-    {
-        EPF_RGBA16Uint,
-        EPF_RGBA32Float,
-        EPF_RGBA8Unorm,
-        EPF_RGBA8Unorm_sRGB,
+	enum EPixelFormat
+	{
+		EPF_RGBA16Uint,
+		EPF_RGBA32Float,
+		EPF_RGBA8Unorm,
+		EPF_RGBA8Unorm_sRGB,
 		EPF_R11G11B10Float,
 		EPF_D32Float,
 		EPF_RGB32Float,
-        PixelFormatNum
-    };
-    
+		PixelFormatNum
+	};
+
 	enum EVertexFormat
 	{
 		EVF_Float1x32,
@@ -341,6 +341,7 @@ namespace rhi
 		ERS_RenderTarget, // D3D12_RESOURCE_STATE_RENDER_TARGET/VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL?
 		ERS_TransferDst,
 		ERS_TransferSrc,
+		ERS_RWDepthStencil,
 		ERS_Unknown,
 		ERS_Num
 	};
@@ -354,12 +355,12 @@ namespace rhi
 	};
 
 	/**
-	 * @see RenderTargetFormat 
+	 * @see RenderTargetFormat
 	 * @members Width,Height,ColorFormat,BackbufferCount
 	 */
 	struct GfxSetting
 	{
-		GfxSetting() 
+		GfxSetting()
 			: Width(0), Height(0)
 			, ColorFormat(EPixelFormat::EPF_RGBA8Unorm)
 			, DepthStencilFormat(EPixelFormat::EPF_D32Float)
@@ -397,11 +398,11 @@ namespace rhi
 		}
 
 		ViewportDesc(
-			float width, float height, 
+			float width, float height,
 			float left = 0.0f, float top = 0.0f,
 			float minDepth = 0.0f, float maxDepth = 1.0f
-			) 
-			: Left(left), Top(top), Width(width), Height(height), MinDepth(minDepth), MaxDepth(maxDepth) 
+			)
+			: Left(left), Top(top), Width(width), Height(height), MinDepth(minDepth), MaxDepth(maxDepth)
 		{
 		}
 
@@ -441,6 +442,13 @@ namespace rhi
 		uint32 SizeInBytes;
 	};
 
+	struct BufferRegion
+	{
+		uint64 SrcOffSet;
+		uint64 DestOffSet;
+		uint64 CopySize;
+	};
+
 	struct ShaderParamLayout
 	{
 		EShaderParam Location[MAX_SHADER_PARAM];
@@ -448,6 +456,7 @@ namespace rhi
 
 	enum EGpuMemViewType
 	{
+		EGVT_Undefined,
 		EGVT_VBV, // For VertexBuffer
 		EGVT_IBV, // For IndexBuffer
 		EGVT_CBV, // For ConstantBuffer,
@@ -477,13 +486,19 @@ namespace rhi
 	{
 		EGRAF_Read = 0x1,
 		EGRAF_Write = 0x1 << 1,
-		EGRAF_ReadAndWrite = (EGRAF_Read | EGRAF_Write)
+		EGRAF_ReadAndWrite = (EGRAF_Read | EGRAF_Write),
+		EGRAF_HostVisible = 0x1 << 2,
+		EGRAF_DeviceVisible = 0x1 << 3,
+		EGRAF_HostCoherent = 0x1 << 4,
+		EGRAF_HostCached = 0x1 << 5,
 	};
 
 	enum EGpuResourceCreationFlag
 	{
-		EGRCF_Dynamic,
-		EGRCF_Static
+		EGRCF_Dynamic = 0,
+		EGRCF_Static = 1,
+		EGRCF_TransferSrc = 2,
+		EGRCF_TransferDst = 4
 	};
 
 	/**
@@ -519,7 +534,7 @@ namespace rhi
 		EGpuResourceAccessFlag Flag;
 		EGpuResourceCreationFlag CreationFlag;
 		EGpuMemViewType ViewType;
-		union 
+		union
 		{
 			TextureDesc TextureDesc;
 			uint64 Size;
@@ -555,8 +570,8 @@ namespace rhi
 	 */
 	struct DrawIndexedInstancedParam
 	{
-		DrawIndexedInstancedParam(uint32 indexCountPerInst, uint32 instCount, 
-			uint32 startLoc = 0, uint32 baseVerLoc = 0, uint32 sInstLoc = 0)
+		DrawIndexedInstancedParam(uint32 indexCountPerInst, uint32 instCount,
+			uint32 startLoc = 0, uint32 baseVerLoc = 0, uint32 sInstLoc = 1)
 			: IndexCountPerInstance(indexCountPerInst)
 			, InstanceCount(instCount)
 			, StartIndexLocation(startLoc)

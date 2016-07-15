@@ -30,7 +30,7 @@ void PipelineLayout::InitWithDesc(rhi::PipelineLayoutDesc const & desc)
 {
 	DescriptorAllocator::Options options;
 	BindingArray array;
-	for (auto rhibinding : desc.Bindings)
+	for (auto & rhibinding : desc.Bindings)
 	{
 		array.Append(RHIBinding2VkBinding(rhibinding));
 	}

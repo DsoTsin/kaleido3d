@@ -40,6 +40,9 @@ bool VkSwapChainPresent::OnInit()
 	m_pDevice = m_RenderContext.GetDevice();
 	m_RenderVp = m_pDevice->NewRenderViewport(HostWindow()->GetHandle(), setting);
 	m_RenderVp->InitViewport(nullptr, nullptr, setting);
+
+
+
 	return true;
 }
 

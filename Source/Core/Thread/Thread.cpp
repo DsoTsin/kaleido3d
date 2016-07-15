@@ -42,7 +42,7 @@ namespace Concurrency {
 #if K3DPLATFORM_OS_WIN
 		return ::GetCurrentThreadId();
 #else
-		return (uint32_t)pthread_self();
+		return (uint64_t)pthread_self();
 #endif
 	}
 
@@ -94,6 +94,8 @@ namespace Concurrency {
 			pthread_attr_init(&attr);
 			pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 			pthread_create((pthread_t*)&m_ThreadHandle, nullptr, Run, this);
+			pthread_setname_np((pthread_t)m_ThreadHandle, m_ThreadName.c_str());
+			s_ThreadMap[(uint64)m_ThreadHandle] = this;
 		}
 #endif
 	}
@@ -133,13 +135,23 @@ namespace Concurrency {
 	std::string  Thread::GetCurrentThreadName() {
 #if K3DPLATFORM_OS_WIN
 		uint32 tid = (uint32)::GetCurrentThreadId();
-#else
-        uint32 tid = (uint32)pthread_self();
-#endif
 		if (s_ThreadMap[tid] != nullptr) {
 			return s_ThreadMap[tid]->GetName();
 		}
+
 		return "Anonymous Thread";
+#elif K3DPLATFORM_OS_ANDROID
+		char name[32];
+		prctl(PR_GET_NAME, (unsigned long)name);
+		return name;
+#else
+        uint32 tid = (uint32)pthread_self();
+		if (s_ThreadMap[tid] != nullptr) {
+			return s_ThreadMap[tid]->GetName();
+		}
+
+		return "Anonymous Thread";
+#endif
 	}
 
 	void* Thread::Run(void *data)

@@ -151,7 +151,7 @@ public:
 
 	PtrCmdAlloc					NewCommandAllocator(bool transient);
 	PtrSemaphore				NewSemaphore();
-
+	void						WaitIdle() override { vkDeviceWaitIdle(m_Device); }
 
 	bool						FindMemoryType(uint32_t typeBits, VkFlags requirementsMask, uint32 *typeIndex) const;
 
@@ -198,6 +198,7 @@ public:
 	//VkQueue const &				GetRawQueue() const { return m_pDevice->GetRawDeviceQueue(); }
 
 	Device::Ptr const			GetDevice() const { return m_pDevice; }
+	SpCmdQueue const&			GetImmCmdQueue() const { return m_pDevice->GetDefaultCmdQueue(); }
 private:
 	Device::Ptr					m_pDevice;
 };
@@ -329,7 +330,7 @@ public:
 
 	Resource::Ptr				Map(uint64 offset, uint64 size) override;
 	void						UnMap() override {	vkUnmapMemory(GetRawDevice(), m_DeviceMem); }
-
+	uint64						GetResourceSize() const override { return m_Size; }
 protected:
 	VkMemoryAllocateInfo		m_MemAllocInfo;
 	VkDeviceMemory				m_DeviceMem;
@@ -346,7 +347,7 @@ public:
 	typedef Buffer * Ptr;
 	explicit					Buffer(Device::Ptr pDevice) : Resource(pDevice) {}
 								Buffer(Device::Ptr pDevice, rhi::ResourceDesc const & desc);
-								~Buffer() override;
+	virtual						~Buffer();
 
 	void						Create(size_t size);
 
@@ -357,6 +358,15 @@ private:
 	VkBufferView				m_BufferView = VK_NULL_HANDLE;
 	VkBuffer					m_Buffer = VK_NULL_HANDLE;
 	VkBufferUsageFlags  		m_Usage = 0;
+	VkMemoryPropertyFlags		m_MemoryBits = 0;
+};
+
+class StageBuffer : public Buffer
+{
+public:
+	StageBuffer(Device::Ptr pDevice, rhi::ResourceDesc const & desc);
+	~StageBuffer() override;
+
 };
 
 class Texture : public Resource
@@ -399,6 +409,7 @@ private:
 	ImageInfo  					m_ImageInfo;
 	VkImage						m_Image = VK_NULL_HANDLE;
 	rhi::EResourceState			m_UsageState = rhi::ERS_Common;
+	VkImageMemoryBarrier		m_Barrier;
 	bool						m_SelfOwn = true;
 };
 
@@ -515,15 +526,21 @@ public:
 	RenderTarget(Device::Ptr pDevice, SpTexture texture, SpFramebuffer framebuffer, VkRenderPass renderpass);
 	~RenderTarget() override;
 
-	VkFramebuffer GetFramebuffer() const;
-	VkRenderPass GetRenderpass() const;
-	SpTexture	GetTexture() const;
+	VkFramebuffer		GetFramebuffer() const;
+	VkRenderPass		GetRenderpass() const;
+	SpTexture			GetTexture() const;
+	VkRect2D			GetRenderArea() const;
+	rhi::IGpuResource*	GetBackBuffer() override;
+	PtrSemaphore		GetSemaphore() { return m_AcquireSemaphore; }
 
-	VkRect2D		GetRenderArea() const;
+	void				SetClearColor(kMath::Vec4f clrColor) override { m_ClearValues[0].color = { clrColor[0], clrColor[1], clrColor[2], clrColor[3] }; }
+	void				SetClearDepthStencil(float depth, uint32 stencil) override { m_ClearValues[1].depthStencil = {depth, stencil}; }
 
-	rhi::IGpuResource* GetBackBuffer() override;
-	PtrSemaphore	GetSemaphore() { return m_AcquireSemaphore; }
 private:
+	friend class	CommandContext;
+
+	VkClearValue	m_ClearValues[2] = { {}, {1.0f, 0} };
+
 	SpFramebuffer	m_Framebuffer;
 	VkRenderPass	m_Renderpass;
 	SpTexture		m_RenderTexture;
@@ -541,7 +558,7 @@ public:
 	virtual				~CommandContext();
 
 	void				Detach(rhi::IDevice *) override;
-	void				CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src) override;
+	void				CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src, ::k3d::DynArray<rhi::BufferRegion> const& Regions) override;
 
 	/**
 	 * @brief	submit command buffer to queue and wait for scheduling.
@@ -628,25 +645,11 @@ public:
 		VkFence fence, 
 		const std::vector<VkSemaphore>& signalSemaphores);
 
-	void Submit(const std::vector<VkSubmitInfo>& submits, VkFence fence);
-
-	void Present(
-		const std::vector<VkSemaphore>& waitSemaphores, 
-		const std::vector<VkSwapchainKHR>& swapChains,
-		const std::vector<uint32>& imageIndices);
-
-	void Present(
-		VkSemaphore waitSemaphore,
-		VkSwapchainKHR swapChain, 
-		uint32 imageIndex);
-
-	void Present(
-		VkSemaphore waitSemaphore, 
-		PtrSwapChain& swapChainRef, 
-		uint32 imageIndex);
-
-
+	VkResult Submit(const std::vector<VkSubmitInfo>& submits, VkFence fence);
+	
 	void WaitIdle();
+
+	VkQueue GetNativeHandle() const { return m_Queue; }
 
 protected:
 	void Initialize(VkQueueFlags queueTypes, uint32 queueFamilyIndex, uint32 queueIndex);
@@ -673,11 +676,14 @@ public:
 
 	uint32									GetPresentQueueFamilyIndex() const { return m_SelectedPresentQueueFamilyIndex; }
 	uint32									AcquireNextImage(PtrSemaphore presentSemaphore, PtrFence pFence);
-	void									Present(uint32 imageIndex, PtrSemaphore renderingFinishSemaphore);
+	VkResult								Present(uint32 imageIndex, PtrSemaphore renderingFinishSemaphore);
 	uint32									GetBackBufferCount() const { return m_ReserveBackBufferCount; }
 	
 	VkSwapchainKHR							GetSwapChain() const { return m_SwapChain; }
 	VkImage									GetBackImage(uint32 i) const { return m_ColorImages[i]; }
+
+	VkExtent2D								GetCurrentExtent() const { return m_SwapchainExtent; }
+	VkFormat								GetFormat() const { return m_ColorAttachFmt; }
 
 private:
 	void									InitSurface(void * WindowHandle);
@@ -687,12 +693,14 @@ private:
 	void									InitSwapChain(uint32 numBuffers, std::pair<VkFormat, VkColorSpaceKHR> color, VkPresentModeKHR mode, VkSurfaceTransformFlagBitsKHR pretran);
 
 private:
-	VkExtent2D								m_SwapchainExtent;
+	VkExtent2D								m_SwapchainExtent = {};
 	VkSurfaceKHR							m_Surface	= VK_NULL_HANDLE;
 	VkSwapchainKHR							m_SwapChain = VK_NULL_HANDLE;
 	uint32									m_SelectedPresentQueueFamilyIndex = 0;
+	uint32 									m_DesiredBackBufferCount;
 	uint32									m_ReserveBackBufferCount;
 	std::vector<VkImage>					m_ColorImages;
+	VkFormat								m_ColorAttachFmt = VK_FORMAT_UNDEFINED;
 
 private:
 
@@ -736,6 +744,8 @@ public:
 	void				AllocateRenderTargets(rhi::GfxSetting & gfxSetting);
 	VkRenderPass		GetRenderPass() const;
 
+	uint32				GetWidth() const override { return m_pSwapChain->GetCurrentExtent().width; }
+	uint32				GetHeight() const override { return m_pSwapChain->GetCurrentExtent().height; }
 protected:
 
 	PtrSemaphore					m_PresentSemaphore;
@@ -873,33 +883,32 @@ public:
 	}
 
 protected:
-	void								InitWithDesc(rhi::PipelineDesc const & desc);
-	void								Destroy();
+	void											InitWithDesc(rhi::PipelineDesc const & desc);
+	void											Destroy();
 
-	friend class						CommandContext;
+	friend class									CommandContext;
 
-	VkPipeline							m_Pipeline;
-	VkPipelineCache						m_PipelineCache;
+	VkPipeline										m_Pipeline;
+	VkPipelineCache									m_PipelineCache;
 	union 
 	{
-		VkGraphicsPipelineCreateInfo	m_GfxCreateInfo;
-		VkComputePipelineCreateInfo		m_CptCreateInfo;
+		VkGraphicsPipelineCreateInfo				m_GfxCreateInfo;
+		VkComputePipelineCreateInfo					m_CptCreateInfo;
 	};
-	VkRenderPass						m_RenderPass;
+	VkRenderPass									m_RenderPass;
 
 private:
-	std::vector<VkPipelineShaderStageCreateInfo> m_ShaderStageInfos;
-	VkPipelineInputAssemblyStateCreateInfo	m_InputAssemblyState;
-	VkPipelineRasterizationStateCreateInfo	m_RasterizationState;
-	VkPipelineColorBlendStateCreateInfo		m_ColorBlendState;
-	VkPipelineDepthStencilStateCreateInfo	m_DepthStencilState;
-	VkPipelineViewportStateCreateInfo		m_ViewportState;
-	VkPipelineMultisampleStateCreateInfo	m_MultisampleState;
-	VkPipelineVertexInputStateCreateInfo	m_VertexInputState;
+	std::vector<VkPipelineShaderStageCreateInfo>	m_ShaderStageInfos;
+	VkPipelineInputAssemblyStateCreateInfo			m_InputAssemblyState;
+	VkPipelineRasterizationStateCreateInfo			m_RasterizationState;
+	VkPipelineColorBlendStateCreateInfo				m_ColorBlendState;
+	VkPipelineDepthStencilStateCreateInfo			m_DepthStencilState;
+	VkPipelineViewportStateCreateInfo				m_ViewportState;
+	VkPipelineMultisampleStateCreateInfo			m_MultisampleState;
+	VkPipelineVertexInputStateCreateInfo			m_VertexInputState;
 	std::vector<VkVertexInputBindingDescription>	m_BindingDescriptions;
 	std::vector<VkVertexInputAttributeDescription>	m_AttributeDescriptions;
-
-	PipelineLayout *						m_PipelineLayout;
+	PipelineLayout *								m_PipelineLayout;
 };
 
 class PipelineLayout : public rhi::IPipelineLayout, public DeviceChild

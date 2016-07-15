@@ -49,16 +49,20 @@ namespace k3d
 
 		struct Uniform
 		{
-			Uniform() : VarType(EDataType::EUnknown), VarOffset(0), VarSzArray(0) {}
+			Uniform() : VarType(EDataType::EUnknown), VarOffset(0), VarName{0}, VarSzArray(0) {}
 			
 			Uniform(EDataType type, std::string const & name, uint32 offset, uint32 szArray=0) 
-				: VarName(name), VarType(type)
-				, VarOffset(offset), VarSzArray(szArray) {}
+				: VarName{0}, VarType(type)
+				, VarOffset(offset), VarSzArray(szArray)
+			{
+				size_t name_len = name.length();
+				strncpy(VarName, name.c_str(), name_len>128?128:name_len);
+			}
 			
 			virtual ~Uniform() {}
 
 			EDataType	VarType;
-			std::string VarName;
+			char 		VarName[128];
 			uint32		VarOffset;
 			uint32		VarSzArray;
 		};
@@ -74,17 +78,25 @@ namespace k3d
 
 		struct Binding
 		{
+			Binding() : VarType(EBindType::EUndefined), VarName{0}, VarStage(rhi::ES_Vertex), VarNumber(0) {}
+			Binding(EBindType t, std::string n, rhi::EShaderType st, uint32 num)
+					: VarType(t), VarName{0}, VarStage(st), VarNumber(num)
+			{
+				size_t name_len = n.length();
+				strncpy(VarName, n.c_str(), name_len>128?128:name_len);
+			}
+
 			EBindType			VarType;
-			std::string			VarName;
+			char				VarName[128];
 			rhi::EShaderType	VarStage;
 			uint32				VarNumber;
 
-			Binding& operator=(Binding const& rhs)
+			Binding &operator = (Binding const &rhs)
 			{
-				this->VarType = rhs.VarType;
-				this->VarName = rhs.VarName;
-				this->VarStage = rhs.VarStage;
-				this->VarNumber = rhs.VarNumber;
+				VarType = rhs.VarType;
+				strncpy(VarName, rhs.VarName, 128);
+				VarStage = rhs.VarStage;
+				VarNumber = rhs.VarNumber;
 				return *this;
 			}
 		};
@@ -100,13 +112,13 @@ namespace k3d
 			DynArray<Uniform>		Uniforms;
 			DynArray<Set::VarIndex>	Sets;
 
-			BindingTable& Add(Binding && binding)
+			BindingTable& AddBinding(Binding && binding)
 			{
 				this->Bindings.Append(binding);
 				return *this;
 			}
 
-			BindingTable& Add(Uniform && uniform)
+			BindingTable& AddUniform(Uniform && uniform)
 			{
 				this->Uniforms.Append(uniform);
 				return *this;

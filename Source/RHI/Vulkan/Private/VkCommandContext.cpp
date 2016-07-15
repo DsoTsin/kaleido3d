@@ -3,6 +3,9 @@
 #include "VkUtils.h"
 #include "VkEnums.h"
 
+#include <sstream>
+#include <iomanip>
+
 K3D_VK_BEGIN
 
 using namespace Concurrency;
@@ -25,9 +28,7 @@ void CommandQueue::Submit(
 	VkFence fence, const std::vector<VkSemaphore>& signalSemaphores)
 {
 	const VkPipelineStageFlags* pWaitDstStageMask = (waitSemaphores.size() == waitStageMasks.size()) ? waitStageMasks.data() : nullptr;
-	VkSubmitInfo submits = {};
-	submits.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submits.pNext = nullptr;
+	VkSubmitInfo submits = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submits.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
 	submits.pWaitSemaphores = waitSemaphores.empty() ? nullptr : waitSemaphores.data();
 	submits.pWaitDstStageMask = pWaitDstStageMask;
@@ -38,62 +39,20 @@ void CommandQueue::Submit(
 	this->Submit({ submits }, fence);
 }
 
-void CommandQueue::Submit(const std::vector<VkSubmitInfo>& submits, VkFence fence)
+VkResult CommandQueue::Submit(const std::vector<VkSubmitInfo>& submits, VkFence fence)
 {
 	VKRHI_METHOD_TRACE
 	K3D_ASSERT(!submits.empty());
 	uint32_t submitCount = static_cast<uint32_t>(submits.size());
 	const VkSubmitInfo* pSubmits = submits.data();
-	VkResult err = vkQueueSubmit(m_Queue, submitCount, pSubmits, fence);
+	VkResult err = vkCmd::QueueSubmit(m_Queue, submitCount, pSubmits, fence);
 	K3D_ASSERT((err == VK_SUCCESS) || (err == VK_ERROR_DEVICE_LOST));
-	WaitIdle();
-}
-
-void CommandQueue::Present(
-	const std::vector<VkSemaphore>& waitSemaphores, 
-	const std::vector<VkSwapchainKHR>& swapChains, 
-	const std::vector<uint32>& imageIndices)
-{
-	VKRHI_METHOD_TRACE
-	VkPresentInfoKHR presentInfo = {};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.pNext = nullptr;
-	presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
-	presentInfo.pWaitSemaphores = waitSemaphores.empty() ? nullptr : waitSemaphores.data();;
-	presentInfo.swapchainCount = static_cast<uint32_t>(swapChains.size());
-	presentInfo.pSwapchains = swapChains.empty() ? nullptr : swapChains.data();
-	presentInfo.pImageIndices = imageIndices.data();
-	presentInfo.pResults = nullptr;
-	K3D_VK_VERIFY(vkQueuePresentKHR(m_Queue, &presentInfo));
-}
-
-void CommandQueue::Present(
-	VkSemaphore waitSemaphore, 
-	VkSwapchainKHR swapChain, 
-	uint32 imageIndex)
-{
-	std::vector<VkSemaphore> waitSemaphores = { waitSemaphore };
-	std::vector<VkSwapchainKHR> swapChains = { swapChain };
-	std::vector<uint32_t> imageIndices = { imageIndex };
-	this->Present(waitSemaphores, swapChains, imageIndices);
-}
-
-void CommandQueue::Present(
-	VkSemaphore waitSemaphore,
-	PtrSwapChain & swapChainRef,
-	uint32 imageIndex)
-{
-	this->Present(waitSemaphore, swapChainRef->GetSwapChain(), imageIndex);
+	return err;
 }
 
 void CommandQueue::WaitIdle()
 {
-	//VkResult res = vkQueueWaitIdle(m_Queue);
-	//if (res == VK_ERROR_DEVICE_LOST)
-	//{
-	//	VKLOG(Info, "\t\t[Method Warn] -- [%s] Device Lost ..", __K3D_FUNC__);
-	//	//K3D_VK_VERIFY(res);
-	//}
+	K3D_VK_VERIFY(vkQueueWaitIdle(m_Queue));
 }
 
 void CommandQueue::Initialize(VkQueueFlags queueTypes, uint32 queueFamilyIndex, uint32 queueIndex)
@@ -112,7 +71,8 @@ void CommandQueue::Destroy()
 
 CommandContextPool::CommandContextPool(Device::Ptr pDevice) 
 	: DeviceChild(pDevice)
-{}
+{
+}
 
 CommandContextPool::~CommandContextPool()
 {
@@ -129,7 +89,7 @@ CommandContext* CommandContextPool::RequestContext()
 	auto context = new CommandContext(GetDevice(), cmdBuffer);
 	uint32 tid = Thread::GetId();
 	m_ContextList[tid].push_back(context);
-	VKLOG(Info, "%s called in thread [%d], new GraphicsCommandContext created (cmdBuf=0x%x).", __K3D_FUNC__, tid, cmdBuffer);
+	VKLOG(Info, "%s called in thread [%s], new GraphicsCommandContext created (cmdBuf=0x%x).", __K3D_FUNC__, Thread::GetCurrentThreadName().c_str(), cmdBuffer);
 	return context;
 }
 
@@ -141,7 +101,7 @@ PtrCmdAlloc CommandContextPool::RequestCommandAllocator()
 		Mutex::AutoLock lock(&m_PoolMutex);
 		auto pAllocator = GetDevice()->NewCommandAllocator(false);
 		m_AllocatorPool.insert({ tid, pAllocator });
-		VKLOG(Info, "CommandContextPool-thread %d, new vkcommandpool created.", tid);
+		VKLOG(Info, "CommandContextPool, new vkcommandpool created. thread=%s", Thread::GetCurrentThreadName().c_str());
 	}
 	return m_AllocatorPool.at(tid);
 }
@@ -167,9 +127,9 @@ void CommandContext::Detach(rhi::IDevice * pDevice)
 
 }
 
-void CommandContext::CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src)
+void CommandContext::CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src, ::k3d::DynArray<rhi::BufferRegion> const& Regions)
 {
-//	vkCmdCopyBuffer(m_CommandBuffer, srcBuffer, dstBuffer, regionCount, pRegions);
+	vkCmdCopyBuffer(m_CommandBuffer, (VkBuffer)Src.GetResourceLocation(), (VkBuffer)Dest.GetResourceLocation(), Regions.Count(), (const VkBufferCopy*)Regions.Data());
 }
 
 void CommandContext::Execute(bool Wait)
@@ -187,34 +147,39 @@ void CommandContext::Execute(bool Wait)
 		submitInfo.waitSemaphoreCount = 0;
 		submitInfo.pWaitSemaphores = nullptr;
 	}
-
-	/*VkPipelineStageFlags pipeStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-	submitInfo.pWaitDstStageMask = &pipeStageFlags;*/
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &m_CommandBuffer;
-	GetDevice()->GetDefaultCmdQueue()->Submit({ submitInfo }, VK_NULL_HANDLE);
-	//vkDeviceWaitIdle(GetRawDevice());
+	GetImmCmdQueue()->Submit({ submitInfo }, VK_NULL_HANDLE);
+	if(Wait) 
+	{
+		GetImmCmdQueue()->WaitIdle();
+	}
 }
 
 void CommandContext::Reset()
 {
-	
+	vkResetCommandBuffer(m_CommandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM);
 }
 
 void CommandContext::SubmitAndWait(PtrSemaphore wait, PtrSemaphore signal, PtrFence fence)
 {
 	VKRHI_METHOD_TRACE
-	VkSubmitInfo submitInfo = {};
+	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	VkPipelineStageFlags waitStage[1] = { VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT };
+	VkSemaphore waitSemaphore = wait ? wait->m_Semaphore : VK_NULL_HANDLE;
+	VkSemaphore signalSemaphore = signal ? signal->m_Semaphore : VK_NULL_HANDLE;
 	submitInfo.pWaitDstStageMask = waitStage;
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = wait ? 1:0;
-	submitInfo.pWaitSemaphores = wait? &wait->m_Semaphore : VK_NULL_HANDLE;
+	submitInfo.pWaitSemaphores = &waitSemaphore;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &m_CommandBuffer;
 	submitInfo.signalSemaphoreCount = signal? 1:0 ;
-	submitInfo.pSignalSemaphores = signal? &signal->m_Semaphore : VK_NULL_HANDLE;
-	GetDevice()->GetDefaultCmdQueue()->Submit({ submitInfo }, fence ? fence->m_Fence : VK_NULL_HANDLE);
+	submitInfo.pSignalSemaphores = &signalSemaphore;
+	std::stringstream strream;
+	strream << "submit ----- wait " << std::hex << std::setfill('0') << waitSemaphore << ", signal " << std::hex
+		<< std::setfill('0') << signalSemaphore;
+	VKLOG(Info, strream.str().c_str());
+	GetImmCmdQueue()->Submit({ submitInfo }, fence ? fence->m_Fence : VK_NULL_HANDLE);
 }
 
 void CommandContext::InitCommandBufferPool()
@@ -435,7 +400,7 @@ void CommandContext::SetViewport(const rhi::ViewportDesc & viewport)
 void RHIRect2VkRect(const rhi::Rect & rect, VkRect2D & r2d)
 {
 	r2d.extent.width = rect.Right - rect.Left;
-	r2d.extent.width = rect.Bottom - rect.Top;
+	r2d.extent.height = rect.Bottom - rect.Top;
 	r2d.offset.x = rect.Left;
 	r2d.offset.y = rect.Top;
 }
@@ -452,13 +417,13 @@ void CommandContext::SetScissorRects(uint32 count, const rhi::Rect* pRect)
 
 void CommandContext::SetIndexBuffer(const rhi::IndexBufferView& IBView)
 {
-	VkBuffer buf = (VkBuffer)IBView.BufferLocation;
+	VkBuffer buf = (VkBuffer)(IBView.BufferLocation);
 	vkCmdBindIndexBuffer(m_CommandBuffer, buf, 0, VK_INDEX_TYPE_UINT32);
 }
 
 void CommandContext::SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView)
 {
-	VkBuffer buf = (VkBuffer)VBView.BufferLocation;
+	VkBuffer buf = (VkBuffer)(VBView.BufferLocation);
 	VkDeviceSize offsets[1] = { 0 };
 	vkCmdBindVertexBuffers(m_CommandBuffer, Slot, 1, &buf, offsets);
 }
@@ -511,17 +476,14 @@ void CommandContext::SetRenderTarget(rhi::IRenderTarget * rt)
 	{
 		RenderTarget* pRT = static_cast<RenderTarget*>(rt);
 		m_CurrentRenderTarget = pRT;
-		VkClearValue clearValues[2];
-		clearValues[0].color = { 0.0f,0.0f, 0.0f, 1.0f };
-		clearValues[1].depthStencil = { 1.0f, 0 };
 		// render pass attachments num should match that of framebuffer attachment
 		VkRenderPassBeginInfo renderPassBeginInfo = {};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassBeginInfo.pNext = NULL;
 		renderPassBeginInfo.renderPass = pRT->GetRenderpass();
 		renderPassBeginInfo.renderArea = pRT->GetRenderArea();
+		renderPassBeginInfo.pClearValues = pRT->m_ClearValues;
 		renderPassBeginInfo.clearValueCount = 2;
-		renderPassBeginInfo.pClearValues = clearValues;
 		renderPassBeginInfo.framebuffer = pRT->GetFramebuffer();
 		BeginRenderPass(&renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -544,7 +506,6 @@ void CommandContext::TransitionResourceBarrier(rhi::IGpuResource * resource, rhi
 			g_ResourceState[srcState],
 			g_ResourceState[dstState]);
 		param.SrcStageMask(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT).DstStageMask(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
-			.SrcAccessMask(VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT).DstAccessMask(VK_ACCESS_MEMORY_READ_BIT)
 			.LayerCount(1).MipLevelCount(1).AspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
 		PipelineBarrierImageMemory(param);
 		pTex->m_UsageState = dstState;

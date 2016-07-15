@@ -26,6 +26,7 @@
 
 #if K3DPLATFORM_OS_ANDROID
 #include <android/log.h>
+#include <sys/prctl.h>
 #endif
 
 #endif

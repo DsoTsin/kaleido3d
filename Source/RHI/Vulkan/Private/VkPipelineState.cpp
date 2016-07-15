@@ -94,12 +94,12 @@ void PipelineStateObject::Finalize()
 {
 	if (VK_NULL_HANDLE != m_Pipeline)
 		return;
-	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+	/*VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
+	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));*/
 	if (GetType() == rhi::EPSO_Graphics) 
 	{
-		K3D_VK_VERIFY(vkCreateGraphicsPipelines(GetRawDevice(), VK_NULL_HANDLE, 1, &m_GfxCreateInfo, nullptr, &m_Pipeline));
+		K3D_VK_VERIFY(vkCmd::CreateGraphicsPipelines(GetRawDevice(), VK_NULL_HANDLE, 1, &m_GfxCreateInfo, nullptr, &m_Pipeline));
 	}
 	else
 	{
@@ -188,35 +188,36 @@ void PipelineStateObject::SetRenderTargetFormat(const rhi::RenderTargetFormat &)
 
 }
 
-void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
+// Init Shaders
+std::vector<VkPipelineShaderStageCreateInfo> 
+GetShaderStageInfo(VkDevice device, rhi::PipelineDesc const & desc)
 {
-	// Init Shaders
+	std::vector<VkPipelineShaderStageCreateInfo> infos;
 	for (uint32 i = 0; i < rhi::EShaderType::ShaderTypeNum; i++)
 	{
 		const rhi::ShaderByteCode& code = desc.Shaders[i];
 		if (code.Count() > 0)
 		{
-			auto sm = CreateShaderModule(GetRawDevice(), code);
-			VkPipelineShaderStageCreateInfo shaderStage = {};
-			shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			shaderStage.stage = g_ShaderType[i];
-			shaderStage.module = sm;
-			shaderStage.pName = "main"; // todo : make param
-			K3D_ASSERT(shaderStage.module != NULL);
-			m_ShaderStageInfos.push_back(shaderStage);
+			infos.push_back({
+				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
+				g_ShaderType[i], CreateShaderModule(device, code), "main"
+			});
 		}
 	}
+	return infos;
+}
 
+void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
+{
+	m_ShaderStageInfos = GetShaderStageInfo(GetRawDevice(), desc);
 	// Init PrimType
-	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {};
-	inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssemblyState.topology = g_PrimitiveTopology[desc.PrimitiveTopology];
-	inputAssemblyState.primitiveRestartEnable = VK_FALSE;
-	inputAssemblyState.pNext = NULL;
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {
+		VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO , nullptr, 0,
+		g_PrimitiveTopology[desc.PrimitiveTopology] , VK_FALSE
+	};
 
 	// Init RasterState
-	VkPipelineRasterizationStateCreateInfo rasterizationState = {};
-	rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO, NULL };
 	rasterizationState.polygonMode = g_FillMode[desc.Rasterizer.FillMode];
 	rasterizationState.cullMode = g_CullMode[desc.Rasterizer.CullMode];
 	rasterizationState.frontFace = desc.Rasterizer.FrontCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE;
@@ -224,11 +225,9 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 	rasterizationState.depthBiasEnable = VK_FALSE;
 	rasterizationState.lineWidth = 1.0f;
-	rasterizationState.pNext = NULL;
 
 	// Init DepthStencilState
-	VkPipelineDepthStencilStateCreateInfo depthStencilState = {};
-	depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO, NULL };
 	depthStencilState.depthTestEnable = desc.DepthStencil.DepthEnable ? VK_TRUE : VK_FALSE;
 	depthStencilState.depthWriteEnable = VK_TRUE;
 	depthStencilState.depthCompareOp = g_ComparisonFunc[desc.DepthStencil.DepthFunc];
@@ -238,17 +237,15 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	depthStencilState.back.compareOp = g_ComparisonFunc[desc.DepthStencil.BackFace.StencilFunc];
 	depthStencilState.stencilTestEnable = desc.DepthStencil.StencilEnable ? VK_TRUE : VK_FALSE;
 	depthStencilState.front = depthStencilState.back;
-	depthStencilState.pNext = NULL;
 
 	// Init BlendState
-	VkPipelineColorBlendStateCreateInfo colorBlendState = {};
-	colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO, NULL };
 	VkPipelineColorBlendAttachmentState blendAttachmentState[1] = {};
 	blendAttachmentState[0].colorWriteMask = 0xf;
 	blendAttachmentState[0].blendEnable = desc.Blend.Enable ? VK_TRUE : VK_FALSE;
 	colorBlendState.attachmentCount = 1;
 	colorBlendState.pAttachments = blendAttachmentState;
-	colorBlendState.pNext = NULL;
+
 	struct VIADLess {
 		bool operator() (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const {
 			return lhs.binding < rhs.binding || lhs.stride < rhs.stride || lhs.inputRate < rhs.inputRate;
@@ -266,35 +263,29 @@ void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 	}
 	m_BindingDescriptions.assign(bindings.begin(), bindings.end());
 
-	VkPipelineVertexInputStateCreateInfo vertexInputState = {};
-	vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO, NULL };
 	vertexInputState.vertexBindingDescriptionCount = m_BindingDescriptions.size();
 	vertexInputState.pVertexBindingDescriptions = m_BindingDescriptions.data();
 	vertexInputState.vertexAttributeDescriptionCount = (uint32)m_AttributeDescriptions.size();
 	vertexInputState.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
-	vertexInputState.pNext = NULL;
 
-	VkPipelineViewportStateCreateInfo vpInfo = {};
-	vpInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	VkPipelineViewportStateCreateInfo vpInfo = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	vpInfo.viewportCount = 1;
 	vpInfo.scissorCount = 1;
 
-	VkPipelineDynamicStateCreateInfo dynamicState = {};
+	VkPipelineDynamicStateCreateInfo dynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 	std::vector<VkDynamicState> dynamicStateEnables;
 	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
 	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
-	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicState.pDynamicStates = dynamicStateEnables.data();
 	dynamicState.dynamicStateCount = (uint32)dynamicStateEnables.size();
 
-	VkPipelineMultisampleStateCreateInfo msInfo = {};
-	msInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	VkPipelineMultisampleStateCreateInfo msInfo = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 	msInfo.pSampleMask = NULL;
 	msInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-	this->m_GfxCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	this->m_GfxCreateInfo.pNext = NULL;
+	this->m_GfxCreateInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	this->m_GfxCreateInfo.stageCount = (uint32)m_ShaderStageInfos.size();
 	this->m_GfxCreateInfo.pStages = m_ShaderStageInfos.data();
 
@@ -325,7 +316,7 @@ void PipelineStateObject::Destroy()
 			vkDestroyShaderModule(GetRawDevice(), iter.module, nullptr);
 		}
 	}
-	vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
+	//vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
 	vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
 	VKLOG(Info, "PipelineStateObject-Destroyed..");
 }

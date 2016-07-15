@@ -356,3 +356,142 @@ int LoadVulkan(VkInstance instance, VkDevice device)
 
 	return 0;
 }
+
+#include <sstream>
+#include <iomanip>
+
+#ifdef K3DPLATFORM_OS_ANDROID
+#include <android/log.h>
+#define OutputDebugStringA(a) __android_log_print(ANDROID_LOG_INFO, "vkdebug", a)
+#endif
+
+std::string DumpSubmitInfo(VkSubmitInfo info)
+{
+	std::stringstream submitInfo;
+	submitInfo << "\tSubmitInfo [\n\tsType=" << info.sType << ", pNext=" << info.pNext << ", \n\twaitSemaphoreCount=" << info.waitSemaphoreCount;
+	if (info.waitSemaphoreCount == 0)
+	{
+		submitInfo << ", pWaitSemaphores=nullptr";
+	}
+	else
+	{
+		for (int i = 0; i < info.waitSemaphoreCount; ++i)
+		{
+			submitInfo << ", pWaitSemaphores[" << i << "]=" << std::hex << std::setfill('0') << (info.pWaitSemaphores ? info.pWaitSemaphores[i] : 0);
+		}
+	}
+	submitInfo << ", \n\tcommandBufferCount=" << info.commandBufferCount;
+	if (info.commandBufferCount == 0)
+	{
+		submitInfo << ", pCommandBuffers=nullptr";
+	}
+	else
+	{
+		for (int i = 0; i < info.commandBufferCount; ++i)
+		{
+			submitInfo << ", pCommandBuffers[" << i << "]=" << std::hex << std::setfill('0') << info.pCommandBuffers[i];
+		}
+	}
+	submitInfo << ", \n\tsignalSemaphoreCount=" << info.signalSemaphoreCount;
+	if (info.signalSemaphoreCount == 0)
+	{
+		submitInfo << ", pSignalSemaphores=nullptr";
+	}
+	else
+	{
+		for (int i = 0; i < info.signalSemaphoreCount; ++i)
+		{
+			submitInfo << ", pSignalSemaphores[" << i << "]=" << std::hex << std::setfill('0') << (info.pSignalSemaphores ? info.pSignalSemaphores[i] : 0);
+		}
+	}
+	submitInfo << "]";
+	return submitInfo.str();
+}
+
+VkResult vkCmd::QueueSubmit(VkQueue Queue, uint32 SubmitCount, const VkSubmitInfo * Submits, VkFence Fence)
+{
+	std::stringstream params;
+	params << "vkCmd::QueueSubmit() Queue: 0x" << std::hex << std::setfill('0') << Queue << ", SubmitCount: " << SubmitCount << "\n" << DumpSubmitInfo(Submits[0]) << std::endl;
+	OutputDebugStringA(params.str().c_str());
+	return vkQueueSubmit(Queue, SubmitCount, Submits, Fence);
+}
+
+std::string DumpDescriptorSetLayoutBinding(VkDescriptorSetLayoutBinding SetLayoutBinding)
+{
+	std::stringstream param;
+	param << "{ DescriptorSetLayoutBinding: binding=" << SetLayoutBinding.binding << ", descriptorType=" << SetLayoutBinding.descriptorType
+		<< ", descriptorCount=" << SetLayoutBinding.descriptorCount << ", stageFlags=" << SetLayoutBinding.stageFlags << " }";
+	return param.str();
+}
+
+VkResult vkCmd::CreateDescriptorSetLayout(VkDevice Device, const VkDescriptorSetLayoutCreateInfo * CreateInfo, const VkAllocationCallbacks * Allocator, VkDescriptorSetLayout * SetLayout)
+{
+	std::stringstream param;
+	param << "vkCmd::CreateDescriptorSetLayout() device=" << std::hex << std::setfill('0') << Device << ", CreateInfo=[\n\tsType=" << CreateInfo->sType
+		<< ", flags=" << CreateInfo->flags << ", bindingCount=" << CreateInfo->bindingCount;
+	if (CreateInfo->bindingCount)
+	{
+		for (int i = 0; i < CreateInfo->bindingCount; i++)
+			param << ", \n\tpBindings[" << i << "]=" << DumpDescriptorSetLayoutBinding(CreateInfo->pBindings[i]);
+	}
+	param << "]\n";
+	OutputDebugStringA(param.str().c_str());
+
+	return vkCreateDescriptorSetLayout(Device, CreateInfo, Allocator, SetLayout);
+}
+
+std::string DumpShaderStageCreateInfo(VkPipelineShaderStageCreateInfo pss)
+{
+	std::stringstream param;
+	param << "{ sType=" << pss.sType << ", stage=" << pss.stage << ", flags=" << pss.flags <<
+		", pName=" << pss.pName << ", module=" << std::hex << std::setfill('0') << pss.module<< " }";
+	return param.str();
+}
+
+std::string DumpGraphicsPipelineCreateInfo(VkGraphicsPipelineCreateInfo gInfo)
+{
+	//VkStructureType                                  sType;
+	//const void*                                      pNext;
+	//VkPipelineCreateFlags                            flags;
+	//uint32_t                                         stageCount;
+	//const VkPipelineShaderStageCreateInfo*           pStages;
+	//const VkPipelineVertexInputStateCreateInfo*      pVertexInputState;
+	//const VkPipelineInputAssemblyStateCreateInfo*    pInputAssemblyState;
+	//const VkPipelineTessellationStateCreateInfo*     pTessellationState;
+	//const VkPipelineViewportStateCreateInfo*         pViewportState;
+	//const VkPipelineRasterizationStateCreateInfo*    pRasterizationState;
+	//const VkPipelineMultisampleStateCreateInfo*      pMultisampleState;
+	//const VkPipelineDepthStencilStateCreateInfo*     pDepthStencilState;
+	//const VkPipelineColorBlendStateCreateInfo*       pColorBlendState;
+	//const VkPipelineDynamicStateCreateInfo*          pDynamicState;
+	//VkPipelineLayout                                 layout;
+	//VkRenderPass                                     renderPass;
+	//uint32_t                                         subpass;
+	//VkPipeline                                       basePipelineHandle;
+	//int32_t                                          basePipelineIndex;
+	std::stringstream param;
+	param << "{ GraphicsPipelineCreateInfo [ sType=" << gInfo.sType << ", pNext=" << gInfo.pNext << ", flags=" << gInfo.flags << ", stageCount=" << gInfo.stageCount;
+	if (gInfo.stageCount)
+	{
+		for (int i = 0; i < gInfo.stageCount; i++)
+		{
+			param << ", \n\t\tpStage[" << i << "]=" << DumpShaderStageCreateInfo(gInfo.pStages[i]);
+		}
+	}
+	param << " }";
+	return param.str();
+}
+
+VkResult vkCmd::CreateGraphicsPipelines(VkDevice Device, VkPipelineCache PipelineCache, uint32 CreateInfoCount, const VkGraphicsPipelineCreateInfo * CreateInfos, const VkAllocationCallbacks * Allocator, VkPipeline * Pipelines)
+{
+	std::stringstream param;
+	param << "vkCmd::CreateGraphicsPipelines() device=" << std::hex << std::setfill('0') << Device << ", cache=" << std::hex << std::setfill('0') << PipelineCache << ", CreateInfoCount=" << CreateInfoCount;
+	if (CreateInfoCount)
+	{
+		for (int i = 0; i < CreateInfoCount; i++)
+			param << ", \n\tCreateInfos[" << i << "]=" << DumpGraphicsPipelineCreateInfo(CreateInfos[i]);
+	}
+	param << "\n";
+	OutputDebugStringA(param.str().c_str());
+	return vkCreateGraphicsPipelines(Device, PipelineCache, CreateInfoCount, CreateInfos, Allocator, Pipelines);
+}

@@ -9,7 +9,7 @@ K3D_VK_BEGIN
 Resource::Ptr Resource::Map(uint64 offset, uint64 size)
 {
 	Resource::Ptr ptr;
-	K3D_VK_VERIFY(vkMapMemory(GetRawDevice(), m_DeviceMem, offset, size, 0, &ptr));
+	K3D_VK_VERIFY(vkMapMemory(GetRawDevice(), m_DeviceMem, m_AllocationOffset+offset, size, 0, &ptr));
 	return ptr;
 }
 
@@ -23,6 +23,29 @@ Buffer::Buffer(Device::Ptr pDevice, rhi::ResourceDesc const &desc)
 : Resource(pDevice)
 {
 	m_Usage = g_ResourceViewFlag[desc.ViewType];
+	
+	if (desc.CreationFlag & rhi::EGRCF_TransferSrc)
+	{
+		m_Usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	}
+	
+	if (desc.CreationFlag & rhi::EGRCF_TransferDst) 
+	{
+		m_Usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	}
+
+	if (desc.Flag & rhi::EGRAF_HostVisible) 
+	{
+		m_MemoryBits |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+	}
+	if (desc.Flag & rhi::EGRAF_DeviceVisible)
+	{
+		m_MemoryBits |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	}
+	if (desc.Flag & rhi::EGRAF_HostCoherent)
+	{
+		m_MemoryBits |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	}
 	Create(desc.Size);
 }
 
@@ -53,19 +76,31 @@ void Buffer::Create(size_t size)
 	createInfo.queueFamilyIndexCount = 0;
 	createInfo.pQueueFamilyIndices = nullptr;
 	K3D_VK_VERIFY(vkCreateBuffer(GetRawDevice(), &createInfo, nullptr, &m_Buffer));
-
-	ResourceManager::Allocation alloc = GetDevice()->GetMemoryManager()->AllocateBuffer(m_Buffer, false, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+	ResourceManager::Allocation alloc = GetDevice()->GetMemoryManager()->AllocateBuffer(m_Buffer, false, m_MemoryBits);
 	K3D_ASSERT(VK_NULL_HANDLE != alloc.Memory);
 
 	m_DeviceMem = alloc.Memory;
 	m_AllocationOffset = alloc.Offset;
 	m_AllocationSize = alloc.Size;
 	m_Size = size;
+
+	VKLOG(Info, "Buffer reqSize:(%d) allocated:(%d) offset:(%d) address:(0x%0x).",
+		  m_Size, m_AllocationSize, m_AllocationOffset, m_DeviceMem);
+
 	m_BufferInfo.buffer = m_Buffer;
 	m_BufferInfo.offset = 0;
 	m_BufferInfo.range = m_Size;
 	
 	K3D_VK_VERIFY(vkBindBufferMemory(GetRawDevice(), m_Buffer, m_DeviceMem, m_AllocationOffset));
+}
+
+StageBuffer::StageBuffer(Device::Ptr pDevice, rhi::ResourceDesc const & desc)
+	: Buffer(pDevice, desc)
+{
+}
+
+StageBuffer::~StageBuffer()
+{
 }
 
 Texture::Texture(Device::Ptr pDevice, rhi::TextureDesc const &desc)
@@ -184,6 +219,7 @@ ResourceManager::Pool<VkObject>::Create(VkDevice device, const VkDeviceSize pool
 	allocInfo.memoryTypeIndex = memoryTypeIndex;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 	VkResult res = vkAllocateMemory(device, &allocInfo, nullptr, &memory);
+	VKLOG(Info,"%s alloca size=%ld", __K3D_FUNC__, poolSize);
 	if (VK_SUCCESS == res) {
 		result = std::unique_ptr< ResourceManager::Pool<VkObject> >(new ResourceManager::Pool<VkObject>(memoryTypeIndex, memory, poolSize));
 	}
@@ -197,7 +233,7 @@ bool ResourceManager::Pool<VkObjectT>::HasAvailable(VkMemoryRequirements memReqs
 #ifdef min
 #undef min
 #endif
-
+	VKLOG(Info,"%s alignedOffset=%ld", __K3D_FUNC__, alignedOffst);
 	VkDeviceSize remaining = m_Size - std::min(alignedOffst, m_Size);
 	return memReqs.size <= remaining;
 }
