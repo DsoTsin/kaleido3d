@@ -7,6 +7,11 @@ buildscript {
     }
 }
 
+File vkDir = file("../../Source/ThirdParty/vulkan")
+String[] vkVers = vkDir.list();
+def vkVer = vkVers[0]
+gradle.ext.set("vulkanDir", "../../../Source/ThirdParty/vulkan/" + vkVer + "/Include")
+
 allprojects {
     repositories {
         jcenter()

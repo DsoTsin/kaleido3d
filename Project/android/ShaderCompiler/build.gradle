@@ -47,7 +47,7 @@ model {
         cppFlags.add("-I${file("../../../Source/RHI")}".toString())
         cppFlags.add("-I${file("../../../Source/ThirdParty/glslang")}".toString())
         cppFlags.add("-I${file('../../../Source/ThirdParty/spir2cross')}".toString())
-        cppFlags.add("-I${file("../../../Source/ThirdParty/vulkan/1.0.17.0/Include")}".toString())
+        cppFlags.add("-I${file(gradle.vulkanDir)}".toString())
         cppFlags.add("-I${file("../../../Include")}".toString())
         cppFlags.add("-D VK_USE_PLATFORM_ANDROID_KHR")
         cppFlags.add("-DK3DPLATFORM_OS_ANDROID=1")

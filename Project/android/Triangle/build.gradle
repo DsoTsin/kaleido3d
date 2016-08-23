@@ -29,7 +29,7 @@ model {
         ldLibs.addAll(["log", "android"])
         cppFlags.add("-I${file("../../../Include")}".toString())
         cppFlags.add("-I${file("../../../Source")}".toString())
-        cppFlags.add("-I${file("../../../Source/ThirdParty/vulkan/1.0.17.0/Include")}".toString())
+        cppFlags.add("-I${file(gradle.vulkanDir)}".toString())
         cppFlags.add("-D VK_USE_PLATFORM_ANDROID_KHR")
         cppFlags.add("-D __ANDROID__=1")
         cppFlags.add("-DK3DPLATFORM_OS_ANDROID=1")

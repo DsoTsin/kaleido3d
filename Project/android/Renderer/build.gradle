@@ -1,5 +1,7 @@
 apply plugin: 'com.android.model.library'
 
+println "vkDir:"+gradle.vulkanDir
+
 model {
     android {
         compileSdkVersion = "android-23"
@@ -21,7 +23,7 @@ model {
         cppFlags.add("-I${file("../../../Source")}".toString())
         cppFlags.add("-I${file("../../../Source/Renderer")}".toString())
         cppFlags.add("-I${file("../../../Include")}".toString())
-        cppFlags.add("-I${file("../../../Source/ThirdParty/vulkan/1.0.17.0/Include")}".toString())
+        cppFlags.add("-I${file(gradle.vulkanDir)}".toString())
         cppFlags.add("-D VK_USE_PLATFORM_ANDROID_KHR")
         cppFlags.add("-D VK_NO_PROTOTYPES")
         cppFlags.add("-DK3DPLATFORM_OS_ANDROID=1")
