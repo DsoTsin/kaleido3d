@@ -1,0 +1,78 @@
+apply plugin: 'com.android.model.application'
+
+model {
+
+    android {
+        compileSdkVersion = "android-23"
+        buildToolsVersion = "23.0.1"
+
+        defaultConfig.with {
+            applicationId = "com.tsinstudio.triangle"
+            minSdkVersion.apiLevel = 22
+            targetSdkVersion.apiLevel = 24
+            versionCode = 1
+            versionName = "0.0.1"
+        }
+
+        compileOptions.with {
+            sourceCompatibility=JavaVersion.VERSION_1_7
+            targetCompatibility=JavaVersion.VERSION_1_7
+        }
+
+    }
+
+    android.ndk {
+        moduleName = "triangle-2"
+        cppFlags.add("-std=c++14")
+        toolchain = "clang"
+        stl = "gnustl_static"
+        ldLibs.addAll(["log", "android"])
+        cppFlags.add("-I${file("src/jni/native_app_glue")}".toString())
+        cppFlags.add("-I${file(gradle.vulkanDir)}".toString())
+        cppFlags.add("-D VK_USE_PLATFORM_ANDROID_KHR")
+        cppFlags.add("-D __ANDROID__=1")
+        cppFlags.add("-DK3DPLATFORM_OS_ANDROID=1")
+        cppFlags.add("-fexceptions")
+    }
+
+    android.abis {
+        create("armeabi-v7a") {
+            cppFlags.addAll(["-mhard-float", "-D_NDK_MATH_NO_SOFTFP=1", "-mfloat-abi=hard"])
+            ldLibs.add("m_hard")
+            ldLibs.add("vulkan")
+            ldFlags.add("-Wl,--no-warn-mismatch")
+        }
+    }
+
+//    android.sources {
+//        main {
+//            jni {
+//                dependencies {
+//                    project ":Core" linkage "shared"
+//                    project ":ShaderCompiler" linkage "shared"
+//                    project ":RHI_Vulkan" linkage "shared"
+//                    project ":Renderer" linkage "shared"
+//                }
+//                source {
+//                    srcDir '../../../Source/UnitTest/3.Triangle/'
+//                }
+//            }
+//        }
+//    }
+
+    android.buildTypes {
+        release {
+            ndk.with {
+                debuggable = true
+            }
+            minifyEnabled = false
+            proguardFiles.add(file('proguard-rules.pro'))
+        }
+    }
+
+    android.productFlavors {
+        create("all") {
+            ndk.abiFilters.add("armeabi-v7a")
+        }
+    }
+}
