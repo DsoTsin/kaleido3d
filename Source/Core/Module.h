@@ -29,20 +29,25 @@
 extern "C" PLUGIN_API_DECLARE ::k3d::IModule *Get##ModuleName##Module() { return new ModuleClass; }
 
 #define K3D_STATIC_MODULE_IMPLEMENT(ModuleName, MoudleClass) \
-class MoudleName##StaticInitializer {\
-public:\
-	MoudleName##StaticInitializer() { k3d::ModuleManager::Get().AddModule(#ModuleName, new MoudleClass); }\
-	~MoudleName##StaticInitializer() { k3d::ModuleManager::Get().RemoveModule(#ModuleName);	}\
-}; \
-static MoudleName##StaticInitializer mInitializer;
+extern "C" ::k3d::IModule *Get##ModuleName##Module() { \
+return new MoudleClass; \
+}
+#define K3D_STATIC_MODULE_DECLARE(ModuleName) \
+extern "C" ::k3d::IModule *Get##ModuleName##Module()
 
 /**
  * build dlls
  */
 #ifdef BUILD_SHARED_CORE
-#define MODULE_IMPLEMENT K3D_DYNAMIC_MODULE_IMPLEMENT
+#define MODULE_IMPLEMENT(ModuleName, MoudleClass) K3D_DYNAMIC_MODULE_IMPLEMENT(ModuleName, MoudleClass)
 #else
-#define MODULE_IMPLEMENT K3D_STATIC_MODULE_IMPLEMENT
+#define MODULE_IMPLEMENT(ModuleName, MoudleClass) K3D_STATIC_MODULE_IMPLEMENT(ModuleName, MoudleClass)
+#endif
+
+#if BUILD_STATIC_PLUGIN
+#define ACQUIRE_PLUGIN(PLUGIN) Get##PLUGIN##Module();
+#else
+#define ACQUIRE_PLUGIN(PLUGIN) k3d::GlobalModuleManager.FindModule(#PLUGIN);
 #endif
 
 namespace k3d

@@ -21,4 +21,8 @@ namespace k3d
 	};
 }
 
+#if	BUILD_STATIC_PLUGIN
+K3D_STATIC_MODULE_DECLARE(RHI_Vulkan);
+#endif
+
 #endif

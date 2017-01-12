@@ -20,15 +20,14 @@ namespace k3d
         void Start()override
         {
             KLOG(Info, MetalRHI, "Starting...");
+#if K3DPLATFORM_OS_MAC
             NSArray<id<MTLDevice>> * deviceList = MTLCopyAllDevices();
             m_Adapters.resize(deviceList.count);
-#if K3DPLATFORM_OS_MAC
             MTLFeatureSet fSets[] = {
                 MTLFeatureSet_OSX_ReadWriteTextureTier2,
                 MTLFeatureSet_OSX_GPUFamily1_v2,
                 MTLFeatureSet_OSX_GPUFamily1_v1
             };
-#endif
             for (uint32 i = 0; i<deviceList.count; i++)
             {
                 id<MTLDevice> device = [deviceList objectAtIndex:i];
@@ -38,6 +37,24 @@ namespace k3d
                       [device supportsFeatureSet:fSets[0]],
                       [device supportsFeatureSet:fSets[1]]);
             }
+#else
+            MTLFeatureSet fSets[] = {
+                MTLFeatureSet_iOS_GPUFamily2_v1,
+                MTLFeatureSet_iOS_GPUFamily1_v2,
+                MTLFeatureSet_iOS_GPUFamily2_v2,
+                MTLFeatureSet_iOS_GPUFamily3_v1,
+                MTLFeatureSet_iOS_GPUFamily1_v3,
+                MTLFeatureSet_iOS_GPUFamily2_v3,
+                MTLFeatureSet_iOS_GPUFamily3_v2
+            };
+            id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+            m_Adapters.resize(1);
+            m_Adapters[0] = new metal::DeviceAdapter(device);
+            KLOG(Info, MetalRHI, "DeviceName: %s ReadWriteTextureTier2:%d GPUv2:%d",
+                 [[device name] UTF8String],
+                 [device supportsFeatureSet:fSets[0]],
+                 [device supportsFeatureSet:fSets[1]]);
+#endif
         }
         
         void Shutdown()override

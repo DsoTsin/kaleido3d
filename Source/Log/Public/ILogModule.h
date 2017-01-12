@@ -22,4 +22,7 @@ namespace k3d
 
 }
 
+#if	BUILD_STATIC_PLUGIN
+K3D_STATIC_MODULE_DECLARE(KawaLog);
+#endif
 #endif // !__ILogModule_h__

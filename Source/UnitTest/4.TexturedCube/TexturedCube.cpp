@@ -220,7 +220,7 @@ bool  TCubeUnitTest::OnInit()
 
 void TCubeUnitTest::LoadGlslangCompiler()
 {
-	rhi::IShModule* shMod = (rhi::IShModule*)GlobalModuleManager.FindModule("ShaderCompiler");
+	rhi::IShModule* shMod = (rhi::IShModule*)ACQUIRE_PLUGIN(ShaderCompiler);
 	if (shMod)
 	{
 		m_Compiler = shMod->CreateShaderCompiler(rhi::ERHI_Vulkan);

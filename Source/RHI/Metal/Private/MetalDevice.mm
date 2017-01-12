@@ -9,7 +9,12 @@
 #include <Core/LogUtil.h>
 #include "MetalRHI.h"
 #include "MetalEnums.h"
-#import <Cocoa/Cocoa.h>
+#if K3DPLATFORM_OS_MAC
+#include <Cocoa/Cocoa.h>
+#else
+#include <UIKit/UIWindow.h>
+#endif
+
 #import <QuartzCore/CAMetalLayer.h>
 
 #define __debugbreak __builtin_trap
@@ -95,12 +100,18 @@ Device::NewDescriptorPool()
 rhi::RenderViewportRef
 Device::NewRenderViewport(void * winHandle, rhi::GfxSetting & setting)
 {
+#if K3DPLATFORM_OS_MAC
     NSWindow* nWindow = (__bridge NSWindow*)winHandle;
     NSView* view = nWindow.contentView;
     NSRect rect = [view frame];
+#else
+    UIWindow* nWindow = (__bridge UIWindow*)winHandle;
+    UIView* view = nWindow.subviews[0];
+    CGRect rect = [view frame];
+#endif
     setting.Width = rect.size.width;
     setting.Height = rect.size.height;
-    CAMetalLayer* mtlayer = (CAMetalLayer*)nWindow.contentView.layer;
+    CAMetalLayer* mtlayer = (CAMetalLayer*)view.layer;
     mtlayer.device = GetDevice();
     return k3d::MakeShared<RenderViewport>(mtlayer);
 }

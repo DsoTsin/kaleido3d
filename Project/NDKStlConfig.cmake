@@ -7,6 +7,7 @@
 # or
 #
 #   find_package(ndk-stl REQUIRED PATHS ".")
+if(ANDROID)
 
 if(NOT ${ANDROID_STL} MATCHES "_shared")
   return()
@@ -37,3 +38,5 @@ elseif("${ANDROID_STL}" STREQUAL "c++_shared")
 else()
    message(FATAL_ERROR "STL configuration ANDROID_STL=${ANDROID_STL} is not supported")
 endif()
+
+endif(ANDROID)

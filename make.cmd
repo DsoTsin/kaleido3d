@@ -31,29 +31,18 @@ exit
 
 :BUILD_BY_CMAKE
 echo Now build by CMake
-if not exist BuildCMakeProj mkdir BuildCMakeProj
-pushd %~dp0
-cd BuildCMakeProj
 
 if defined VS140COMNTOOLS (goto MS2015Build)
 if defined VS120COMNTOOLS (goto MS2013Build) else (goto NotSupport)
 
 :MS2015Build 
 echo Build By Visual Studio 2015
-cmake -G"Visual Studio 14 2015 Win64" ..\Source -DCMAKE_BUILD_TYPE=Debug
+cmake -G"Visual Studio 14 2015 Win64" -HSource -BBuildWin64 -DCMAKE_BUILD_TYPE=Debug
 call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
-msbuild Kaleido3D.sln
-goto End
-
-:MS2013Build
-echo Build By Visual Studio 2013
-cmake -G"Visual Studio 12 2013 Win64" ..\Source
-call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
-msbuild Kaleido3D.sln
+cmake --build BuildWin64 --config Debug
 goto End
 
 :NotSupport
 echo Visual Studio Version not supported!
 
 :End
-popd

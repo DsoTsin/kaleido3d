@@ -115,6 +115,7 @@ public:
     void Execute(bool Wait) override;
     void Reset() override;
     
+    void BeginRendering() override;
     void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
     void SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView) override;
     void SetPipelineState(uint32 HashCode, rhi::PipelineStateObjectRef) override;
@@ -122,12 +123,16 @@ public:
     void SetPrimitiveType(rhi::EPrimitiveType) override;
     void DrawInstanced(rhi::DrawInstancedParam) override;
     void DrawIndexedInstanced(rhi::DrawIndexedInstancedParam) override;
+    void EndRendering() override;
+    
     void Dispatch(uint32 X = 1, uint32 Y =1, uint32 Z = 1) override;
     
 protected:
     
 private:
+    MTLRenderPassDescriptor*        m_RenderpassDesc;
     rhi::ECommandType               m_CommandType;
+    MTLPrimitiveType                m_CurPrimType;
     id<MTLComputeCommandEncoder>    m_ComputeEncoder;
     id<MTLRenderCommandEncoder>     m_RenderEncoder;
     

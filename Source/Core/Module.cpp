@@ -62,6 +62,10 @@ namespace k3d
 #else
         ".so";
 #endif
+        if(libDir.empty())
+        {
+            return false;
+        }
 		void* handle = ::dlopen(libDir.c_str(), RTLD_LAZY);
 		if(handle) {
 			PFN_GetModule fn = (PFN_GetModule)dlsym(handle, entryName.c_str());

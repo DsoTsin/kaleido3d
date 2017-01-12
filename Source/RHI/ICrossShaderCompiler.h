@@ -305,3 +305,7 @@ result.Member.Append(ele);\
 		//virtual ::k3d::DynArray<String> ListAvailableShaderLanguage() const = 0;
     };
 }
+
+#if	BUILD_STATIC_PLUGIN
+K3D_STATIC_MODULE_DECLARE(ShaderCompiler);
+#endif

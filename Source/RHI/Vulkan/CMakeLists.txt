@@ -51,7 +51,10 @@ source_group(
 	${RHI_IMPL_SRCS}
 )
 
-add_plugin(RHI_Vulkan "Runtime/RHI" ${VKRHI_SRC_LIST} ${RHI_HEADERS} ${RHI_IMPL_SRCS} LINKLIBS ShaderCompiler)
+add_plugin(RHI_Vulkan 
+	FOLDER "Runtime/RHI" 
+	SRCS ${VKRHI_SRC_LIST} ${RHI_HEADERS} ${RHI_IMPL_SRCS} 
+	LIBS ShaderCompiler)
 
 if(NOT ANDROID)
 	install(TARGETS RHI_Vulkan ARCHIVE DESTINATION lib)

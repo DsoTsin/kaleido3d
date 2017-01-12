@@ -12,12 +12,15 @@ bool UnitTestRHIDevice::OnInit()
 {
 	App::OnInit();
 #if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
-	IVkRHI* pVkRHI = (IVkRHI*)GlobalModuleManager.FindModule("RHI_Vulkan");
-	pVkRHI->Initialize("UnitTestRHIDevice", false);
-	pVkRHI->Start();
-	m_TestDevice = pVkRHI->GetPrimaryDevice();
+	IVkRHI* pVkRHI = (IVkRHI*)ACQUIRE_PLUGIN(RHI_Vulkan);
+	if (pVkRHI)
+	{
+		pVkRHI->Initialize("UnitTestRHIDevice", false);
+		pVkRHI->Start();
+		m_TestDevice = pVkRHI->GetPrimaryDevice();
+	}
 #else
-    IMetalRHI* pMtlRHI = (IMetalRHI*)GlobalModuleManager.FindModule("RHI_Metal");
+    IMetalRHI* pMtlRHI = (IMetalRHI*)ACQUIRE_PLUGIN(RHI_Metal);
     if(pMtlRHI)
     {
         pMtlRHI->Start();

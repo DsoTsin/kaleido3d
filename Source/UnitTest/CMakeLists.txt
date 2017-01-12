@@ -1,5 +1,6 @@
+IF(BUILD_SHARED)
 add_definitions(-DBUILD_SHARED_LIB -DBUILD_WITH_PLUGIN)
-
+ENDIF()
 ################################## Unit Test For RHI #####################################
 
 add_unittest(

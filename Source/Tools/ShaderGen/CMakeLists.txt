@@ -1,7 +1,6 @@
-add_definitions(-DUSE_GLSLANG=1)
-
+add_definitions(-DUSE_GLSLANG=1 -DAMD_EXTENSIONS)
 include_directories(${DXSDK_INCLUDE_DIR} .)
-ADD_DEFINITIONS(-DAMD_EXTENSIONS)
+
 set(COMPILER_SRCS
     Private/ShaderCompiler.cc Private/DXCompiler.cc Private/GLSLCompiler.cc
     Private/DXCompiler.h Private/GLSLCompiler.h
@@ -14,10 +13,14 @@ source_group("Compiler\\Private" FILES ${COMPILER_SRCS})
 set(PUB_SRCS Public/ShaderCompiler.h)
 source_group("Compiler\\Public" FILES ${PUB_SRCS})
 
-add_plugin(ShaderCompiler "Tools" ${COMPILER_SRCS} ${PUB_SRCS})
-target_link_libraries(ShaderCompiler ${GLSLANG_LIBRARIES} ${SPIRV2CROSS_LIBRARY})
+add_plugin(ShaderCompiler 
+	FOLDER "Tools"
+	SRCS ${COMPILER_SRCS} ${PUB_SRCS}
+    LIBS ${GLSLANG_LIBRARIES} ${SPIRV2CROSS_LIBRARY})
 
 if(MACOS)
-    add_custom_command(TARGET ShaderCompiler POST_BUILD COMMAND
-        ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libShaderCompiler.dylib" $<TARGET_FILE:ShaderCompiler>)
+    if(BUILD_SHARED)
+        add_custom_command(TARGET ShaderCompiler POST_BUILD COMMAND
+            ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libShaderCompiler.dylib" $<TARGET_FILE:ShaderCompiler>)
+    endif()
 endif()

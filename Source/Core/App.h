@@ -114,6 +114,26 @@ namespace k3d
         className app(#className); \
         return ::k3d::RunApplication(app, #className); \
     }
+#elif K3DPLATFORM_OS_IOS
+#import <UIKit/UIKit.h>
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+{
+    k3d::App * m_App;
+}
+@end
+
+k3d::App * __entry_ios_main__();
+
+#define K3D_APP_MAIN(className) \
+int main(int argc, char *argv[]) \
+{\
+@autoreleasepool {\
+    return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));\
+}}\
+k3d::App * __entry_ios_main__()\
+{\
+return new className(#className);\
+}
 
 #elif K3DPLATFORM_OS_WIN
 #define K3D_APP_MAIN(className) \

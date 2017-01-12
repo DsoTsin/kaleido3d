@@ -6,11 +6,15 @@
 #include "Allocator.hpp"
 #include "Archive.hpp"
 
-#ifndef K3DPLATFORM_OS_MAC
+#if (K3DPLATFORM_OS_WIN) || (K3DPLATFORM_OS_ANDROID)
 #include <malloc.h>
 #else
 #include <stdlib.h>
 #endif
+
+
+
+
 #include <string.h>
 
 #ifdef DYNARRAY_TEST_CASE
@@ -103,7 +107,8 @@ namespace k3d
 			m_ElementCount = rhs.m_ElementCount;
 			m_Capacity = rhs.m_Capacity;
 			m_pElement = (ElementType*)m_Allocator.allocate(m_Capacity*sizeof(ElementType), 0);
-			memcpy(m_pElement, rhs.m_pElement, rhs.m_ElementCount * sizeof(ElementType));
+			__Initializer<ElementType>::DoInit(m_pElement, m_pElement + m_Capacity);
+			__Copier<ElementType>::DoCopy(m_pElement, rhs.m_pElement, rhs.m_ElementCount);
 		}
 
 		template <typename OtherElementType>

@@ -11,7 +11,7 @@ namespace k3d
 {
 	bool Mouse::IsButtonPressed(Button button)
 	{
-#ifndef K3DPLATFORM_OS_MAC
+#if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
 		return InputDeviceImpl::isMouseButtonPressed(button);
 #else
         return true;
@@ -20,7 +20,7 @@ namespace k3d
 
 	Mouse::Vector2i Mouse::GetPosition()
     {
-#ifndef K3DPLATFORM_OS_MAC
+#if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
 		return InputDeviceImpl::getMousePosition();
 #else
         return Mouse::Vector2i();
@@ -29,7 +29,7 @@ namespace k3d
 
 	Mouse::Vector2i Mouse::GetPosition(const IWindow& relativeTo)
     {
-#ifndef K3DPLATFORM_OS_MAC
+#if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
         return InputDeviceImpl::getMousePosition(relativeTo);
 #else
         return Mouse::Vector2i();
@@ -38,21 +38,21 @@ namespace k3d
 
 	void Mouse::SetPosition(const Mouse::Vector2i& position)
     {
-#ifndef K3DPLATFORM_OS_MAC
+#if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
         return InputDeviceImpl::setMousePosition(position);
 #endif
 	}
 	
 	void Mouse::SetPosition(const Mouse::Vector2i& position, const IWindow& relativeTo)
     {
-#ifndef K3DPLATFORM_OS_MAC
+#if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
 		return InputDeviceImpl::setMousePosition(position, relativeTo);
 #endif
 	}
 
 	bool Keyboard::IsKeyPressed(Key key)
     {
-#ifndef K3DPLATFORM_OS_MAC
+#if K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_ANDROID
 		return InputDeviceImpl::isKeyPressed(key);
 #else
         return true;

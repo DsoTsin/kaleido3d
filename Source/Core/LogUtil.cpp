@@ -10,7 +10,7 @@ namespace k3d
 {
 	void Log(ELogLevel const & Lv, const char * tag, const char * fmt, ...)
 	{
-		static thread_local char dbgStr[2048] = { 0 };
+		static /*thread_local*/ char dbgStr[2048] = { 0 };
 		va_list va;
 		va_start(va, fmt);
 #if K3DPLATFORM_OS_ANDROID

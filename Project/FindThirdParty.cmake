@@ -1,13 +1,14 @@
 message("ThirdParty includes vulkan, rapidjson, glslang, spirv2cross, freetype2. ")
-message("build config = ${CMAKE_SYSTEM_NAME}_${CMAKE_BUILD_TYPE}")
-
 if(WIN32)
 	set(ThirdParty_PREBUILT_DIR ${K3D_THIRD_PARTY}/Win64_${CMAKE_BUILD_TYPE})
 elseif(ANDROID)
 	set(ThirdParty_PREBUILT_DIR ${K3D_THIRD_PARTY}/Android_ARM_${CMAKE_BUILD_TYPE})
 elseif(MACOS)
 	set(ThirdParty_PREBUILT_DIR ${K3D_THIRD_PARTY}/MacOS_${CMAKE_BUILD_TYPE})
+elseif(IOS)
+	set(ThirdParty_PREBUILT_DIR ${K3D_THIRD_PARTY}/iOS_${CMAKE_BUILD_TYPE})
 endif()
+message(STATUS "** 3rd party ** ${ThirdParty_PREBUILT_DIR}")
 
 unset(THIRDPARTY_FOUND CACHE)
 
@@ -25,11 +26,13 @@ if(WIN32)
     unset(DXSDK_INCLUDE_DIR CACHE)
 endif()
 
+if(WIN32 OR ANDROID)
 find_path(VULKANSDK_INCLUDE_DIR
     vulkan/vulkan.h
     PATH_SUFFIXES include
     PATHS ${ThirdParty_PREBUILT_DIR}
 )
+endif()
 
 find_path(RAPIDJSON_INCLUDE_DIR
     rapidjson/rapidjson.h
@@ -84,6 +87,7 @@ link_directories(${ThirdParty_PREBUILT_DIR}/lib)
 
 include(FindPackageHandleStandardArgs)
 
+if(WIN32 OR ANDROID)
 find_package_handle_standard_args(ThirdParty DEFAULT_MSG
     VULKANSDK_INCLUDE_DIR
     RAPIDJSON_INCLUDE_DIR
@@ -91,7 +95,6 @@ find_package_handle_standard_args(ThirdParty DEFAULT_MSG
     SPIRV2CROSS_INCLUDE_DIR
     FREETYPE2_INCLUDE_DIR
 )
-
 mark_as_advanced(
     VULKANSDK_INCLUDE_DIR
     RAPIDJSON_INCLUDE_DIR
@@ -99,3 +102,17 @@ mark_as_advanced(
     SPIRV2CROSS_INCLUDE_DIR
     FREETYPE2_INCLUDE_DIR
 )
+elseif(IOS OR MACOS)
+find_package_handle_standard_args(ThirdParty DEFAULT_MSG
+    RAPIDJSON_INCLUDE_DIR
+    GLSLANG_INCLUDE_DIR
+    SPIRV2CROSS_INCLUDE_DIR
+    FREETYPE2_INCLUDE_DIR
+)
+mark_as_advanced(
+    RAPIDJSON_INCLUDE_DIR
+    GLSLANG_INCLUDE_DIR
+    SPIRV2CROSS_INCLUDE_DIR
+    FREETYPE2_INCLUDE_DIR
+)
+endif()

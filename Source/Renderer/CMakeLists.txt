@@ -34,6 +34,8 @@ set_target_properties(Render PROPERTIES FOLDER "Runtime")
 if(WIN32)
 	install(TARGETS Render ARCHIVE DESTINATION lib)
 elseif(MACOS)
-    add_custom_command(TARGET Render POST_BUILD COMMAND
-        ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libRender.dylib" $<TARGET_FILE:Render>)
+	if(BUILD_SHARED)
+		add_custom_command(TARGET Render POST_BUILD COMMAND
+			${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libRender.dylib" $<TARGET_FILE:Render>)
+	endif()
 endif()
