@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">3.Triangle</string>
+    <string name="tip">Hello, Vulkan Surface View!</string>
+</resources>

@@ -1,0 +1,17 @@
+shader SplashVS( int vec3 pos:0, out vec2 texcoord )
+{
+	texcoord 	= pos.xy;
+	gl_Position = vec4(pos, 1.0);
+}
+
+layout(binding = 0) uniform sampler2D splashTex;
+shader SplashPS( in vec2 texcoord, out vec4 FragColor:0 )
+{
+	FragColor = texture(splashTex, texcoord);
+}
+
+program Splash
+{
+	vs(430) = SplashVS();
+	fs(430) = SplashPS();
+};

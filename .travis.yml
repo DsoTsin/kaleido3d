@@ -1,0 +1,10 @@
+language: objective-c
+
+osx_image: xcode8.1
+
+install:
+  - brew install cmake
+  - git clone https://github.com/Tomicyo/kaleido3d_dep_prebuilt.git -b macos_debug Source/ThirdParty_Prebuilt/MacOS_Debug
+
+script:
+  - chmod 777 make_macos.sh && ./make_macos.sh
