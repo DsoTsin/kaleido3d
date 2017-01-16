@@ -5,7 +5,7 @@
 #include <Kaleido3D.h>
 #include <Math/kMath.hpp>
 #include <RHI/Vulkan/Private/DynVulkanLoader.h>
-#include <RHI/IRHI.h>
+#include <Interface/IRHI.h>
 #include <string>
 #include <vector>
 #include <array>

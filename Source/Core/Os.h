@@ -120,6 +120,7 @@ namespace Os
 	typedef void(*PFN_FileProcessRoutine)(const ::k3d::kchar * path, bool isDir);
 	extern K3D_API bool ListFiles(const ::k3d::kchar * srcPath, PFN_FileProcessRoutine);
 	extern K3D_API uint32 GetCpuCoreNum();
+	extern K3D_API float* GetCpuUsage();
 
 	enum class ThreadPriority 
 	{

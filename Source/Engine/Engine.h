@@ -1,14 +1,11 @@
 #pragma once
 #include <KTL/Singleton.hpp>
-#include <Interface/IRenderer.h>
 
 namespace k3d {
 	class Engine {
 	public:
 		
 		~Engine();
-
-		void SetRenderer(IRenderer * renderer);
 
 		void DoOnInitEngine();
 
@@ -19,7 +16,6 @@ namespace k3d {
 		Engine();
 
 	private:
-		IRenderer *pRenderer;
-
+	
 	};
 }

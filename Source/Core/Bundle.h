@@ -1,5 +1,7 @@
 #pragma once
 
+#include <KTL/Archive.hpp>
+
 namespace k3d
 {
 	enum class EAssetVersion : uint64

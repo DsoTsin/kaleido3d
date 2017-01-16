@@ -34,28 +34,6 @@ namespace k3d {
 
 		return ESemantic::ENumSemanics;
 	}
-
-	static void sInitializeGlSlang()
-	{
-#if USE_GLSLANG
-		static bool sGlSlangIntialized = false;
-		if (!sGlSlangIntialized) {
-			glslang::InitializeProcess();
-			sGlSlangIntialized = true;
-		}
-#endif
-	}
-
-	static void sFinializeGlSlang()
-	{
-#if USE_GLSLANG
-		static bool sGlSlangFinalized = false;
-		if (!sGlSlangFinalized) {
-			glslang::FinalizeProcess();
-			//sGlSlangFinalized = true;
-		}
-#endif
-	}
 	   
 	GLSLangCompiler::GLSLangCompiler()
     {

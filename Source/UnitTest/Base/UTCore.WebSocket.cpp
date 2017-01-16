@@ -1,6 +1,6 @@
 #include "Common.h"
 #include <sstream>
-#include <Core/String.h>
+#include <KTL/String.hpp>
 
 using namespace net;
 
@@ -14,7 +14,7 @@ public:
 	void BindAndListen()
 	{
 		Create();
-		Os::IPv4Address addr(":7000");
+		Os::IPv4Address addr("192.168.0.112:7000");
 		this->SetBlocking(true);
 		Bind(addr);
 		Listen(10);

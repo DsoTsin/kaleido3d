@@ -1,6 +1,6 @@
 #include "Common.h"
 #include <Core/CameraData.h>
-#include <Core/String.h>
+#include <KTL/String.hpp>
 #include <iostream>
 
 using namespace std;

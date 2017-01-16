@@ -3,6 +3,7 @@
 #include "Bundle.h"
 #include <Math/kMath.hpp>
 #include <Math/kGeometry.hpp>
+#include <KTL/Archive.hpp>
 
 namespace k3d
 {

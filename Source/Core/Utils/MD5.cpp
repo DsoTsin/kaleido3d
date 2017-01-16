@@ -1,8 +1,10 @@
 #include "Kaleido3D.h"
 #include "MD5.h"
 
-
+#ifndef DISABLE_STL
 using namespace std;
+#endif // !DISABLE_STL
+
 
 /* Constants for MD5Transform routine. */
 #define S11 7
@@ -79,6 +81,7 @@ MD5::MD5(const void* input, size_t length) {
 	update(input, length);
 }
 
+#ifndef DISABLE_STL
 /* Construct a MD5 object with a string. */
 MD5::MD5(const string& str) {
 	reset();
@@ -90,6 +93,7 @@ MD5::MD5(ifstream& in) {
 	reset();
 	update(in);
 }
+#endif
 
 /* Return the message-digest */
 const byte* MD5::digest() {
@@ -119,6 +123,7 @@ void MD5::update(const void* input, size_t length) {
 	update((const byte*)input, length);
 }
 
+#ifndef DISABLE_STL
 /* Updating the context with a string. */
 void MD5::update(const string& str) {
 	update((const byte*)str.c_str(), str.length());
@@ -142,6 +147,7 @@ void MD5::update(ifstream& in) {
 	}
 	in.close();
 }
+#endif
 
 /* MD5 block update operation. Continues an MD5 message-digest
 operation, processing another message block, and updating the
@@ -326,9 +332,9 @@ void MD5::decode(const byte* input, uint32* output, size_t length) {
 	}
 }
 
+#ifndef DISABLE_STL
 /* Convert byte array to hex string. */
 string MD5::bytesToHexString(const byte* input, size_t length) {
-
 	string str;
 	str.reserve(length << 1);
 	for (size_t i = 0; i < length; ++i) {
@@ -344,4 +350,24 @@ string MD5::bytesToHexString(const byte* input, size_t length) {
 /* Convert digest to string value */
 string MD5::toString() {
 	return bytesToHexString(digest(), 16);
+}
+#endif
+
+k3d::String MD5::Str()
+{
+	k3d::String str;
+	str.Resize(32);
+	for (size_t i = 0; i < 16; ++i) {
+		int t = digest()[i];
+		int a = t / 16;
+		int b = t % 16;
+		str += HEX[a];
+		str += HEX[b];
+	}
+	return str;
+}
+
+void MD5::Update(const k3d::String & str)
+{
+	update((const byte*)str.CStr(), str.Length());
 }

@@ -7,13 +7,11 @@
 
 @interface MetalView : UIView
 @property (nonatomic) CAMetalLayer *metalLayer;
+- (void) onRender;
 @end
 
 namespace k3d
 {
-    constexpr uint32 DEFAULT_WINDOW_WIDTH = 1280;
-    constexpr uint32 DEFAULT_WINDOW_HEIGHT = 720;
-    
     namespace WindowImpl
     {
         class iOSWindow : public IWindow
@@ -69,10 +67,7 @@ namespace k3d
             UIViewController* view_controller = [[UIViewController alloc] initWithNibName:nil bundle:nil];
             // create window
             UIWindow* window = [[UIWindow alloc] initWithFrame:bounds];
-            MetalView * mtlView = [[MetalView alloc] initWithFrame:bounds];
-            //NSString* appName = [[NSProcessInfo processInfo] processName];
-            //[window setTitle:appName];
-            [window setRootViewController:view_controller];
+            MetalView * mtlView = [[MetalView alloc] initWithFrame:bounds];            [window setRootViewController:view_controller];
             [window setBackgroundColor:[UIColor blackColor]];
             [window addSubview:mtlView];
             [window makeKeyAndVisible];
@@ -124,15 +119,24 @@ namespace k3d
 }
 
 @implementation MetalView
-
+{
+    CADisplayLink *dispLink;
+}
 @synthesize metalLayer;
 
 - (BOOL) isOpaque {
     return YES;
 }
 
+- (void) onRender
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"RHIRender" object:nil];
+}
+
 -(instancetype) initWithFrame:(CGRect)frameRect {
     self = [super initWithFrame: frameRect];
+    dispLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onRender)];
+    [dispLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     if (self)
     {
         metalLayer = (CAMetalLayer*)self.layer;
@@ -152,6 +156,10 @@ namespace k3d
 
 - (BOOL) wantsUpdateLayer {
     return YES;
+}
+
+- (void)dealloc {
+    [dispLink invalidate];
 }
 
 @end

@@ -1,6 +1,6 @@
 #pragma once
 #include "Engine/SceneManager.h"
-#include "RHI/IRHI.h"
+#include <Interface/IRHI.h>
 #include <Math/kMath.hpp>
 #include <memory>
 #include <Core/Window.h>

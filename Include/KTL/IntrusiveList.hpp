@@ -8,7 +8,8 @@
 #include <memory>
 #include <list>
 
-namespace kTL {
+K3D_COMMON_NS
+{
 
   class _My_Intrusive_List_Base;
   class _My_Intrusive_List_Node_Base;

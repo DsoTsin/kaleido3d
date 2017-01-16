@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "IRHIDefs.h"
-#include <Core/Module.h>
+#include "IModule.h"
 
 namespace rhi
 {

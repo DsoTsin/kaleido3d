@@ -3,7 +3,6 @@
 #include <Core/AssetManager.h>
 #include <Core/LogUtil.h>
 #include <Core/Message.h>
-#include <RHI/IRHI.h>
 #include <Renderer/Render.h>
 #include <Math/kMath.hpp>
 #include "TextureObject.h"

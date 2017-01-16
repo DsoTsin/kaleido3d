@@ -1,6 +1,9 @@
 #pragma once
-#include <RHI/ICrossShaderCompiler.h>
+#include <Interface/ICrossShaderCompiler.h>
 #include <glslang/GlslangToSpv.h>
+
+void sInitializeGlSlang();
+void sFinializeGlSlang();
 
 void initResources(TBuiltInResource &resources);
 EShLanguage findLanguage(const rhi::EShaderType shader_type);

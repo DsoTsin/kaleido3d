@@ -1,7 +1,4 @@
-
-#if(BUILD_SHARED)
-	add_definitions(-DBUILD_SHARED_LIB)
-#endif()
+#include_directories(${RAPIDJSON_INCLUDE_DIR})
 
 set(ENGINE_SRCS
 	Engine.h
@@ -84,20 +81,17 @@ source_group(
 	${PARAM_SRCS}
 )
 
-add_library(
-	Engine  ${LIB_TYPE} 
+k3d_add_lib(Engine 
+SRCS 
 	${CAMERA_SRCS}
 	${SCENE_SRCS}
 	${RENDERER_SRCS}
 	${ENGINE_SRCS}
 	${MAT_SRCS}
-	${PARAM_SRCS}
-)
+	${PARAM_SRCS} 
+LIBS 
+	Core 
+FOLDER 
+	"Runtime")
 
-target_link_libraries(
-	Engine
-	Core
-)
-
-set_target_properties(Engine PROPERTIES FOLDER "Runtime")
 add_precompiled_header(Engine "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Engine/Engine.cpp")

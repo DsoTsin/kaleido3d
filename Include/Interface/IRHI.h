@@ -1,8 +1,6 @@
 #pragma once
 
-#include <KTL/DynArray.hpp>
 #include "ICrossShaderCompiler.h"
-#include "Tools/ShaderGen/Public/ShaderCompiler.h"
 
 namespace rhi
 {

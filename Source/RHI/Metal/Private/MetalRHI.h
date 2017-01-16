@@ -10,7 +10,7 @@
 #define __CommandContext_h__
 
 #include "../Common.h"
-#include <RHI/IRHI.h>
+#include <Interface/IRHI.h>
 
 NS_K3D_METAL_BEGIN
 
@@ -54,6 +54,8 @@ public:
     void Destroy();
     
 private:
+    Device(id<MTLDevice> device);
+    friend class DeviceAdapter;
     
     id <MTLDevice>          m_Device;
     id <MTLCommandQueue>    m_CommandQueue;
@@ -65,7 +67,8 @@ inline rhi::DeviceRef DeviceAdapter::GetDevice()
 {
     if(!m_pRHIDevice)
     {
-        m_pRHIDevice = k3d::MakeShared<Device>();
+        auto pDevice = new Device(m_Device);
+        m_pRHIDevice = rhi::DeviceRef(pDevice);
     }
     return m_pRHIDevice;
 }
@@ -104,7 +107,7 @@ private:
 class CommandContext : public rhi::ICommandContext
 {
 public:
-    CommandContext();
+    CommandContext(rhi::ECommandType const & cmdType, id<MTLCommandBuffer> cmdBuf);
     
     ~CommandContext() override;
     
@@ -112,18 +115,27 @@ public:
     
     void CopyTexture(const rhi::TextureCopyLocation& Dest, const rhi::TextureCopyLocation& Src) override;
     void CopyBuffer(rhi::IGpuResource& Dest, rhi::IGpuResource& Src, rhi::CopyBufferRegion const & Region) override;
+    void TransitionResourceBarrier(rhi::GpuResourceRef resource, /*EPipelineStage stage,*/ rhi::EResourceState dstState) override {}
     void Execute(bool Wait) override;
     void Reset() override;
     
+    void ClearColorBuffer(rhi::GpuResourceRef, kMath::Vec4f const&) override {}
+    void ClearDepthBuffer(rhi::IDepthBuffer*) override {}
+    
     void BeginRendering() override;
-    void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
-    void SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView) override;
+    void SetRenderTargets(uint32 NumColorBuffer, rhi::IColorBuffer*, rhi::IDepthBuffer*, bool ReadOnlyDepth = false) override {}
+    void SetRenderTarget(rhi::RenderTargetRef) override;
     void SetPipelineState(uint32 HashCode, rhi::PipelineStateObjectRef) override;
+    void SetPipelineLayout(rhi::PipelineLayoutRef) override {}
+    void SetScissorRects(uint32, const rhi::Rect*) override {}
     void SetViewport(const rhi::ViewportDesc &) override;
     void SetPrimitiveType(rhi::EPrimitiveType) override;
+    void SetIndexBuffer(const rhi::IndexBufferView& IBView) override;
+    void SetVertexBuffer(uint32 Slot, const rhi::VertexBufferView& VBView) override;
     void DrawInstanced(rhi::DrawInstancedParam) override;
     void DrawIndexedInstanced(rhi::DrawIndexedInstancedParam) override;
     void EndRendering() override;
+    void PresentInViewport(rhi::RenderViewportRef rvp) override;
     
     void Dispatch(uint32 X = 1, uint32 Y =1, uint32 Z = 1) override;
     
@@ -137,7 +149,6 @@ private:
     id<MTLRenderCommandEncoder>     m_RenderEncoder;
     
     id<MTLCommandBuffer>            m_CmdBuffer;
-    id<MTLCommandQueue>             m_CmdQueue;
 };
 
 class RenderViewport : public rhi::IRenderViewport
@@ -151,7 +162,7 @@ public:
                                      rhi::GfxSetting &
                         ) override;
     
-    void				PrepareNextFrame() override {}
+    void				PrepareNextFrame() override;
     bool				Present(bool vSync) override { return false; }
     
     rhi::RenderTargetRef     GetRenderTarget(uint32 index) override { return nullptr; }
@@ -162,10 +173,25 @@ public:
     
     uint32				GetWidth() const override { return m_Width; }
     uint32				GetHeight() const override { return m_Height; }
+    
+    friend class        Device;
+    friend class        CommandContext;
 private:
+    
     CAMetalLayer *      m_Layer;
+    id<CAMetalDrawable> m_CurrentDrawable;
+    MTLRenderPassDescriptor *m_RenderPassDescriptor;
+    id<MTLTexture>      m_DepthTex;
     uint32              m_Width;
     uint32              m_Height;
+};
+
+class RenderTarget : public rhi::IRenderTarget
+{
+public:
+    
+private:
+    
 };
 
 NS_K3D_METAL_END

@@ -22,6 +22,7 @@
     if(m_App)
     {
         m_App->OnInit();
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onFrame) name:@"RHIRender" object:nil];
     }
 }
 
@@ -31,8 +32,18 @@
     if(m_App)
     {
         m_App->OnDestroy();
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
     }
  }
+
+- (void) onFrame
+{
+    if(m_App)
+    {
+        k3d::Message msg;
+        m_App->OnProcess(msg);
+    }
+}
 
 - (void)postFinishLaunch
 {

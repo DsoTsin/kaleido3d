@@ -3,13 +3,37 @@
 #define __MetalEnums_h__
 
 #include "../Common.h"
-#include <RHI/IRHIDefs.h>
+#include <Interface/IRHIDefs.h>
 
 
 NS_K3D_METAL_BEGIN
 
 namespace
 {
+    /**
+     EPF_RGBA16Uint,
+     EPF_RGBA32Float,
+     EPF_RGBA8Unorm,
+     EPF_RGBA8Unorm_sRGB,
+     EPF_R11G11B10Float,
+     EPF_D32Float,
+     EPF_RGB32Float,
+     EPF_RGB8Unorm,
+     */
+    MTLPixelFormat g_PixelFormat[] = {
+        MTLPixelFormatRGBA16Uint,
+        MTLPixelFormatRGBA32Float,
+        MTLPixelFormatRGBA8Unorm,
+        MTLPixelFormatRGBA8Unorm_sRGB,
+        MTLPixelFormatRG11B10Float,
+        MTLPixelFormatDepth32Float,
+        MTLPixelFormatInvalid,
+        MTLPixelFormatInvalid,
+        MTLPixelFormatBGRA8Unorm,
+        MTLPixelFormatBGRA8Unorm_sRGB,
+        MTLPixelFormatRGBA16Float,
+    };
+    
     /*
      Points,
      Lines,

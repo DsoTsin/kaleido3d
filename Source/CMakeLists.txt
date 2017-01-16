@@ -90,7 +90,6 @@ include_directories(
 )
 
 if(ANDROID)
-  	find_package(VulkanSDK)
   	if(VULKANSDK_FOUND)
   		add_definitions(-DUSEVULKANSDK)
     	include_directories(${VULKANSDK_INCLUDE_DIR})

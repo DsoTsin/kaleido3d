@@ -222,6 +222,9 @@ namespace k3d
 				lEnvVars[Environment::ENV_KEY_APP_NAME] = exeFilePath.substr(0, nPos - 4);
 			}
 			lEnvVars[Environment::ENV_KEY_LOG_DIR] = lEnvVars[Environment::ENV_KEY_MODULE_DIR];
+#elif K3DPLATFORM_OS_IOS
+            lEnvVars[Environment::ENV_KEY_MODULE_DIR] = KT("./");
+            //lEnvVars[Environment::ENV_KEY_LOG_DIR] = KT("./");
 #endif
 		}
 

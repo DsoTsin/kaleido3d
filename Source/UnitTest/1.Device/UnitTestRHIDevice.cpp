@@ -20,11 +20,11 @@ bool UnitTestRHIDevice::OnInit()
 		m_TestDevice = pVkRHI->GetPrimaryDevice();
 	}
 #else
-    IMetalRHI* pMtlRHI = (IMetalRHI*)ACQUIRE_PLUGIN(RHI_Metal);
+    auto pMtlRHI = ACQUIRE_PLUGIN(RHI_Metal);
     if(pMtlRHI)
     {
         pMtlRHI->Start();
-        m_TestDevice = pMtlRHI->GetPrimaryDevice();
+        m_TestDevice = ((IMetalRHI*)pMtlRHI)->GetPrimaryDevice();
     }
 #endif
 	return true;

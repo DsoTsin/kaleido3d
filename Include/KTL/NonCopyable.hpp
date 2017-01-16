@@ -1,5 +1,7 @@
 #pragma once 
 
+K3D_COMMON_NS
+{
 class NonCopyable
 {
 protected:
@@ -9,3 +11,4 @@ protected:
 	NonCopyable(const NonCopyable &&);
 	NonCopyable& operator=(const NonCopyable &);
 };
+}

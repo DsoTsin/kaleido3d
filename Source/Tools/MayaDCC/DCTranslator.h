@@ -5,7 +5,7 @@
 #include "MayaCommon.h"
 
 #include <Interface/IIODevice.h>
-#include <Core/Archive.h>
+#include <KTL/Archive.hpp>
 #include <Core/MeshData.h>
 #include <Core/CameraData.h>
 #include <Core/Bundle.h>

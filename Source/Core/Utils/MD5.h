@@ -1,27 +1,36 @@
 #pragma once 
 
+#ifndef DISABLE_STL
 #include <string>
 #include <fstream>
+#endif
+
+#include <KTL/String.hpp>
 
 /* Type define */
 typedef unsigned char byte;
 typedef unsigned int uint32;
 
-using std::string;
-using std::ifstream;
-
 /* MD5 declaration. */
-class K3D_API MD5 {
+class K3D_API MD5 
+{
 public:
 	MD5();
 	MD5(const void* input, size_t length);
-	MD5(const string& str);
-	MD5(ifstream& in);
 	void update(const void* input, size_t length);
-	void update(const string& str);
-	void update(ifstream& in);
+
+#ifndef DISABLE_STL
+	MD5(const std::string& str);
+	MD5(std::ifstream& in);
+	void update(const std::string& str);
+	void update(std::ifstream& in);
+	std::string toString();
+#endif
+	void Update(const k3d::String& str);
+
+	k3d::String Str();
+
 	const byte* digest();
-	string toString();
 	void reset();
 
 private:
@@ -30,7 +39,10 @@ private:
 	void transform(const byte block[64]);
 	void encode(const uint32* input, byte* output, size_t length);
 	void decode(const byte* input, uint32* output, size_t length);
-	string bytesToHexString(const byte* input, size_t length);
+
+#ifndef DISABLE_STL
+	std::string bytesToHexString(const byte* input, size_t length);
+#endif
 
 	/* class uncopyable */
 	MD5(const MD5&);

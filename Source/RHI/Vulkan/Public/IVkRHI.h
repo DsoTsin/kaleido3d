@@ -1,7 +1,7 @@
 #ifndef __IVkRHI_h__
 #define __IVkRHI_h__
 #include <Core/Module.h>
-#include <RHI/IRHI.h>
+#include <Interface/IRHI.h>
 
 namespace k3d
 {

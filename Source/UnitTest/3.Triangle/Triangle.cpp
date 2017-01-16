@@ -3,7 +3,7 @@
 #include <Core/AssetManager.h>
 #include <Core/LogUtil.h>
 #include <Core/Message.h>
-#include <RHI/IRHI.h>
+#include <Interface/IRHI.h>
 #include <Renderer/Render.h>
 #include <Math/kMath.hpp>
 
@@ -227,7 +227,11 @@ void VkTriangleUnitTest::LoadGlslangCompiler()
 	rhi::IShModule* shMod = (rhi::IShModule*)ACQUIRE_PLUGIN(ShaderCompiler);
 	if (shMod)
 	{
+#if K3DPLATFORM_OS_MAC
+        m_Compiler = shMod->CreateShaderCompiler(rhi::ERHI_Metal);
+#else
 		m_Compiler = shMod->CreateShaderCompiler(rhi::ERHI_Vulkan);
+#endif
 	}
 }
 

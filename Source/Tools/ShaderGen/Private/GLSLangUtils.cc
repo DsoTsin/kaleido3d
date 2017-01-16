@@ -4,6 +4,28 @@
 
 using namespace ::glslang;
 
+void sInitializeGlSlang()
+{
+#if USE_GLSLANG
+    static bool sGlSlangIntialized = false;
+    if (!sGlSlangIntialized) {
+        glslang::InitializeProcess();
+        sGlSlangIntialized = true;
+    }
+#endif
+}
+
+void sFinializeGlSlang()
+{
+#if USE_GLSLANG
+    static bool sGlSlangFinalized = false;
+    if (!sGlSlangFinalized) {
+        glslang::FinalizeProcess();
+        sGlSlangFinalized = true;
+    }
+#endif
+}
+
 rhi::shc::EDataType glTypeToRHIAttribType(int glType)
 {
 	using namespace rhi::shc;

@@ -4,7 +4,6 @@
 
 #include <Math/kMath.hpp>
 #include <Math/kGeometry.hpp>
-#include <Interface/IReflectable.h>
 #include <Interface/IMesh.h>
 #include <sstream>
 
@@ -72,9 +71,7 @@ namespace k3d
 	};
 
 
-	class K3D_API MeshData :
-		public IMesh,
-		public IReflectable {
+	class K3D_API MeshData : public IMesh {
 	public:
 
 		MeshData();
@@ -109,8 +106,6 @@ namespace k3d
 		float *		GetVertexBuffer() const override { return (float*)&m_P3Buffer[0]; }
 		void		SetVertexBuffer(void* dataPtr);
 		void		SetVertexNum(int num) { m_NumVertices = num; }
-
-		MeshData *	Reflect() override { return new MeshData; }
 
 		std::string DumpMeshInfo() 
 		{

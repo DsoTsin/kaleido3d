@@ -3,7 +3,6 @@
 #include <mutex>
 #include <atomic>
 #include "../Os.h"
-#include <Interface/IJob.h>
 
 namespace Dispatch {
 

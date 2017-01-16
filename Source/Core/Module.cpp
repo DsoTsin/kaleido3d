@@ -2,6 +2,7 @@
 #include "Module.h"
 #include "App.h"
 #include "Os.h"
+#include <KTL/String.hpp>
 #include <list>
 #include <algorithm>
 #include <utility>
@@ -16,7 +17,7 @@ namespace k3d
 #endif
 
 	ModuleManager GlobalModuleManager;
-	static std::unordered_map<std::string, IModule*> g_ModuleMap;
+	static std::unordered_map<String, IModule*> g_ModuleMap;
 
 #if K3DPLATFORM_OS_WIN
 	static std::unordered_map<std::string, HMODULE> g_Win32ModuleMap;
@@ -39,23 +40,21 @@ namespace k3d
 
 	bool ModuleManager::LoadModule(const char * moduleName)
 	{
+		String entryFunction;
+		entryFunction.AppendSprintf("Get%sModule", moduleName);
 #if K3DPLATFORM_OS_WIN
         std::string moduleDir = "./";
 		HMODULE hModule = LoadLibraryA((moduleDir + moduleName + ".dll").c_str());
 		if (hModule)
 		{
-			std::string entryName("Get");
-			entryName += moduleName;
-			entryName += "Module";
-			PFN_GetModule pFn = (PFN_GetModule)::GetProcAddress((HMODULE)hModule, entryName.c_str());
+			PFN_GetModule pFn = (PFN_GetModule)::GetProcAddress((HMODULE)hModule, entryFunction.CStr());
 			g_Win32ModuleMap[moduleName] = hModule;
 			g_ModuleMap[moduleName] = pFn();
 			return true;
 		}
 #else
-		std::string entryName("Get");
-		entryName += moduleName;
-		entryName += "Module";
+
+#if !K3DPLATFORM_OS_IOS
         kString libDir = GetEnv()->GetEnvValue(Environment::ENV_KEY_MODULE_DIR) + "/lib" + moduleName +
 #if K3DPLATFORM_OS_MAC
         ".dylib";
@@ -66,13 +65,23 @@ namespace k3d
         {
             return false;
         }
-		void* handle = ::dlopen(libDir.c_str(), RTLD_LAZY);
-		if(handle) {
-			PFN_GetModule fn = (PFN_GetModule)dlsym(handle, entryName.c_str());
-			if(!fn) {
+        void* handle = ::dlopen(libDir.c_str(), RTLD_LAZY);
+#else
+        //kString libDir = kString(moduleName) + ".framework/" + moduleName;
+        String libDir;
+        libDir.AppendSprintf("%s.framework/%s", moduleName, moduleName);
+        void* handle = ::dlopen(libDir.CStr(), RTLD_LAZY);
+#endif
+		if(handle)
+        {
+			PFN_GetModule fn = (PFN_GetModule)dlsym(handle, entryFunction.CStr());
+			if(!fn)
+            {
 				return false;
 			}
-			g_ModuleMap[moduleName] = fn();
+            auto mod = fn();
+			//g_ModuleMap[moduleName] = mod;
+            g_ModuleMap.insert({moduleName, mod});
 			return true;
 		}
 #endif
@@ -81,15 +90,14 @@ namespace k3d
 	
 	IModule * ModuleManager::FindModule(const char * moduleName)
 	{
-		std::string mName(moduleName);
 		if (g_ModuleMap.find(moduleName) != g_ModuleMap.end())
 		{
-			return g_ModuleMap[mName];
+			return g_ModuleMap[moduleName];
 		} 
 		else
 		{
 			if(LoadModule(moduleName))
-				return g_ModuleMap[mName];
+				return g_ModuleMap[moduleName];
 		}
 		return nullptr;
 	}

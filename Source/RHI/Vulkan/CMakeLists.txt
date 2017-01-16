@@ -11,7 +11,6 @@ elseif(ANDROID)
 endif()
 
 set(RHI_HEADERS
-	../IRHI.h
 	VkCommon.h
 	Public/IVkRHI.h
 )

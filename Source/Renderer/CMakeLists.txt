@@ -5,16 +5,16 @@ ${DXSDK_INCLUDE_DIR}
 ${V8_INCLUDE_DIR}
 )
 
-if(BUILD_SHARED)
-	add_definitions(-DBUILD_SHARED_LIB -DBUILD_WITH_PLUGIN)
-endif()
-
 set(RENDER_SRCS
 Render.h
 Render.cpp
 MeshRender.cpp
 RenderContext.cpp
 )
+
+if(BUILD_SHARED)
+	add_definitions(-DBUILD_WITH_PLUGIN)
+endif()
 
 source_group(Render FILES ${RENDER_SRCS})
 
@@ -27,9 +27,7 @@ if(HAS_FREETYPE)
 	set(RENDER_DEPLIB ${RENDER_DEPLIB} ${FREETYPE2_LIBRARY})
 endif()
 
-add_library(Render ${LIB_TYPE} ${RENDER_SRCS})
-target_link_libraries(Render ${RENDER_DEPLIB})
-set_target_properties(Render PROPERTIES FOLDER "Runtime")
+k3d_add_lib(Render SRCS ${RENDER_SRCS} LIBS ${RENDER_DEPLIB} FOLDER "Runtime")
 
 if(WIN32)
 	install(TARGETS Render ARCHIVE DESTINATION lib)

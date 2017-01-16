@@ -16,9 +16,6 @@ Private/MetalRHI.h
 set(INCS
 Public/IMetalRHI.h
 Public/MetalRHIResource.h
-../IRHI.h
-../IRHIDefs.h
-../ICrossShaderCompiler.h
 )
 
 source_group(Private FILES ${SRCS})

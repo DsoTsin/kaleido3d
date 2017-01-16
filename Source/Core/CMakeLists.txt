@@ -1,10 +1,6 @@
 include_directories(.. ../../Include)
 
-if(BUILD_SHARED)
-add_definitions(-DBUILD_SHARED_LIB)
-endif()
-
-set(SRC_ASSETMANAGER	AssetManager.h AssetManager.cpp Bundle.h Bundle.cpp Archive.h Archive.cpp)
+set(SRC_ASSETMANAGER	AssetManager.h AssetManager.cpp Bundle.h Bundle.cpp)
 set(SRC_CAMERA			CameraData.h CameraData.cpp)
 set(SRC_MESH			MeshData.h MeshData.cpp ObjectMesh.h ObjectMesh.cpp RiggedMeshData.h RiggedMeshData.cpp)
 set(SRC_IMAGE			ImageData.h ImageData.cpp)
@@ -70,8 +66,7 @@ set(COMMON_SRCS
     App.h
     App.cpp
     AllocatorImpl.cpp
-    String.h
-    String.cpp
+    StringImpl.cpp
 )
 
 source_group(XPlatform FILES ${COMMON_SRCS})
@@ -87,31 +82,30 @@ elseif(ANDROID)
     file(GLOB ANDROID_SRCS "../Platform/Android/cpp/*.cpp" "../Platform/Android/cpp/*.h")
     source_group("XPlatform\\Android" FILES ${ANDROID_SRCS})
     set(CORE_SRCS ${CORE_SRCS} ${ANDROID_SRCS})
+    list(APPEND CORE_DEP_LIBS log android)
 elseif(IOS)
-    file(GLOB IOS_IMPL_SRCS "../Platform/Apple/iOS/*.mm" "../Platform/Apple/iOS/*.h")
+    #file(GLOB IOS_IMPL_SRCS "../Platform/Apple/iOS/*.mm" "../Platform/Apple/iOS/*.h")
+    set(IOS_IMPL_SRCS "../Platform/Apple/iOS/Window.mm" "../Platform/Apple/CpuUsage.mm")
     source_group("XPlatform\\iOS" FILES ${IOS_IMPL_SRCS})
     set(CORE_SRCS ${CORE_SRCS} ${IOS_IMPL_SRCS})
+    list(APPEND CORE_DEP_LIBS "-framework Foundation" "-framework UIKit" "-framework QuartzCore")
 elseif(MACOS)
     file(GLOB OSX_IMPL_SRCS "../Platform/Apple/MacOS/*.mm" "../Platform/Apple/MacOS/*.h")
+    list(APPEND OSX_IMPL_SRCS "../Platform/Apple/CpuUsage.mm")
     source_group("XPlatform\\OSX" FILES ${OSX_IMPL_SRCS})
     set(CORE_SRCS ${CORE_SRCS} ${OSX_IMPL_SRCS})
+    list(APPEND CORE_DEP_LIBS "-framework Cocoa" "-framework AppKit" "-framework QuartzCore" "-framework CoreData" "-framework Foundation")
 endif()
 
-add_library(Core ${LIB_TYPE} ${CORE_SRCS})
+k3d_add_lib(Core SRCS ${CORE_SRCS} LIBS ${CORE_DEP_LIBS} FOLDER "Runtime")
 
 if(WIN32)
     install(TARGETS Core ARCHIVE DESTINATION lib)
     add_precompiled_header(Core "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Core/App.cpp")
-elseif(ANDROID)
-    target_link_libraries(Core log android)
-elseif(IOS)
-    target_link_libraries(Core "-framework Foundation" "-framework UIKit" "-framework QuartzCore")
 elseif(MACOS)
-    target_link_libraries(Core "-framework Cocoa" "-framework AppKit" "-framework QuartzCore" "-framework CoreData" "-framework Foundation")
     if(BUILD_SHARED)
         add_custom_command(TARGET Core POST_BUILD COMMAND
             ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libCore.dylib" $<TARGET_FILE:Core>)
     endif()
 endif()
 
-set_target_properties(Core PROPERTIES FOLDER "Runtime")

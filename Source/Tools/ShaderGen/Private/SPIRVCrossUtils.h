@@ -1,5 +1,5 @@
 #pragma once
-#include <RHI/ICrossShaderCompiler.h>
+#include <Interface/ICrossShaderCompiler.h>
 #include <spirv2cross/spirv_cross.hpp>
 #include <spirv2cross/spirv_msl.hpp>
 #include <spirv2cross/spirv_glsl.hpp>

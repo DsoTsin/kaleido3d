@@ -1,4 +1,8 @@
 #pragma once
+
+K3D_COMMON_NS
+{
+	
 template <typename T>
 class LockFreeQueue {
 public:
@@ -106,3 +110,5 @@ private:
 
 	Node *m_Head, *m_Tail;
 };
+
+}

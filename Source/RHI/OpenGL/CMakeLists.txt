@@ -11,7 +11,6 @@ elseif(ANDROID OR IOS)
 endif()
 
 set(RHI_HEADERS
-	../IRHI.h
 	OpenGLCommon.h
 	Public/IOpenGLRHI.h
 )
@@ -30,10 +29,10 @@ source_group(
 	${RHI_IMPL_SRCS}
 )
 
-add_plugin(RHI_OpenGL "Runtime/RHI" ${OGLRHI_SRC_LIST} ${RHI_HEADERS} ${RHI_IMPL_SRCS})
+add_plugin(RHI_OpenGL FOLDER "Runtime/RHI" SRCS ${OGLRHI_SRC_LIST} ${RHI_HEADERS} ${RHI_IMPL_SRCS})
 
 if(NOT ANDROID)
-	install(TARGETS RHI_OpenGL ARCHIVE DESTINATION lib)
+	#install(TARGETS RHI_OpenGL ARCHIVE DESTINATION lib)
 	add_precompiled_header(RHI_OpenGL "OpenGLCommon.h" "${Kaleido3D_ROOT_DIR}/Source/RHI/OpenGL" "${Kaleido3D_ROOT_DIR}/Source/RHI/OpenGL/Private/OpenGLRHI.cpp")
 endif()
 

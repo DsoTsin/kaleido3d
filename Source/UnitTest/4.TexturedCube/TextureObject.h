@@ -1,7 +1,7 @@
 #ifndef __TextureObject_h__
 #define __TextureObject_h__
 
-#include <RHI/IRHI.h>
+#include <Interface/IRHI.h>
 /*
 * Defines a simple object for creating and holding Vulkan texture objects.
 * Supports loading from TGA files in Android Studio asset folder.

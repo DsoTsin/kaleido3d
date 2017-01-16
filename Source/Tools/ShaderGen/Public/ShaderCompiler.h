@@ -1,8 +1,8 @@
 #ifndef __ShaderGen_h__
 #define __ShaderGen_h__
 
-#include <RHI/IRHIDefs.h>
-#include <RHI/ICrossShaderCompiler.h>
+#include <Interface/IRHIDefs.h>
+#include <Interface/ICrossShaderCompiler.h>
 #include <Config/Config.h>
 #include <string>
 

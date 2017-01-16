@@ -3,7 +3,6 @@
 #include "MeshData.h"
 #include "CameraData.h"
 #include "ImageData.h"
-#include "Archive.h"
 #include "Os.h"
 #include "LogUtil.h"
 #include "Utils/StringUtils.h"

@@ -19,6 +19,16 @@ namespace k3d
 {
     EResult mtlCompile(string const& source, String & metalIR);
 
+    MetalCompiler::MetalCompiler()
+    {
+        sInitializeGlSlang();
+    }
+    
+    MetalCompiler::~MetalCompiler()
+    {
+        sFinializeGlSlang();
+    }
+    
     EResult MetalCompiler::Compile(String const& src, rhi::ShaderDesc const& inOp, rhi::ShaderBundle & bundle)
     {
         if(inOp.Format == rhi::EShFmt_Text)

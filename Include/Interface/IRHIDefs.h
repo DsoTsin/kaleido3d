@@ -5,8 +5,8 @@
 #include "Config/PlatformTypes.h"
 #include <KTL/DynArray.hpp>
 #include <KTL/SharedPtr.hpp>
+#include <KTL/String.hpp>
 #include <Math/kGeometry.hpp>
-#include <Core/String.h>
 
 namespace rhi
 {
@@ -48,8 +48,11 @@ namespace rhi
 		EPF_R11G11B10Float,
 		EPF_D32Float,
 		EPF_RGB32Float,
-		EPF_RGB8Unorm,
-		PixelFormatNum
+        EPF_RGB8Unorm,
+        EPF_BGRA8Unorm, // Apple Metal Layer uses it as default pixel format
+        EPF_BGRA8Unorm_sRGB,
+        EPF_RGBA16Float,
+		PixelFormatNum,
 	};
 
 	enum EVertexFormat

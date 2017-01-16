@@ -7,8 +7,8 @@ namespace k3d
     class MetalCompiler : public rhi::IShCompiler
     {
     public:
-        MetalCompiler() {}
-        ~MetalCompiler() override {}
+        MetalCompiler();
+        ~MetalCompiler() override;
         rhi::shc::EResult	Compile(String const& src,
                                     rhi::ShaderDesc const& inOp,
                                     rhi::ShaderBundle & bundle) override;

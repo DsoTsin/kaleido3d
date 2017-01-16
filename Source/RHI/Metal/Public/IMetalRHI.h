@@ -1,6 +1,6 @@
 #pragma once 
 #include <Core/Module.h>
-#include <RHI/IRHI.h>
+#include <Interface/IRHI.h>
 
 namespace k3d
 {

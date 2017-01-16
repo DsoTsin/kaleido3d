@@ -1,5 +1,4 @@
 #pragma once
-#include <Interface/IParameter.h>
 
 namespace k3d
 {

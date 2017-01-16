@@ -1,4 +1,5 @@
 #include "Common.h"
+#include <Core/Utils/MD5.h>
 
 using namespace k3d;
 using namespace std;
@@ -19,14 +20,29 @@ threadptr TestString()
         cout << testString.CStr() << endl;
         
         testString.AppendSprintf("%d %s", 5, "fhdsfjdhjkfdhksfhdkjshfjkdshfk");
+		testString += 'B';
         cout << testString.CStr() << endl;
         
+		MD5 md5;
+		md5.Update(testString);
+		auto testMd5 = md5.Str();
+		cout << "md5:" << testMd5.CStr() << endl;
+
+		cout << "md5:" << MD5Encode(testString).CStr() << endl;
+
         //Archive ar;
         //ar << testString;
         
         String testMoveString(Move(toBeRemoved));
         cout << "testMove:" << testMoveString.CStr()
         << " original:" << (toBeRemoved.CStr()?toBeRemoved.CStr():"null") << endl;
+
+		auto b64 = Base64Encode(testMoveString);
+		cout << "b64:" << b64.CStr() << endl;
+
+		auto d64 = Base64Decode(b64);
+		cout << "d64:" << d64.CStr() << endl;
+
     });
     return ret;
 }

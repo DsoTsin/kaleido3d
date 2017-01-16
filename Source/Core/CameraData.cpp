@@ -1,6 +1,5 @@
 #include "Kaleido3D.h"
 #include "CameraData.h"
-#include "Archive.h"
 
 namespace k3d
 {
