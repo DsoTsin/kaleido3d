@@ -6,6 +6,8 @@ namespace rhi
 {
 	struct ICommandContext;
 	typedef ::k3d::SharedPtr<ICommandContext> 	CommandContextRef;
+	struct IDeviceAdapter;
+	typedef ::k3d::SharedPtr<IDeviceAdapter>	DeviceAdapterRef;
 	struct IDevice;
 	typedef ::k3d::SharedPtr<IDevice> 			DeviceRef;
 	struct IGpuResource;
@@ -101,6 +103,7 @@ namespace rhi
 	struct IDeviceAdapter
 	{
 		virtual DeviceRef GetDevice() = 0;
+		virtual ~IDeviceAdapter() {}
 	};
 
 	/**

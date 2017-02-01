@@ -95,7 +95,7 @@ void RenderViewport::AllocateDefaultRenderPass(rhi::GfxSetting & gfxSetting)
 	if (gfxSetting.HasDepth) 
 	{
 		VkFormat depthFormat = g_FormatTable[gfxSetting.DepthStencilFormat];
-		GetSupportedDepthFormat(GetPhysicalDevice(), &depthFormat);
+		GetGpuRef()->GetSupportedDepthFormat(&depthFormat);
 		RenderpassAttachment depthAttach = 
 			RenderpassAttachment::CreateDepthStencil(depthFormat);
 		depthAttach.GetDescription().InitialLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
@@ -112,7 +112,7 @@ void RenderViewport::AllocateRenderTargets(rhi::GfxSetting & gfxSetting)
 	if (m_RenderPass)
 	{
 		VkFormat depthFormat = g_FormatTable[gfxSetting.DepthStencilFormat];
-		GetSupportedDepthFormat(GetPhysicalDevice(), &depthFormat);
+		GetGpuRef()->GetSupportedDepthFormat(&depthFormat);
 		VkImage depthImage;
 		VkImageCreateInfo image = {};
 		image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

@@ -9,8 +9,7 @@ extern K3D_API VkDeviceSize				CalcAlignedOffset(VkDeviceSize offset, VkDeviceSi
 extern K3D_API VkImageAspectFlags		DetermineAspectMask(VkFormat format);
 extern K3D_API std::string				ErrorString(VkResult errorCode);
 extern K3D_API VkBool32					GetSupportedDepthFormat(VkPhysicalDevice physicalDevice, VkFormat * depthFormat);
-extern K3D_API void						SetupDebugging(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportCallbackEXT callBack);
-extern K3D_API void						FreeDebugCallback(VkInstance instance);
+
 extern K3D_API rhi::PipelineLayoutKey	HashPipelineLayoutDesc(rhi::PipelineLayoutDesc const& desc);
 
 class CommandAllocator;

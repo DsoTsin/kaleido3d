@@ -235,6 +235,7 @@ K3D_COMMON_NS
                 m_Capacity = NewElementCount;
                 m_pElement = pElement;
             }
+			m_ElementCount = NewElementCount;
         }
         
 		ElementType const& operator[](uint32 index) const

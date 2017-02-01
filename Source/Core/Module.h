@@ -5,6 +5,8 @@
 
 namespace k3d
 {
+	class ModuleManagerPrivate;
+
 	class CORE_API ModuleManager
 	{
 	public:
@@ -16,7 +18,11 @@ namespace k3d
 		IModule* FindModule(const char * moduleName);
 
 		ModuleManager();
+
+	private:
+		ModuleManagerPrivate * p;
 	};
+
 
 	extern CORE_API ModuleManager GlobalModuleManager;
 }

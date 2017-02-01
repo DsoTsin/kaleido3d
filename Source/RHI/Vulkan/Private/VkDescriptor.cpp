@@ -90,7 +90,7 @@ void DescriptorAllocator::Initialize(uint32 maxSets, BindingArray const& binding
 
 void DescriptorAllocator::Destroy()
 {
-	if (VK_NULL_HANDLE == m_Pool)
+	if (VK_NULL_HANDLE == m_Pool || !GetRawDevice() )
 		return;
 	vkDestroyDescriptorPool(GetRawDevice(), m_Pool, nullptr);
 	m_Pool = VK_NULL_HANDLE;
@@ -119,14 +119,14 @@ void DescriptorSetLayout::Initialize(BindingArray const & bindings)
 
 void DescriptorSetLayout::Destroy()
 {
-	if( VK_NULL_HANDLE == m_DescriptorSetLayout ) 
+	if( VK_NULL_HANDLE == m_DescriptorSetLayout || !GetRawDevice() ) 
 		return;
 	vkDestroyDescriptorSetLayout( GetRawDevice(), m_DescriptorSetLayout, nullptr );
 	m_DescriptorSetLayout = VK_NULL_HANDLE;
 	VKLOG(Info, "DescriptorSetLayout-destroying vkDescriptorSetLayout...");
 }
 
-DescriptorSet::DescriptorSet( DescriptorAllocator *descriptorAllocator, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice )
+DescriptorSet::DescriptorSet( DescriptorAllocRef descriptorAllocator, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice )
 	: DeviceChild( pDevice )
 	, m_DescriptorAllocator( descriptorAllocator )
 	, m_Bindings(bindings)
@@ -135,7 +135,7 @@ DescriptorSet::DescriptorSet( DescriptorAllocator *descriptorAllocator, VkDescri
 }
 
 
-DescriptorSet * DescriptorSet::CreateDescSet(DescriptorAllocator * descriptorPool, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice)
+DescriptorSet * DescriptorSet::CreateDescSet(DescriptorAllocRef descriptorPool, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice)
 {
 	return new DescriptorSet(descriptorPool, layout, bindings, pDevice);
 }
@@ -203,19 +203,18 @@ void DescriptorSet::Initialize( VkDescriptorSetLayout layout, BindingArray const
 
 void DescriptorSet::Destroy()
 {
-	if( VK_NULL_HANDLE == m_DescriptorSet ) 
+	if( VK_NULL_HANDLE == m_DescriptorSet || !GetRawDevice() ) 
 		return;
 
-	if( nullptr != m_DescriptorAllocator )
+	if (m_DescriptorAllocator)
 	{
 		//const auto& options = m_DescriptorAllocator->m_Options;
 		//if( options.hasFreeDescriptorSetFlag() ) {
 			VkDescriptorSet descSets[1] = { m_DescriptorSet };
 			vkFreeDescriptorSets( GetRawDevice(), m_DescriptorAllocator->m_Pool, 1, descSets );
+			m_DescriptorSet = VK_NULL_HANDLE;
 		//}
 	}
-	m_DescriptorSet = VK_NULL_HANDLE;
-	m_DescriptorAllocator = nullptr;
 	VKRHI_METHOD_TRACE
 }
 

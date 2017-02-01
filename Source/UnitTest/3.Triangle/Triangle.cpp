@@ -319,6 +319,7 @@ void VkTriangleUnitTest::PrepareCommandBuffer()
 
 void VkTriangleUnitTest::OnDestroy()
 {
+	App::OnDestroy();
 	m_TriMesh->~TriangleMesh();
 	m_RenderContext.Destroy();
 }

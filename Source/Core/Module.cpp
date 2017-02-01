@@ -12,30 +12,40 @@ namespace k3d
 {
 	typedef IModule * (*PFN_GetModule)();
 
+	class ModuleManagerPrivate
+	{
+	public:
 #if K3DPLATFORM_OS_WIN
-	std::list<std::pair<IModule*, HMODULE> > g_ModuleList;
+		std::list<std::pair<IModule*, HMODULE> > g_ModuleList;
+		std::unordered_map<std::string, HMODULE> g_Win32ModuleMap;
 #endif
+		std::unordered_map<String, IModule*> g_ModuleMap;
+	};
 
 	ModuleManager GlobalModuleManager;
-	static std::unordered_map<String, IModule*> g_ModuleMap;
 
-#if K3DPLATFORM_OS_WIN
-	static std::unordered_map<std::string, HMODULE> g_Win32ModuleMap;
-#endif
 
 	ModuleManager::~ModuleManager()
 	{
-		//g_ModuleMap.clear(); TODO crash
+		if (!p->g_ModuleMap.empty())
+		{
+			for (auto entry : p->g_ModuleMap)
+			{
+				delete entry.second;
+				entry.second = nullptr;
+			}
+			p->g_ModuleMap.clear();
+		}
 	}
 
 	void ModuleManager::AddModule(const char * name, IModule * module)
 	{
-		g_ModuleMap[name] = module;
+		p->g_ModuleMap[name] = module;
 	}
 
 	void ModuleManager::RemoveModule(const char * name)
 	{
-		g_ModuleMap.erase(name);
+		p->g_ModuleMap.erase(name);
 	}
 
 	bool ModuleManager::LoadModule(const char * moduleName)
@@ -48,8 +58,8 @@ namespace k3d
 		if (hModule)
 		{
 			PFN_GetModule pFn = (PFN_GetModule)::GetProcAddress((HMODULE)hModule, entryFunction.CStr());
-			g_Win32ModuleMap[moduleName] = hModule;
-			g_ModuleMap[moduleName] = pFn();
+			p->g_Win32ModuleMap[moduleName] = hModule;
+			p->g_ModuleMap[moduleName] = pFn();
 			return true;
 		}
 #else
@@ -81,7 +91,7 @@ namespace k3d
 			}
             auto mod = fn();
 			//g_ModuleMap[moduleName] = mod;
-            g_ModuleMap.insert({moduleName, mod});
+			p->g_ModuleMap.insert({moduleName, mod});
 			return true;
 		}
 #endif
@@ -90,19 +100,19 @@ namespace k3d
 	
 	IModule * ModuleManager::FindModule(const char * moduleName)
 	{
-		if (g_ModuleMap.find(moduleName) != g_ModuleMap.end())
+		if (p->g_ModuleMap.find(moduleName) != p->g_ModuleMap.end())
 		{
-			return g_ModuleMap[moduleName];
+			return p->g_ModuleMap[moduleName];
 		} 
 		else
 		{
 			if(LoadModule(moduleName))
-				return g_ModuleMap[moduleName];
+				return p->g_ModuleMap[moduleName];
 		}
 		return nullptr;
 	}
 
-	ModuleManager::ModuleManager()
+	ModuleManager::ModuleManager() : p(new ModuleManagerPrivate)
 	{
 	}
 }

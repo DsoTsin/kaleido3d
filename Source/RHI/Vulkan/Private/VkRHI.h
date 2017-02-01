@@ -73,47 +73,50 @@ class Sampler;
 class ShaderResourceView;
 using BindingArray = DynArray<VkDescriptorSetLayoutBinding>;
 
-//extern K3D_API void EnumAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*);
-extern K3D_API void EnumAndInitAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*, bool debug);
+class DescriptorAllocator;
+using DescriptorAllocRef = SharedPtr<DescriptorAllocator>;
+
+class DescriptorSetLayout;
+using DescriptorSetLayoutRef = SharedPtr<DescriptorSetLayout>;
+
+class DescriptorSet;
+using DescriptorSetRef = SharedPtr<DescriptorSet>;
+
+typedef std::map<rhi::PipelineLayoutKey, rhi::PipelineLayoutRef> MapPipelineLayout;
+typedef std::map<uint32, DescriptorSetLayoutRef>			MapDescriptorSetLayout;
+typedef std::map<uint32, DescriptorAllocRef>				MapDescriptorAlloc;
 
 struct RHIRoot
 {
-	using DeviceList	= std::vector<VkPhysicalDevice>;
-
 	static void			Initialize(const char* appName, bool debug);
 	static void			Destroy();
+	static void			SetupDebug(VkDebugReportFlagsEXT flags, PFN_vkDebugReportCallbackEXT callBack);
+	static uint32		GetHostGpuCount();
+	static GpuRef		GetHostGpuById(uint32 id);
+	static VkInstance	GetInstance();
 
-	static DeviceList&	GetPhysicDevices() { return PhysicalDevices; }
-	static VkInstance&	GetInstance() { return Instance; }
-	
-	static void			AddViewport(RenderViewport *);
+	static rhi::DeviceRef	GetDeviceById(uint32 id);
+	static void				AddViewport(RenderViewport *);
 	static RenderViewport *	GetViewport(int index);
 
-	using LayerNames = std::vector<char*>;
-	static LayerNames 	s_LayerNames;
-
 private:
+	static InstanceRef	s_InstanceRef;
 	static RenderViewport* s_Vp;
-	using LayerProps = std::vector<VkLayerProperties>;
 	
-	static void			EnumLayers();
-	static VkResult		CreateInstance(bool enableValidation, std::string name);
-
-	static LayerProps	s_LayerProps;
-	static VkInstance		Instance;
-	static DeviceList		PhysicalDevices;
-	friend class						Device;
+	static void			EnumLayersAndExts();
+	friend class		Device;
 };
 
 class DeviceAdapter : public rhi::IDeviceAdapter
 {
 	friend class Device;
 public:
-	explicit DeviceAdapter(VkPhysicalDevice * pDevice) : m_pGpu(pDevice) {}
+	typedef SharedPtr<DeviceAdapter> Ptr;
+	explicit DeviceAdapter(GpuRef const& gpu);
+	~DeviceAdapter() override;
 	rhi::DeviceRef 		GetDevice() override;
 private:
-	friend K3D_API void EnumAndInitAllDeviceAdapter(rhi::IDeviceAdapter** &, uint32*, bool debug);
-	VkPhysicalDevice *	m_pGpu = nullptr;
+	GpuRef				m_Gpu;
 	rhi::DeviceRef		m_pDevice;
 };
 
@@ -134,8 +137,8 @@ public:
 	
 	rhi::PipelineLayoutRef		NewPipelineLayout(rhi::PipelineLayoutDesc const & table) override;
 
-	DescriptorAllocator*		NewDescriptorAllocator(uint32 maxSets, BindingArray const& bindings);
-	DescriptorSetLayout*		NewDescriptorSetLayout(BindingArray const& bindings);
+	DescriptorAllocRef			NewDescriptorAllocator(uint32 maxSets, BindingArray const& bindings);
+	DescriptorSetLayoutRef		NewDescriptorSetLayout(BindingArray const& bindings);
 
 	rhi::PipelineStateObjectRef NewPipelineState(rhi::PipelineDesc const & desc, rhi::PipelineLayoutRef ppl,rhi::EPipelineType)override;
 	rhi::PipelineStateObjectRef CreatePipelineStateObject(rhi::PipelineDesc const & desc, rhi::PipelineLayoutRef ppl);
@@ -150,16 +153,14 @@ public:
 	SpCmdQueue const&			GetDefaultCmdQueue() const { return m_DefCmdQueue; }
 
 	VkDevice const&				GetRawDevice() const { return m_Device; }
-	VkPhysicalDevice const*		GetGpuRef() const { return m_pGpu; }
 	PtrResManager const &		GetMemoryManager() const { return m_ResourceManager; }
 
 	PtrCmdAlloc					NewCommandAllocator(bool transient);
+	bool						FindMemoryType(uint32 typeBits, VkFlags requirementsMask, uint32 *typeIndex) const;
 	PtrSemaphore				NewSemaphore();
 	void						WaitIdle() override { vkDeviceWaitIdle(m_Device); }
 
-	bool						FindMemoryType(uint32_t typeBits, VkFlags requirementsMask, uint32 *typeIndex) const;
-
-	uint32						GetQueueCount() const { return m_QueueCount; }
+	uint32						GetQueueCount() const { return m_Gpu->m_QueueProps.Count(); }
 	SpRenderpass const &		GetTopPass() const { return m_PendingPass.back(); }
 	void						PushRenderPass(SpRenderpass renderPass) { m_PendingPass.push_back(renderPass); }
 
@@ -172,35 +173,22 @@ protected:
 	SpCmdQueue					InitCmdQueue(VkQueueFlags queueTypes, uint32 queueFamilyIndex, uint32 queueIndex);
 
 private:
-
-	VkResult					CreateDevice(VkPhysicalDevice gpu, bool withDebug, VkDevice * pDevice);
-	bool						GetDeviceQueueProps(VkPhysicalDevice gpu);
-
-	typedef std::map<rhi::PipelineLayoutKey, PipelineLayout*> CachePipelineLayout;
-
 	PtrResManager							m_ResourceManager;
 	std::unique_ptr<CommandContextPool>		m_ContextPool;
 	std::vector<SpRenderpass>				m_PendingPass;
 
-	CachePipelineLayout						m_CachedPipelineLayout;
-	std::map<uint32, DescriptorAllocator*>	m_CachedDescriptorPool;
-	std::map<uint32, DescriptorSetLayout*>	m_CachedDescriptorSetLayout;
+	MapPipelineLayout						m_CachedPipelineLayout;
+	MapDescriptorAlloc						m_CachedDescriptorPool;
+	MapDescriptorSetLayout					m_CachedDescriptorSetLayout;
 
 private:
-	// following is init params
-	std::vector<VkQueueFamilyProperties>	queueProps;
-
 	VkPhysicalDeviceMemoryProperties		m_MemoryProperties = {};
-	VkPhysicalDeviceProperties				m_PhysicalDeviceProperties = {};
+
 	SpCmdQueue								m_DefCmdQueue;
 	SpCmdQueue								m_ComputeCmdQueue;
 
 	VkDevice								m_Device = VK_NULL_HANDLE;
-	VkPhysicalDevice *						m_pGpu = nullptr;
-	uint32									m_GraphicsQueueIndex = 0;
-	uint32									m_ComputeQueueIndex = 0;
-	uint32									m_CopyQueueIndex = 0;
-	uint32									m_QueueCount = 0;
+	GpuRef									m_Gpu;
 };
 
 class DeviceChild
@@ -210,8 +198,7 @@ public:
 	virtual						~DeviceChild() {}
 
 	VkDevice const &			GetRawDevice() const { return m_pDevice->GetRawDevice(); }
-	VkPhysicalDevice const &	GetPhysicalDevice() const { return *(m_pDevice->GetGpuRef()); }
-	//VkQueue const &				GetRawQueue() const { return m_pDevice->GetRawDeviceQueue(); }
+	GpuRef						GetGpuRef() const { return m_pDevice->m_Gpu; }
 
 	Device::Ptr const			GetDevice() const { return m_pDevice; }
 	SpCmdQueue const&			GetImmCmdQueue() const { return m_pDevice->GetDefaultCmdQueue(); }
@@ -240,7 +227,15 @@ public:
 		}
 	}
 
-	~Fence() override { vkDestroyFence(GetRawDevice(), m_Fence, nullptr); }
+	~Fence() override 
+	{
+		if (m_Fence)
+		{
+			vkDestroyFence(GetRawDevice(), m_Fence, nullptr);
+			VKLOG(Info, "Fence Destroyed. -- %0x.", m_Fence);
+			m_Fence = VK_NULL_HANDLE;
+		}
+	}
 
 	void Signal(int32 val) override {}
 
@@ -318,23 +313,22 @@ private:
 class DescriptorSet : public DeviceChild, public rhi::IDescriptor
 {
 public:
-	static DescriptorSet*	CreateDescSet(DescriptorAllocator *descriptorPool, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice);
+	static DescriptorSet*	CreateDescSet(DescriptorAllocRef descriptorPool, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice);
 	virtual					~DescriptorSet();
 	void					Update(uint32 bindSet, rhi::GpuResourceRef) override;
 	VkDescriptorSet			GetNativeHandle() const { return m_DescriptorSet; }
 
 private:
-	DescriptorSet( DescriptorAllocator *descriptorPool, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice );
+	DescriptorSet( DescriptorAllocRef descriptorPool, VkDescriptorSetLayout layout, BindingArray const & bindings, Device::Ptr pDevice );
 
 	VkDescriptorSet							m_DescriptorSet = VK_NULL_HANDLE;
-	DescriptorAllocator*					m_DescriptorAllocator = nullptr; 
+	DescriptorAllocRef						m_DescriptorAllocator = nullptr;
 	BindingArray							m_Bindings;
 	std::vector<VkWriteDescriptorSet>		m_BoundDescriptorSet;
 
 	void Initialize( VkDescriptorSetLayout layout, BindingArray const & bindings);
 	void Destroy();
 };
-
 
 class Resource : virtual public rhi::IGpuResource, public DeviceChild
 {
@@ -742,10 +736,6 @@ private:
 	void Destroy();
 
 	/** private functions */
-	PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
-	PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
-	PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fpGetPhysicalDeviceSurfaceFormatsKHR;
-	PFN_vkGetPhysicalDeviceSurfacePresentModesKHR fpGetPhysicalDeviceSurfacePresentModesKHR;
 	PFN_vkCreateSwapchainKHR fpCreateSwapchainKHR;
 	PFN_vkDestroySwapchainKHR fpDestroySwapchainKHR;
 	PFN_vkGetSwapchainImagesKHR fpGetSwapchainImagesKHR;
@@ -943,7 +933,7 @@ private:
 class ShaderResourceView : public rhi::IShaderResourceView
 {
 public:
-	ShaderResourceView(rhi::ResourceViewDesc const &desc, rhi::IGpuResource * pGpuResource);
+	ShaderResourceView(rhi::ResourceViewDesc const &desc, rhi::GpuResourceRef gpuResource);
 	~ShaderResourceView();
 	rhi::GpuResourceRef		GetResource() const override { return m_Resource; }
 	rhi::ResourceViewDesc	GetDesc() const override { return m_Desc; }
@@ -972,7 +962,7 @@ protected:
 	friend class		PipelineStateObject;
 private:
 	rhi::DescriptorRef		m_DescSet;
-	DescriptorSetLayout *	m_DescSetLayout;
+	DescriptorSetLayoutRef	m_DescSetLayout;
 	VkPipelineLayout		m_PipelineLayout;
 };
 

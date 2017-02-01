@@ -346,9 +346,18 @@ void PipelineStateObject::Destroy()
 			vkDestroyShaderModule(GetRawDevice(), iter.module, nullptr);
 		}
 	}
-	//vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
-	vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
-	VKLOG(Info, "PipelineStateObject-Destroyed..");
+	if (m_PipelineCache)
+	{
+		vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
+		VKLOG(Info, "PipelineCache  Destroyed.. -- %0x.", m_PipelineCache);
+		m_PipelineCache = VK_NULL_HANDLE;
+	}
+	if (m_Pipeline)
+	{
+		vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
+		VKLOG(Info, "PipelineStateObject  Destroyed.. -- %0x.", m_Pipeline);
+		m_Pipeline = VK_NULL_HANDLE;
+	}
 }
 
 K3D_VK_END

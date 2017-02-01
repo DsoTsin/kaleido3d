@@ -137,7 +137,7 @@ void CommandAllocator::Initialize()
 
 void CommandAllocator::Destroy()
 {
-	if (VK_NULL_HANDLE == m_Pool)
+	if (VK_NULL_HANDLE == m_Pool || !GetRawDevice() )
 	{
 		return;
 	}

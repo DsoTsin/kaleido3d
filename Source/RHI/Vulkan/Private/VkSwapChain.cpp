@@ -26,7 +26,7 @@ void SwapChain::Initialize(void * WindowHandle, rhi::GfxSetting & gfxSetting)
 	m_SelectedPresentQueueFamilyIndex					= ChooseQueueIndex();
 	m_SwapchainExtent = { gfxSetting.Width, gfxSetting.Height };
 	VkSurfaceCapabilitiesKHR surfProperties;
-	K3D_VK_VERIFY(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GetPhysicalDevice(), m_Surface, &surfProperties));
+	K3D_VK_VERIFY(GetGpuRef()->GetSurfaceCapabilitiesKHR(m_Surface, &surfProperties));
 	m_SwapchainExtent = surfProperties.currentExtent;
 	/*gfxSetting.Width = m_SwapchainExtent.width;
 	gfxSetting.Height = m_SwapchainExtent.height;*/
@@ -95,9 +95,9 @@ void SwapChain::InitSurface(void * WindowHandle)
 VkPresentModeKHR SwapChain::ChoosePresentMode()
 {
 	uint32_t presentModeCount;
-	K3D_VK_VERIFY(fpGetPhysicalDeviceSurfacePresentModesKHR(GetPhysicalDevice(), m_Surface, &presentModeCount, NULL));
+	K3D_VK_VERIFY(GetGpuRef()->GetSurfacePresentModesKHR(m_Surface, &presentModeCount, NULL));
 	std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-	K3D_VK_VERIFY(fpGetPhysicalDeviceSurfacePresentModesKHR(GetPhysicalDevice(), m_Surface, &presentModeCount, presentModes.data()));
+	K3D_VK_VERIFY(GetGpuRef()->GetSurfacePresentModesKHR(m_Surface, &presentModeCount, presentModes.data()));
 	VkPresentModeKHR swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR;
 	for (size_t i = 0; i < presentModeCount; i++)
 	{
@@ -117,9 +117,9 @@ VkPresentModeKHR SwapChain::ChoosePresentMode()
 std::pair<VkFormat, VkColorSpaceKHR> SwapChain::ChooseFormat(rhi::GfxSetting & gfxSetting)
 {
 	uint32_t formatCount;
-	K3D_VK_VERIFY(fpGetPhysicalDeviceSurfaceFormatsKHR(GetPhysicalDevice(), m_Surface, &formatCount, NULL));
+	K3D_VK_VERIFY(GetGpuRef()->GetSurfaceFormatsKHR(m_Surface, &formatCount, NULL));
 	std::vector<VkSurfaceFormatKHR> surfFormats(formatCount);
-	K3D_VK_VERIFY(fpGetPhysicalDeviceSurfaceFormatsKHR(GetPhysicalDevice(), m_Surface, &formatCount, surfFormats.data()));
+	K3D_VK_VERIFY(GetGpuRef()->GetSurfaceFormatsKHR(m_Surface, &formatCount, surfFormats.data()));
 	VkFormat colorFormat;
 	VkColorSpaceKHR colorSpace;
 	if (formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED)
@@ -142,7 +142,7 @@ int SwapChain::ChooseQueueIndex()
 
 	for (uint32_t i = 0; i < GetDevice()->GetQueueCount(); ++i)
 	{
-		vkGetPhysicalDeviceSurfaceSupportKHR(GetPhysicalDevice(), i, m_Surface, &queuePresentSupport[i]);
+		GetGpuRef()->GetSurfaceSupportKHR(i, m_Surface, &queuePresentSupport[i]);
 		if (queuePresentSupport[i])
 		{
 			chosenIndex = i;

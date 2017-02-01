@@ -347,6 +347,11 @@ void CommandContext::PipelineBarrierImageMemory(const ImageMemoryBarrierParams &
 	VkImageMemoryBarrier barrier = params.m_Barrier;
 	switch (params.m_Barrier.oldLayout)
 	{
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+	{
+		barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		break;
+	}
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 	{
 		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -390,7 +395,11 @@ void CommandContext::PipelineBarrierImageMemory(const ImageMemoryBarrierParams &
 		barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		break;
 	}
-
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+	{
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		break;
+	}
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 	{
 		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
@@ -406,7 +415,6 @@ void CommandContext::PipelineBarrierImageMemory(const ImageMemoryBarrierParams &
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 		break;
 	}
-
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 	{
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;

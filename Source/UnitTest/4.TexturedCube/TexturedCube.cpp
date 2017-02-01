@@ -343,7 +343,15 @@ void TCubeUnitTest::PrepareCommandBuffer()
 
 void TCubeUnitTest::OnDestroy()
 {
+	App::OnDestroy();
+
 	m_TriMesh->~CubeMesh();
+	m_pFence->WaitFor(1000);
+	if (m_Texture)
+	{
+		delete m_Texture;
+		m_Texture = nullptr;
+	}
 	m_RenderContext.Destroy();
 }
 

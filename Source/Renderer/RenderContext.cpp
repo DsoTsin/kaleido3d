@@ -77,6 +77,7 @@ namespace render
     
     void RenderContext::Destroy()
     {
+		m_pDevice->WaitIdle();
 		KLOG(Info, "RenderContext", "Destroyed Render Context.");
     }
     

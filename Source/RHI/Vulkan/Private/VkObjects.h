@@ -541,6 +541,141 @@ struct ImageInfo : VkImageCreateInfo
 	static ImageInfo FromRHI(rhi::TextureDesc const & desc);
 };
 
+class VkObjectAllocator
+{
+public:
+
+	inline operator VkAllocationCallbacks() const 
+	{ 
+		VkAllocationCallbacks result;
+		result.pUserData = (void*)this; 
+		result.pfnAllocation = Allocation; 
+		result.pfnReallocation = Reallocation; 
+		result.pfnFree = Free; 
+		result.pfnInternalAllocation = nullptr; 
+		result.pfnInternalFree = nullptr; 
+		return result; 
+	}; 
+
+private:
+	static void* VKAPI_CALL Allocation( void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope); 
+	static void* VKAPI_CALL Reallocation( void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope); 
+	static void VKAPI_CALL Free( void* pUserData, void* pMemory); 
+	void* Allocation( size_t size, size_t alignment, VkSystemAllocationScope allocationScope);
+	void* Reallocation(void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope); 
+	void Free(void* pMemory);
+};
+
+class CommandBufferManager
+{
+public:
+	CommandBufferManager(VkDevice device, VkCommandBufferLevel bufferLevel, unsigned graphicsQueueIndex);
+	~CommandBufferManager();
+
+	VkCommandBuffer RequestCommandBuffer();
+	void			BeginFrame();
+
+private:
+	VkDevice device = VK_NULL_HANDLE;
+	VkCommandPool pool = VK_NULL_HANDLE;
+	std::vector<VkCommandBuffer> buffers;
+	VkCommandBufferLevel commandBufferLevel;
+	unsigned count = 0;
+};
+
+extern ::k3d::DynArray<VkLayerProperties>		gVkLayerProps;
+extern ::k3d::DynArray<VkExtensionProperties>	gVkExtProps;
+
+class Instance;
+
+class Gpu
+{
+public:
+	~Gpu();
+
+	VkDevice CreateLogicDevice(bool enableValidation);
+	VkBool32 GetSupportedDepthFormat(VkFormat * depthFormat);
+
+	VkResult GetSurfaceSupportKHR(uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported);
+	VkResult GetSurfaceCapabilitiesKHR(VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* pSurfaceCapabilities);
+	VkResult GetSurfaceFormatsKHR(VkSurfaceKHR surface, uint32_t* pSurfaceFormatCount, VkSurfaceFormatKHR* pSurfaceFormats);
+	VkResult GetSurfacePresentModesKHR(VkSurfaceKHR surface, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes);
+
+private:
+	friend class Instance;
+	friend class Device;
+	friend class DeviceAdapter;
+	
+	Gpu(VkPhysicalDevice const&, Instance* inst);
+
+	void QuerySupportQueues();
+
+	Instance*					m_Inst;
+	VkPhysicalDevice			m_Gpu;
+	VkPhysicalDeviceProperties	m_Prop;
+	VkPhysicalDeviceMemoryProperties m_MemProp;
+	uint32									m_GraphicsQueueIndex = 0;
+	uint32									m_ComputeQueueIndex = 0;
+	uint32									m_CopyQueueIndex = 0;
+	DynArray<VkQueueFamilyProperties>		m_QueueProps;
+
+};
+
+using GpuRef = SharedPtr<Gpu>;
+
+VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
+	VkDebugReportFlagsEXT flags,
+	VkDebugReportObjectTypeEXT objectType,
+	uint64_t object, size_t location, int32_t messageCode,
+	const char * pLayerPrefix,
+	const char * pMessage, void * pUserData);
+
+class Instance
+{
+public:
+	Instance(const ::k3d::String& engineName, const ::k3d::String& appName, bool enableValidation = true);
+	~Instance();
+
+	uint32	GetHostGpuCount() const { return m_Gpus.Count(); }
+	GpuRef	GetHostGpuByIndex(uint32 i) const { return m_Gpus[i]; }
+	rhi::DeviceRef GetDeviceByIndex(uint32 i) const { return m_LogicDevices[i]; }
+
+	void	SetupDebugging(VkDebugReportFlagsEXT flags, PFN_vkDebugReportCallbackEXT callBack);
+	void	FreeDebugCallback();
+
+	bool	WithValidation() const { return m_EnableValidation; }
+	void	AppendLogicalDevice(rhi::DeviceRef logicalDevice);
+
+	friend class Gpu;
+	friend class Device;
+	friend struct RHIRoot;
+private:
+	void ExtractEnabledExtsAndLayers();
+	void EnumGpus();
+	void EnumProcs();
+
+	bool							m_EnableValidation;
+	::k3d::DynArray<::k3d::String>	m_EnabledExts;
+	::k3d::DynArray<char*>			m_EnabledExtsRaw;
+	::k3d::DynArray<::k3d::String>	m_EnabledLayers;
+	::k3d::DynArray<const char*>	m_EnabledLayersRaw;
+
+	VkInstance								m_Instance;
+	VkDebugReportCallbackEXT				m_DebugMsgCallback;
+	::k3d::DynArray<GpuRef>					m_Gpus;
+	::k3d::DynArray<rhi::DeviceAdapterRef>	m_GpuAdapters;
+	::k3d::DynArray<rhi::DeviceRef>			m_LogicDevices;
+
+	//private functions 
+
+	PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
+	PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
+	PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fpGetPhysicalDeviceSurfaceFormatsKHR;
+	PFN_vkGetPhysicalDeviceSurfacePresentModesKHR fpGetPhysicalDeviceSurfacePresentModesKHR;
+};
+
+using InstanceRef = SharedPtr<Instance>;
+
 K3D_VK_END
 
 #endif

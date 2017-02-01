@@ -248,31 +248,45 @@ Texture::TextureRef Texture::CreateFromSwapChain(VkImage image, VkImageView view
 	return k3d::MakeShared<Texture>(image, view, info, pDevice, false);
 }
 
-ShaderResourceView::ShaderResourceView(rhi::ResourceViewDesc const &desc, rhi::IGpuResource * pGpuResource)
+ShaderResourceView::ShaderResourceView(rhi::ResourceViewDesc const &desc, rhi::GpuResourceRef pGpuResource)
 	: m_Desc(desc), m_Resource(pGpuResource), m_TextureViewInfo{}, m_TextureView(VK_NULL_HANDLE)
 {
 	auto resourceDesc = m_Resource->GetResourceDesc();
+	m_TextureViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	m_TextureViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	switch(resourceDesc.Type)
 	{
+	case rhi::EGT_Texture1D:
+		m_TextureViewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
+		break;
 	case rhi::EGT_Texture2D:
-		m_TextureViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		m_TextureViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 		m_TextureViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		m_TextureViewInfo.format = g_FormatTable[resourceDesc.TextureDesc.Format];
-		m_TextureViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		m_TextureViewInfo.subresourceRange.baseMipLevel = 0;
-		m_TextureViewInfo.subresourceRange.baseArrayLayer = 0;
-		m_TextureViewInfo.subresourceRange.layerCount = 1;
-		m_TextureViewInfo.subresourceRange.levelCount = resourceDesc.TextureDesc.MipLevels;
-		m_TextureViewInfo.image = (VkImage)m_Resource->GetResourceLocation();
-		K3D_VK_VERIFY(vkCreateImageView(dynamic_cast<Resource*>(m_Resource.Get())->GetRawDevice(), &m_TextureViewInfo, nullptr, &m_TextureView));
+		break;
+	case rhi::EGT_Texture3D:
+		m_TextureViewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+		break;
+	case rhi::EGT_Texture2DArray:
+		m_TextureViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 		break;
 	}
+	m_TextureViewInfo.format = g_FormatTable[resourceDesc.TextureDesc.Format];
+	m_TextureViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	m_TextureViewInfo.subresourceRange.baseMipLevel = 0;
+	m_TextureViewInfo.subresourceRange.baseArrayLayer = 0;
+	m_TextureViewInfo.subresourceRange.layerCount = 1;
+	m_TextureViewInfo.subresourceRange.levelCount = resourceDesc.TextureDesc.MipLevels;
+	m_TextureViewInfo.image = (VkImage)m_Resource->GetResourceLocation();
+	K3D_VK_VERIFY(vkCreateImageView(DynamicPointerCast<Resource>(m_Resource)->GetRawDevice(), &m_TextureViewInfo, nullptr, &m_TextureView));
 }
 
 ShaderResourceView::~ShaderResourceView()
 {
 	// destroy view
+	if (m_TextureView)
+	{
+		vkDestroyImageView(DynamicPointerCast<Resource>(m_Resource)->GetRawDevice(), m_TextureView, nullptr);
+		m_TextureView = VK_NULL_HANDLE;
+	}
 }
 
 template<typename VkObject>
@@ -346,6 +360,8 @@ ResourceManager::PoolManager<VkObjectT>::~PoolManager()
 template<typename VkObjectT>
 void ResourceManager::PoolManager<VkObjectT>::Destroy()
 {
+	if (!GetRawDevice())
+		return;
 	::Os::Mutex::AutoLock lock(&m_Mutex);
 	for (auto& pool : m_Pools) {
 		vkFreeMemory(GetRawDevice(), pool->m_Memory, nullptr);

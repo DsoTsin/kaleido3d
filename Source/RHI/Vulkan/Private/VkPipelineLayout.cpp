@@ -20,10 +20,11 @@ PipelineLayout::~PipelineLayout()
 
 void PipelineLayout::Destroy()
 {
-	if (m_PipelineLayout == VK_NULL_HANDLE)
+	if (m_PipelineLayout == VK_NULL_HANDLE || !GetRawDevice())
 		return;
 	vkDestroyPipelineLayout(GetRawDevice(), m_PipelineLayout, nullptr);
-	VKLOG(Info, "PipelineLayout-destroying vkPipelineLayout...");
+	VKLOG(Info, "PipelineLayout Destroyed . -- %0x.", m_PipelineLayout);
+	m_PipelineLayout = VK_NULL_HANDLE;
 }
 
 void PipelineLayout::InitWithDesc(rhi::PipelineLayoutDesc const & desc)
@@ -35,9 +36,9 @@ void PipelineLayout::InitWithDesc(rhi::PipelineLayoutDesc const & desc)
 		array.Append(RHIBinding2VkBinding(rhibinding));
 	}
 
-	DescriptorAllocator*	alloc	= GetDevice()->NewDescriptorAllocator(16, array);
-	m_DescSetLayout					= GetDevice()->NewDescriptorSetLayout(array);
-	m_DescSet						= rhi::DescriptorRef( DescriptorSet::CreateDescSet(alloc, m_DescSetLayout->GetNativeHandle(), array, GetDevice()) );
+	auto alloc = GetDevice()->NewDescriptorAllocator(16, array);
+	m_DescSetLayout = GetDevice()->NewDescriptorSetLayout(array);
+	m_DescSet = rhi::DescriptorRef( DescriptorSet::CreateDescSet(alloc, m_DescSetLayout->GetNativeHandle(), array, GetDevice()) );
 
 	VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
 	pPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

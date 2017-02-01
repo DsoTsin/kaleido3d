@@ -3,6 +3,8 @@
 #include <KTL/String.hpp>
 #include <Interface/IRHI.h>
 
+#include <unordered_map>
+
 namespace render
 {
 	class TextQuad
@@ -38,27 +40,46 @@ namespace render
 		// Cache
 	};
 
-	class FontTexture
+	class CharTexture
 	{
 	public:
-		FontTexture(rhi::DeviceRef device, TextQuad const& quad);
-		~FontTexture();
+		CharTexture(rhi::DeviceRef device, TextQuad const& quad);
+		~CharTexture();
 		rhi::TextureRef GetTexture() const { return m_Texture; }
 	private:
 		rhi::TextureRef m_Texture;
 	};
 
+	class CharRenderer
+	{
+	public:
+		CharRenderer();
+		~CharRenderer();
+
+		void InitVertexBuffers(rhi::DeviceRef const& device);
+
+	private:
+		static short s_Indices[];
+		static float s_Vertices[];
+		static float s_CharTexCoords[];
+
+	private:
+		rhi::GpuResourceRef m_VertexBuffer;
+		rhi::GpuResourceRef m_IndexBuffer;
+	};
+
 	class FontRenderer
 	{
 	public:
-		FontRenderer();
+		explicit FontRenderer(rhi::DeviceRef const & device);
 		~FontRenderer();
-
+		void InitPSO();
 		void DrawText2D(rhi::CommandContextRef const& cmd, const ::k3d::String & text, float x, float y);
 	
 	private:
-		
-
-
+		rhi::DeviceRef							m_Device;
+		rhi::PipelineStateObjectRef				m_TextRenderPSO;
+		FontManager								m_FontManager;
+		std::unordered_map<char, CharTexture>	m_TexCache;
 	};
 }

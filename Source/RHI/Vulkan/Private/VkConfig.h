@@ -14,7 +14,6 @@ namespace
 	{
 		"VK_LAYER_LUNARG_standard_validation",
 	};
-
 }
 
 #ifdef DEBUG_MARKER

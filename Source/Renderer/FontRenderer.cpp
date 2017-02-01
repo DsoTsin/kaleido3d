@@ -1,6 +1,6 @@
 #include "Kaleido3D.h"
 #include "FontRenderer.h"
-
+#include <Core/Module.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -86,7 +86,7 @@ namespace render
 		return quadlist;
 	}
 
-	FontTexture::FontTexture(rhi::DeviceRef device, TextQuad const & quad)
+	CharTexture::CharTexture(rhi::DeviceRef device, TextQuad const & quad)
 	{
 		rhi::ResourceDesc texDesc;
 		texDesc.Type = rhi::EGT_Texture2D;
@@ -129,19 +129,72 @@ namespace render
 		cmd->Execute(false);
 	}
 	
-	FontTexture::~FontTexture()
+	short CharRenderer::s_Indices[] = { 0, 1, 3, 2 };
+	
+	float CharRenderer::s_Vertices[] = { 
+		0.0f, 0.0f, 0.0f,	0.0f, 1.0f, // 0
+		1.0f, 0.0f, 0.0f,	1.0f, 1.0f, // 1
+		0.0f, 1.0f, 0.0f,	0.0f, 0.0f, // 3
+		1.0f, 1.0f, 0.0f,	1.0f, 0.0f	// 2
+	};
+
+	CharRenderer::CharRenderer()
 	{
 	}
 
-	FontRenderer::FontRenderer()
+	CharRenderer::~CharRenderer()
+	{
+	}
+	
+
+	void CharRenderer::InitVertexBuffers(rhi::DeviceRef const & device)
+	{
+		rhi::ResourceDesc vboDesc;
+		vboDesc.ViewType = rhi::EGpuMemViewType::EGVT_VBV;
+		vboDesc.Flag = (rhi::EGpuResourceAccessFlag) (rhi::EGpuResourceAccessFlag::EGRAF_HostCoherent | rhi::EGpuResourceAccessFlag::EGRAF_HostVisible);
+		vboDesc.Size = sizeof(s_Vertices);
+		m_VertexBuffer = device->NewGpuResource(vboDesc);
+		void * ptr = m_VertexBuffer->Map(0, vboDesc.Size);
+		memcpy(ptr, s_Vertices, vboDesc.Size);
+		m_VertexBuffer->UnMap();
+
+		rhi::ResourceDesc iboDesc;
+		iboDesc.ViewType = rhi::EGpuMemViewType::EGVT_IBV;
+		iboDesc.Flag = (rhi::EGpuResourceAccessFlag) (rhi::EGpuResourceAccessFlag::EGRAF_HostCoherent | rhi::EGpuResourceAccessFlag::EGRAF_HostVisible);
+		iboDesc.Size = sizeof(s_Indices);
+		m_IndexBuffer = device->NewGpuResource(iboDesc);
+		ptr = m_IndexBuffer->Map(0, iboDesc.Size);
+		memcpy(ptr, s_Indices, iboDesc.Size);
+		m_IndexBuffer->UnMap();
+	}
+	
+	CharTexture::~CharTexture()
+	{
+	}
+
+	FontRenderer::FontRenderer(rhi::DeviceRef const& device)
+		: m_Device(device)
 	{
 	}
 	
 	FontRenderer::~FontRenderer()
 	{
 	}
+
+	void FontRenderer::InitPSO()
+	{
+		rhi::IShModule* shMod = (rhi::IShModule*)ACQUIRE_PLUGIN(ShaderCompiler);
+		if (!shMod)
+			return;
+		auto glslc = shMod->CreateShaderCompiler(rhi::ERHI_Vulkan);
+	}
 	
 	void FontRenderer::DrawText2D(rhi::CommandContextRef const & cmd, const::k3d::String & text, float x, float y)
 	{
+		auto quads = m_FontManager.AcquireText(text);
+		for (auto quad : quads)
+		{
+			CharTexture * tex = new CharTexture(m_Device, quad);
+		}
 	}
 }

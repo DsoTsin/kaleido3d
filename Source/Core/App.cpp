@@ -1,6 +1,7 @@
 #include "Kaleido3D.h"
 #include "App.h"
 #include "Message.h"
+#include "LogUtil.h"
 
 namespace k3d
 {
@@ -41,6 +42,7 @@ namespace k3d
 
 	void App::OnDestroy()
 	{
+		KLOG(Info, App, "Super::OnDestroy..");
 	}
 
 	AppStatus App::Run() {

@@ -20,87 +20,63 @@ namespace k3d
 namespace vk
 {
 
-//void EnumAllDeviceAdapter(rhi::IDeviceAdapter** & adapterList, uint32* count)
-//{
-//	*count = (uint32)RHIRoot::GetPhysicDevices().size();
-//	adapterList = new rhi::IDeviceAdapter*[*count];
-//	for (size_t i = 0; i < *count; i++)
-//	{
-//		VkPhysicalDeviceProperties properties;
-//		vkGetPhysicalDeviceProperties(RHIRoot::GetPhysicDevices()[i], &properties);
-//		adapterList[i] = new DeviceAdapter(&(RHIRoot::GetPhysicDevices()[i]));
-//		VKLOG(Info, "DeviceName is %s, VendorId is %d.", properties.deviceName, properties.vendorID);
-//	}
-//}
-
-void EnumAndInitAllDeviceAdapter(rhi::IDeviceAdapter** & adapterList, uint32* count, bool debug)
-{
-	*count = (uint32)RHIRoot::GetPhysicDevices().size();
-	adapterList = new rhi::IDeviceAdapter*[*count];
-	for (size_t i = 0; i < *count; i++)
-	{
-		auto& gpu = RHIRoot::GetPhysicDevices()[i];
-		VkPhysicalDeviceProperties properties = {};
-		vkGetPhysicalDeviceProperties(gpu, &properties); 
-		auto da = new DeviceAdapter(&gpu);
-		adapterList[i] = da;
-		auto dev = da->GetDevice();
-		auto ret = dev->Create(da, debug);
-		K3D_ASSERT(ret == rhi::IDevice::DeviceFound);
-		VKLOG(Info, "DeviceName is %s, VendorId is %d.", properties.deviceName, properties.vendorID);
-	}
-}
-
-std::vector<VkLayerProperties> RHIRoot::s_LayerProps;
-std::vector<char*> RHIRoot::s_LayerNames;
-RenderViewport * RHIRoot::s_Vp = nullptr;
-VkInstance RHIRoot::Instance;
-RHIRoot::DeviceList RHIRoot::PhysicalDevices;
+InstanceRef			RHIRoot::s_InstanceRef;
+RenderViewport *	RHIRoot::s_Vp = nullptr;
 
 void RHIRoot::Initialize(const char * appName, bool debug)
 {
 	vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(dynlib::GetVulkanLib().ResolveEntry("vkCreateInstance"));
 	vkDestroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(dynlib::GetVulkanLib().ResolveEntry("vkDestroyInstance"));
+	vkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dynlib::GetVulkanLib().ResolveEntry("vkGetInstanceProcAddr"));
 	vkEnumeratePhysicalDevices = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(dynlib::GetVulkanLib().ResolveEntry("vkEnumeratePhysicalDevices"));
 	vkEnumerateInstanceLayerProperties = (PFN_vkEnumerateInstanceLayerProperties)dynlib::GetVulkanLib().ResolveEntry("vkEnumerateInstanceLayerProperties");
 	vkEnumerateInstanceExtensionProperties = (PFN_vkEnumerateInstanceExtensionProperties)dynlib::GetVulkanLib().ResolveEntry("vkEnumerateInstanceExtensionProperties");
 	vkGetPhysicalDeviceProperties = (PFN_vkGetPhysicalDeviceProperties)dynlib::GetVulkanLib().ResolveEntry("vkGetPhysicalDeviceProperties");
 	vkGetPhysicalDeviceMemoryProperties = (PFN_vkGetPhysicalDeviceMemoryProperties)dynlib::GetVulkanLib().ResolveEntry("vkGetPhysicalDeviceMemoryProperties");
 	vkGetPhysicalDeviceQueueFamilyProperties = (PFN_vkGetPhysicalDeviceQueueFamilyProperties)dynlib::GetVulkanLib().ResolveEntry("vkGetPhysicalDeviceQueueFamilyProperties");
+	vkGetDeviceProcAddr = (PFN_vkGetDeviceProcAddr)dynlib::GetVulkanLib().ResolveEntry("vkGetDeviceProcAddr");
 	vkCreateDevice = (PFN_vkCreateDevice)dynlib::GetVulkanLib().ResolveEntry("vkCreateDevice");
 	
-	EnumLayers();
+	EnumLayersAndExts();
 
-	VkResult err = CreateInstance(debug, appName);
-	if (err == VK_ERROR_INCOMPATIBLE_DRIVER) {
-		VKLOG(Error, "Cannot find a compatible Vulkan installable client driver: vkCreateInstance Failure");
-	}
-	else if (err == VK_ERROR_EXTENSION_NOT_PRESENT) {
-		VKLOG(Error, "Cannot find a specified extension library: vkCreateInstance Failure");
-	}
-	else {
-		K3D_VK_VERIFY(err);
-	}
-
-	uint32_t gpuCount = 0;
-	K3D_VK_VERIFY(vkEnumeratePhysicalDevices(Instance, &gpuCount, nullptr));
-	VKLOG(Info, "RHIRoot::Initializer Device Count : %u .", gpuCount);
-	std::vector<VkPhysicalDevice> deviceList(gpuCount);
-	err = vkEnumeratePhysicalDevices(Instance, &gpuCount, deviceList.data());
-	VkPhysicalDeviceProperties physicalDeviceProperties = {};
-	vkGetPhysicalDeviceProperties(deviceList[0], &physicalDeviceProperties);
-	VKLOG(Info, "Vulkan First Device: %s", physicalDeviceProperties.deviceName);
-	PhysicalDevices.swap(deviceList);
-
+	// create instance
+	s_InstanceRef = InstanceRef(new vk::Instance(appName, appName, debug));
 }
 
 void RHIRoot::Destroy()
 {
-#if _DEBUG
-	FreeDebugCallback(Instance);
-#endif
-	vkDestroyInstance(Instance, nullptr);
-	VKLOG(Info, "RHIRoot: Destroy Instance.");
+}
+
+void RHIRoot::SetupDebug(VkDebugReportFlagsEXT flags, PFN_vkDebugReportCallbackEXT callBack)
+{
+	if (s_InstanceRef)
+	{
+		s_InstanceRef->SetupDebugging(flags, callBack);
+	}
+}
+
+uint32 RHIRoot::GetHostGpuCount()
+{
+	if (s_InstanceRef)
+	{
+		return s_InstanceRef->GetHostGpuCount();
+	}
+	return 0;
+}
+
+GpuRef RHIRoot::GetHostGpuById(uint32 id)
+{
+	return s_InstanceRef->GetHostGpuByIndex(id);
+}
+
+VkInstance RHIRoot::GetInstance()
+{
+	return s_InstanceRef ? s_InstanceRef->m_Instance : VK_NULL_HANDLE;
+}
+
+rhi::DeviceRef RHIRoot::GetDeviceById(uint32 id)
+{
+	return s_InstanceRef ? s_InstanceRef->GetDeviceByIndex(id): nullptr;
 }
 
 void RHIRoot::AddViewport(RenderViewport * vp)
@@ -113,90 +89,28 @@ RenderViewport * RHIRoot::GetViewport(int index)
 	return s_Vp;
 }
 
-void RHIRoot::EnumLayers()
+void RHIRoot::EnumLayersAndExts()
 {
+	// Enum Layers
 	uint32 layerCount = 0;
 	K3D_VK_VERIFY(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
-	if(layerCount>0)
+	if(layerCount > 0)
 	{
-		s_LayerProps.resize(layerCount);
-		K3D_VK_VERIFY(vkEnumerateInstanceLayerProperties(&layerCount, s_LayerProps.data()));
-	}
-	VKLOG(Info, "layerCount = %d. ", layerCount);
-}
-
-VkResult RHIRoot::CreateInstance(bool enableValidation, std::string name)
-{
-#if K3DPLATFORM_OS_WIN
-#define PLATFORM_SURFACE_EXT VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-#elif defined(K3DPLATFORM_OS_LINUX) && !defined(K3DPLATFORM_OS_ANDROID)
-#define PLATFORM_SURFACE_EXT VK_KHR_XCB_SURFACE_EXTENSION_NAME
-#elif defined(K3DPLATFORM_OS_ANDROID)
-#define PLATFORM_SURFACE_EXT VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
-#endif
-	uint32_t instanceExtensionCount = 0;
-	K3D_VK_VERIFY(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr));
-	VKLOG(Info, "extension num : %d.", instanceExtensionCount);
-	VkBool32 surfaceExtFound = 0;
-	VkBool32 platformSurfaceExtFound = 0;
-	VkExtensionProperties* instanceExtensions = new VkExtensionProperties[instanceExtensionCount];
-	K3D_VK_VERIFY(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, instanceExtensions));
-	std::vector<const char*> enabledExtensions;
-	for (uint32_t i = 0; i < instanceExtensionCount; i++) {
-		if (!strcmp(VK_KHR_SURFACE_EXTENSION_NAME, instanceExtensions[i].extensionName))
-		{
-			surfaceExtFound = 1;
-			enabledExtensions.push_back( VK_KHR_SURFACE_EXTENSION_NAME );
-		}
-		if (!strcmp(PLATFORM_SURFACE_EXT, instanceExtensions[i].extensionName))
-		{
-			platformSurfaceExtFound = 1;
-			enabledExtensions.push_back( PLATFORM_SURFACE_EXT );
-		}
-		if (enableValidation)
-		{
-			enabledExtensions.push_back( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
-		}
-		VKLOG(Info, "available extension : %s .", instanceExtensions[i].extensionName);
-	}
-	if (!surfaceExtFound)
-	{
-		VKLOG(Error, "vkEnumerateInstanceExtensionProperties failed to find the " VK_KHR_SURFACE_EXTENSION_NAME" extension.");
-	}
-	if (!platformSurfaceExtFound)
-	{
-		VKLOG(Error, "vkEnumerateInstanceExtensionProperties failed to find the " PLATFORM_SURFACE_EXT " extension.");
+		gVkLayerProps.Resize(layerCount);
+		K3D_VK_VERIFY(vkEnumerateInstanceLayerProperties(&layerCount, gVkLayerProps.Data()));
 	}
 
-	VkApplicationInfo appInfo = {};
-	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = name.c_str();
-	appInfo.pEngineName = name.c_str();
-	appInfo.apiVersion = VK_MAKE_VERSION(1,0,1);
-	appInfo.engineVersion = 1;
-	appInfo.applicationVersion = 0;
-
-	VkInstanceCreateInfo instanceCreateInfo = {};
-	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	instanceCreateInfo.pNext = NULL;
-	instanceCreateInfo.pApplicationInfo = &appInfo;
-	instanceCreateInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();
-	instanceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
-	if (enableValidation && !s_LayerProps.empty())
+	// Enum Extensions
+	uint32 extCount = 0;
+	K3D_VK_VERIFY(vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr));
+	if (extCount > 0)
 	{
-		for (auto prop : s_LayerProps)
-		{
-			if (strcmp(prop.layerName, g_ValidationLayerNames[0]) == 0 /*|| strcmp(prop.layerName, g_ValidationLayerNames[1])==0*/)
-			{
-				s_LayerNames.push_back(prop.layerName);
-				instanceCreateInfo.enabledLayerCount = s_LayerNames.size();
-				instanceCreateInfo.ppEnabledLayerNames = s_LayerNames.data();
-				VKLOG(Info, "enable validation layer [%s].", prop.layerName);
-				break;
-			}
-		}
+		gVkExtProps.Resize(extCount);
+		K3D_VK_VERIFY(vkEnumerateInstanceExtensionProperties(nullptr, &extCount, gVkExtProps.Data()));
 	}
-	return vkCreateInstance(&instanceCreateInfo, nullptr, &Instance);
+	VKLOG(Info, ">> RHIRoot::EnumLayersAndExts <<\n\n"
+		"=================================>> layerCount = %d.\n"
+		"=================================>> extensionCount = %d.\n", layerCount, extCount);
 }
 
 // Macro to get a procedure address based on a vulkan instance
@@ -221,10 +135,6 @@ VkResult RHIRoot::CreateInstance(bool enableValidation, std::string name)
 
 void SwapChain::InitProcs()
 {
-	GET_INSTANCE_PROC_ADDR(RHIRoot::GetInstance(), GetPhysicalDeviceSurfaceSupportKHR);
-	GET_INSTANCE_PROC_ADDR(RHIRoot::GetInstance(), GetPhysicalDeviceSurfaceCapabilitiesKHR);
-	GET_INSTANCE_PROC_ADDR(RHIRoot::GetInstance(), GetPhysicalDeviceSurfaceFormatsKHR);
-	GET_INSTANCE_PROC_ADDR(RHIRoot::GetInstance(), GetPhysicalDeviceSurfacePresentModesKHR);
 	GET_DEVICE_PROC_ADDR(GetRawDevice(), CreateSwapchainKHR);
 	GET_DEVICE_PROC_ADDR(GetRawDevice(), DestroySwapchainKHR);
 	GET_DEVICE_PROC_ADDR(GetRawDevice(), GetSwapchainImagesKHR);
@@ -238,7 +148,10 @@ class VkRHI : public IVkRHI
 {
 public:
 	VkRHI() {}
-	~VkRHI() override {}
+	~VkRHI() override 
+	{
+		Shutdown();
+	}
 
 	void Initialize(const char* appName, bool debug) override
 	{
@@ -252,25 +165,18 @@ public:
 
 	rhi::DeviceRef	GetPrimaryDevice() override 
 	{
-		if (!m_pMainDevice && m_ppAdapters && GetDeviceCount() > 0)
-		{
-			m_pMainDevice = m_ppAdapters[0]->GetDevice();
-		}
-		return m_pMainDevice;
+		return GetDeviceById(0);
 	}
 	
 	uint32 GetDeviceCount() override { return m_DeviceCount; }
 	
 	rhi::DeviceRef	GetDeviceById(uint32 id) override
 	{
-		if (!m_ppAdapters || id >= m_DeviceCount)
-			return nullptr;
-		return m_ppAdapters[id]->GetDevice();
+		return vk::RHIRoot::GetDeviceById(id);
 	}
 	
 	void Destroy() override
 	{
-		k3d::vk::RHIRoot::Destroy();
 	}
 
 	void Start() override
@@ -280,7 +186,6 @@ public:
 			VKLOG(Fatal, "RHI Module uninitialized!! You should call Initialize first!");
 			return;
 		}
-		k3d::vk::EnumAndInitAllDeviceAdapter(m_ppAdapters, &m_DeviceCount, m_ConfigDebug);
 	}
 
 	void Shutdown() override
@@ -294,8 +199,6 @@ private:
 
 	bool					m_IsInitialized = false;
 	uint32					m_DeviceCount = 0;
-	rhi::IDeviceAdapter **	m_ppAdapters = nullptr;
-	rhi::DeviceRef			m_pMainDevice = nullptr;
 	bool					m_ConfigDebug = false;
 };
 
