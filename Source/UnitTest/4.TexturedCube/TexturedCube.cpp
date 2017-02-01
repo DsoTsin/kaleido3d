@@ -263,7 +263,7 @@ void TCubeUnitTest::LoadTexture()
  		uint64 length = textureFile->GetLength();
 		uint8* data = new uint8[length];
 		textureFile->Read(data, length);
-		m_Texture = new TextureObject(m_RenderContext.GetDevice(), data);
+		m_Texture = new TextureObject(m_RenderContext.GetDevice(), data, false);
 		auto texStageBuf = CreateStageBuffer(m_Texture->GetSize());
 		m_Texture->MapIntoBuffer(texStageBuf);
 		m_Texture->CopyAndInitTexture(texStageBuf);

@@ -175,6 +175,8 @@ namespace rhi
 		virtual void			SetVertexInputLayout(rhi::VertexDeclaration const*, uint32 Count) = 0;
 		virtual void			SetRenderTargetFormat(const RenderTargetFormat &) = 0;
 		virtual void			SetSampler(SamplerRef) = 0;
+		virtual void			SavePSO(const char* /*path*/) {}
+		virtual void			LoadPSO(const char*) {}
 	};
 
 	struct IDescriptorPool
@@ -210,7 +212,8 @@ namespace rhi
 
 	struct K3D_API IDevice
 	{
-		enum Result {
+		enum Result
+		{
 			DeviceNotFound,
 			DeviceFound
 		};

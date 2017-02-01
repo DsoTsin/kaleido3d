@@ -6,6 +6,6 @@
 
 int main(int argc, char**argv)
 {
-	JOIN_TESTS(TestBundle(), TestOs(), TestShaderCompiler(), TestWebSocket(), TestSharedPtr(), TestString(), TestDynArrray());
+	JOIN_TESTS(TestBundle(), TestOs(), TestShaderCompiler(), TestWebSocket(), TestSharedPtr(), TestString(), TestDynArrray(), TestFontManager());
 	return 0;
 }

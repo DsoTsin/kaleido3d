@@ -2,11 +2,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-TextureObject::TextureObject(rhi::DeviceRef pDevice, const uint8_t * dataInMemory) 
-	: m_pDevice(pDevice), m_width(0), m_height(0), m_format(rhi::EPF_RGB8Unorm), m_pBits(nullptr), m_DataSize(0)
+TextureObject::TextureObject(rhi::DeviceRef pDevice, const uint8_t * dataInMemory, bool useStaging) 
+	: m_pDevice(pDevice), m_width(0), m_height(0), m_format(rhi::EPF_RGB8Unorm), m_pBits(nullptr), m_DataSize(0), m_UseStaging(useStaging)
 {
 	InitData(dataInMemory);
-	InitTexture();
+	if (!useStaging)
+	{
+		InitTexture();
+	}
 }
 
 TextureObject::~TextureObject()
@@ -16,6 +19,8 @@ TextureObject::~TextureObject()
 
 void TextureObject::MapIntoBuffer(rhi::GpuResourceRef stageBuff)
 {
+	if (!m_UseStaging)
+		return;
 	void * pData = stageBuff->Map(0, GetSize());
 	memcpy(pData, m_pBits, GetSize());
 	stageBuff->UnMap();
@@ -23,6 +28,8 @@ void TextureObject::MapIntoBuffer(rhi::GpuResourceRef stageBuff)
 
 void TextureObject::CopyAndInitTexture(rhi::GpuResourceRef stageBuff)
 {
+	if (!m_UseStaging)
+		return;
 	rhi::ResourceDesc texDesc;
 	texDesc.Type = rhi::EGT_Texture2D;
 	texDesc.ViewType = rhi::EGpuMemViewType::EGVT_SRV;
@@ -92,11 +99,10 @@ void TextureObject::InitData(const uint8* dataInMemory)
 
 void TextureObject::InitTexture()
 {
-	/*rhi::ResourceDesc texDesc;
+	rhi::ResourceDesc texDesc;
 	texDesc.Type = rhi::EGT_Texture2D;
 	texDesc.ViewType = rhi::EGpuMemViewType::EGVT_SRV;
-	texDesc.CreationFlag = rhi::EGpuResourceCreationFlag::EGRCF_TransferDst;
-	texDesc.Flag = rhi::EGpuResourceAccessFlag::EGRAF_DeviceVisible;
+	texDesc.Flag = rhi::EGpuResourceAccessFlag::EGRAF_HostVisible;
 	texDesc.TextureDesc.Format = rhi::EPF_RGBA8Unorm;
 	texDesc.TextureDesc.Width = m_width;
 	texDesc.TextureDesc.Height = m_height;
@@ -105,26 +111,33 @@ void TextureObject::InitTexture()
 	texDesc.TextureDesc.Depth = 1;
 	m_Resource = m_pDevice->NewGpuResource(texDesc);
 
-	m_pContext = m_pDevice->NewCommandContext(rhi::ECMD_Graphics);
-	m_pContext->Begin();
-	m_pContext->TransitionResourceBarrier(m_Resource, rhi::ERS_Unknown, rhi::ERS_ShaderResource);
-	m_pContext->End();
-	m_pContext->Execute(false);
 	uint64 sz = m_Resource->GetResourceSize();
 	void * pData = m_Resource->Map(0, sz);
 	rhi::SubResourceLayout layout = {};
 	rhi::TextureResourceSpec spec = { rhi::ETAF_COLOR,0,0 };
 	m_pDevice->QueryTextureSubResourceLayout(m_Resource, spec, &layout);
-
-	for (int y = 0; y < m_height; y++)
+	if (m_width * 4 == layout.RowPitch) // directly upload
 	{
-		uint32_t *row = (uint32_t *)((char *)pData + layout.RowPitch * y);
-		for (int x = 0; x < m_width; x++)
+		memcpy(pData, m_pBits, sz);
+	}
+	else
+	{
+		for (int y = 0; y < m_height; y++)
 		{
-			row[x] = m_pBits[x + y * m_width];
+			uint32_t *row = (uint32_t *)((char *)pData + layout.RowPitch * y);
+			for (int x = 0; x < m_width; x++)
+			{
+				row[x] = m_pBits[x + y * m_width];
+			}
 		}
 	}
-	m_Resource->UnMap();*/
+	m_Resource->UnMap();
+
+	m_pContext = m_pDevice->NewCommandContext(rhi::ECMD_Graphics);
+	m_pContext->Begin();
+	m_pContext->TransitionResourceBarrier(m_Resource, rhi::ERS_ShaderResource);
+	m_pContext->End();
+	m_pContext->Execute(false);
 
 }
 

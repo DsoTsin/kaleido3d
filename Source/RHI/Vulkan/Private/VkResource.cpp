@@ -200,8 +200,16 @@ void Texture::CreateSampledTexture(TextureDesc const & desc)
 {
 	m_ImageInfo = ImageInfo::FromRHI(desc);
 	m_ImageInfo.usage = m_ImageUsage | VK_IMAGE_USAGE_SAMPLED_BIT;
-	m_ImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	m_ImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	if (m_ImageUsage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) // texture upload use staging
+	{
+		m_ImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		m_ImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	}
+	else // directly upload
+	{
+		m_ImageInfo.tiling = VK_IMAGE_TILING_LINEAR;
+		m_ImageInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+	}
 	
 	m_SubResRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, desc.MipLevels, 0, desc.Layers };
 

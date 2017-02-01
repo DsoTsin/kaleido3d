@@ -6,7 +6,7 @@ if(POLICY CMP0054)
 endif()
 
 set(Kaleido3D_ROOT_DIR "${Kaleido3D_SOURCE_DIR}/..")
-set(K3D_THIRD_PARTY "${Kaleido3D_ROOT_DIR}/Source/ThirdParty_Prebuilt")
+set(K3D_THIRD_PARTY "${Kaleido3D_SOURCE_DIR}/ThirdParty_Prebuilt")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kaleido3D_SOURCE_DIR}/../Project")
 set(CMAKE_FIND_ROOT_PATH "${K3D_THIRD_PARTY};${CMAKE_FIND_ROOT_PATH}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${Kaleido3D_ROOT_DIR}/Binary/")

@@ -3,6 +3,8 @@ add_definitions(-DBUILD_SHARED_LIB -DBUILD_WITH_PLUGIN)
 ENDIF()
 ################################## Unit Test For RHI #####################################
 
+INCLUDE_DIRECTORIES(${FREETYPE2_INCLUDE_DIR})
+
 add_unittest(
 	1.Device
 	1.Device/UnitTestRHIDevice.h
@@ -36,5 +38,8 @@ add_unittest(
 	Base/UTKTL.SharedPtr.cpp
 	Base/UTKTL.DynArray.cpp
 	Base/UTCore.String.cpp
+	Base/UTFontLoader.cpp
 	Base/Main.cpp
 )
+
+TARGET_LINK_LIBRARIES(0.BaseComponents ${FREETYPE2_LIBRARY})

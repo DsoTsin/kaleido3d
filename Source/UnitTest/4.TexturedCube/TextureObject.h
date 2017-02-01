@@ -11,7 +11,7 @@
 class TextureObject
 {
 public:
-	TextureObject(rhi::DeviceRef pDevice, const uint8_t* dataInMemory);
+	TextureObject(rhi::DeviceRef pDevice, const uint8_t* dataInMemory, bool useStaging = true);
 	~TextureObject();
 
 	uint64 GetSize() const { return m_DataSize; }
@@ -39,6 +39,7 @@ private:
 	rhi::GpuResourceRef m_Resource;
 	rhi::SamplerRef m_sampler;
 	rhi::EPixelFormat m_format;
+	bool	m_UseStaging;
 	uint64	m_DataSize;
 	uint32_t m_width;
 	uint32_t m_height;

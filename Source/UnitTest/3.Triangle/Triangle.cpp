@@ -286,7 +286,7 @@ void VkTriangleUnitTest::PreparePipeline()
 	desc.Shaders[rhi::ES_Fragment] = fragSh;
 	desc.VertexLayout.Append(m_TriMesh->GetVertDec()[0]).Append(m_TriMesh->GetVertDec()[1]);
 	m_pPso = pDevice->NewPipelineState(desc, m_pl, rhi::EPSO_Graphics);
-
+	//m_pPso->LoadPSO("triagle.psocache");
 }
 
 void VkTriangleUnitTest::PrepareCommandBuffer()

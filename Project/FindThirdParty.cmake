@@ -18,7 +18,7 @@ unset(GLSLANG_INCLUDE_DIR CACHE)
 unset(SPIRV2CROSS_INCLUDE_DIR CACHE)
 unset(FREETYPE2_INCLUDE_DIR CACHE)
 
-set(FREETYPE2_LIBRARY freetyped)
+set(FREETYPE2_LIBRARY freetype)
 set(GLSLANG_LIBRARIES glslang HLSL OGLCompiler OSDependent SPIRV SPVRemapper)
 set(SPIRV2CROSS_LIBRARY Spirv2Cross)
 
@@ -53,10 +53,27 @@ find_path(SPIRV2CROSS_INCLUDE_DIR
 )
 
 find_path(FREETYPE2_INCLUDE_DIR
-    freetype2/ft2build.h
-    PATH_SUFFIXES include
+    ft2build.h
+    PATH_SUFFIXES include/freetype2
     PATHS ${ThirdParty_PREBUILT_DIR}
 )
+
+find_library(FREETYPE2_LIBRARY
+	NAMES freetype
+	HINTS
+	$ENV{FREETYPE2_DIR}
+	PATH_SUFFIXES lib
+	PATHS
+	${ThirdParty_PREBUILT_DIR}
+)
+
+if(FREETYPE2_LIBRARY)
+	include_directories(${FREETYPE2_INCLUDE_DIR})
+	set(HAS_FREETYPE true)
+    if(ANDROID)
+        list(APPEND FREETYPE2_LIBRARY z)
+    endif()
+endif()
 
 message("GLSLang = ${GLSLANG_INCLUDE_DIR}")
 

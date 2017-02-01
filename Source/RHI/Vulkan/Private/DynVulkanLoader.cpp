@@ -494,7 +494,7 @@ VkResult vkCmd::CreateGraphicsPipelines(VkDevice Device, VkPipelineCache Pipelin
 {
 	std::stringstream param;
 	param << "vkCmd::CreateGraphicsPipelines() device=" << std::hex << std::setfill('0') << Device << ", cache=" << std::hex << std::setfill('0') << PipelineCache << ", CreateInfoCount=" << CreateInfoCount;
-	if (CreateInfoCount)
+	if (CreateInfoCount && CreateInfos)
 	{
 		for (int i = 0; i < CreateInfoCount; i++)
 			param << ", \n\tCreateInfos[" << i << "]=" << DumpGraphicsPipelineCreateInfo(CreateInfos[i]);

@@ -900,6 +900,8 @@ public:
 
 	VkPipeline 							GetPipeline() const { return m_Pipeline; }
 	void								Finalize() override;
+	void								SavePSO(const char* path) override;
+	void								LoadPSO(const char* path) override;
 
 	/**
 	 * TOFIX

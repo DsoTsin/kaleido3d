@@ -2,6 +2,7 @@
 #include "VkRHI.h"
 #include "VkEnums.h"
 #include "VkUtils.h"
+#include <Core/Os.h>
 
 #include <set>
 
@@ -94,18 +95,45 @@ void PipelineStateObject::Finalize()
 {
 	if (VK_NULL_HANDLE != m_Pipeline)
 		return;
-	/*VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));*/
+	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
 	if (GetType() == rhi::EPSO_Graphics) 
 	{
-		K3D_VK_VERIFY(vkCmd::CreateGraphicsPipelines(GetRawDevice(), VK_NULL_HANDLE, 1, &m_GfxCreateInfo, nullptr, &m_Pipeline));
+		K3D_VK_VERIFY(vkCmd::CreateGraphicsPipelines(GetRawDevice(), m_PipelineCache, 1, &m_GfxCreateInfo, nullptr, &m_Pipeline));
 	}
 	else
 	{
 		m_CptCreateInfo.stage = m_ShaderStageInfos[0];
 		K3D_VK_VERIFY(vkCreateComputePipelines(GetRawDevice(), m_PipelineCache, 1, &m_CptCreateInfo, nullptr, &m_Pipeline));
 	}
+}
+
+void PipelineStateObject::SavePSO(const char * path)
+{
+	size_t szPSO = 0;
+	K3D_VK_VERIFY(vkGetPipelineCacheData(GetRawDevice(), m_PipelineCache, &szPSO, nullptr));
+	if (!szPSO || !path)
+		return;
+	DynArray<char> dataBlob;
+	dataBlob.Resize(szPSO);
+	vkGetPipelineCacheData(GetRawDevice(), m_PipelineCache, &szPSO, dataBlob.Data());
+	Os::File psoCacheFile(path);
+	psoCacheFile.Open(IOWrite);
+	psoCacheFile.Write(dataBlob.Data(), szPSO);
+	psoCacheFile.Close();
+}
+
+void PipelineStateObject::LoadPSO(const char * path)
+{
+	Os::MemMapFile psoFile;
+	if(!path || !psoFile.Open(path, IORead))
+		return;
+	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	pipelineCacheCreateInfo.pInitialData = psoFile.FileData();
+	pipelineCacheCreateInfo.initialDataSize = psoFile.GetSize();
+	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
 }
 
 void PipelineStateObject::SetRasterizerState(const rhi::RasterizerState& rasterState)

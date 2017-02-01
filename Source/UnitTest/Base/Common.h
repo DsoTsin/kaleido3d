@@ -13,6 +13,8 @@
 
 #include <Tools/ShaderGen/Public/ShaderCompiler.h>
 
+#include <Renderer/FontRenderer.h>
+
 #include <memory>
 #include <thread>
 
@@ -29,6 +31,8 @@ for (auto t : tests) \
 extern threadptr TestBundle();
 
 extern threadptr TestOs();
+
+extern threadptr TestFontManager();
 
 extern threadptr TestString();
 

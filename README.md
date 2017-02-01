@@ -1,12 +1,13 @@
 Introduction 
 =========
 
+**kaleido3d** is a cross-platform graphics library.
 
 > **Main Feature**
 > 
 >* `Next Generation Graphics Library` 
->* Modern C++ Code (**`C++ 11`**)
->* Modern Graphics Renderer (`Metal`, `Vulkan`, `Direct3D 12`)
+>* Modern C++ Code
+>* Modern Graphics Renderer (`Metal`, `Vulkan`, `Direct3D 12`, `OpenGL|ES`)
 >* **`Maya`** Digital Content Creation Tools
 >* **Task-Oriented**, support `multi-thread` rendering 
 >* Support Windows, Android, iOS, MacOS & Linux.
@@ -41,14 +42,14 @@ Current Status
 - RHI(Render Hardware Interface)
 
 	* [x] Vulkan backend **ready**.
-	* [ ] DirectX 12 backend **WIP**
-	* [ ] Metal backend **WIP**
+	* [x] DirectX 12 backend **WIP**
+	* [x] Metal backend **WIP**
 
 - Core.Platform
 
 	* [x] Windows implementation ready.
 	* [x] Android RendererView.
-	* [ ] iOS/MacOS not initialized.
+	* [x] iOS/MacOS **WIP**.
 
 - Tools
 	
@@ -59,11 +60,11 @@ Current Status
 	
 	* [x] Triangle(vk)
 	* [x] Textured Cube 
-	* [ ] Compute Shader
-	* [ ] Shadow Mapping
-	* [ ] Physically Based Shading
-	* [ ] Deferred Shading
-	* [ ] Multi-thread Rendering
+	* [x] Compute Shader
+	* [x] Shadow Mapping
+	* [x] Physically Based Shading
+	* [x] Deferred Shading
+	* [x] Multi-thread Rendering
 	* [ ] Multi-GPU/CrossAdapter Rendering
 	* [ ] Cross Shader Language Compiler
 
@@ -90,6 +91,7 @@ Documents
 	*  [rapidJson][3]
 	*  [glslang][7]
 	*  [spir2cross][10]
+	*  [freetype][11]
 	*  DXSDK
 
 
@@ -166,3 +168,4 @@ Framework development discussions and thorough bug reports are collected on [Iss
 [8]: https://github.com/Tomicyo/kaleido3d_dep
 [9]: https://vulkan.lunarg.com/
 [10]: https://github.com/KhronosGroup/SPIRV-Cross
+[11]: https://www.freetype.org

@@ -100,6 +100,9 @@ K3D_COMMON_NS
 			m_ElementCount = rhs.m_ElementCount;
 			m_Capacity = rhs.m_Capacity;
 			m_pElement = rhs.m_pElement;
+			rhs.m_pElement = nullptr;
+			rhs.m_Capacity = 0;
+			rhs.m_ElementCount = 0;
 		}
 
 		DynArray(DynArray && rhs, TAllocator & alloc) : m_ElementCount(0), m_ElementIndex(0), m_pElement(nullptr), m_Allocator(alloc)
