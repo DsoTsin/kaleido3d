@@ -170,7 +170,7 @@ void RenderPass::Initialize(RenderpassOptions const & options)
 	renderPassCreateInfo.pSubpasses = subPassDescs.empty() ? nullptr : subPassDescs.data();
 	renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
 	renderPassCreateInfo.pDependencies = dependencies.empty() ? nullptr : dependencies.data();
-	K3D_VK_VERIFY(vkCreateRenderPass(GetRawDevice(), &renderPassCreateInfo, nullptr, &m_RenderPass));
+	K3D_VK_VERIFY(GetGpuRef()->vkCreateRenderPass(GetRawDevice(), &renderPassCreateInfo, nullptr, &m_RenderPass));
 }
 
 void RenderPass::Initialize(RenderTargetLayout const & rtl)
@@ -198,7 +198,7 @@ void RenderPass::Initialize(RenderTargetLayout const & rtl)
 	renderPassCreateInfo.pSubpasses = &subpass;
 	renderPassCreateInfo.dependencyCount = 0;
 	renderPassCreateInfo.pDependencies = nullptr;
-	K3D_VK_VERIFY(vkCreateRenderPass(GetRawDevice(), &renderPassCreateInfo, nullptr, &m_RenderPass));
+	K3D_VK_VERIFY(GetGpuRef()->vkCreateRenderPass(GetRawDevice(), &renderPassCreateInfo, nullptr, &m_RenderPass));
 }
 
 void RenderPass::Destroy()
@@ -207,7 +207,8 @@ void RenderPass::Destroy()
 	{
 		return;
 	}
-	vkDestroyRenderPass(GetRawDevice(), m_RenderPass, nullptr);
+	VKLOG(Info, "RenderPass destroy... -- %0x.", m_RenderPass);
+	GetGpuRef()->vkDestroyRenderPass(GetRawDevice(), m_RenderPass, nullptr);
 	m_RenderPass = VK_NULL_HANDLE;
 }
 

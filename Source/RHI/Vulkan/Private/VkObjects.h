@@ -7,6 +7,9 @@ K3D_VK_BEGIN
 
 struct ImageInfo;
 
+class Gpu;
+using GpuRef = SharedPtr<Gpu>;
+
 class RenderTargetLayout
 {
 public:
@@ -386,6 +389,9 @@ public:
 	static std::pair<VkImageView, VkImageViewCreateInfo> CreateColorImageView(
 		VkDevice device, VkFormat colorFmt, VkImage colorImage,
 		VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+	static std::pair<VkImageView, VkImageViewCreateInfo> CreateColorImageView(
+		GpuRef device, VkFormat colorFmt, VkImage colorImage,
+		VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 
 	static ImageViewInfo CreateDepthStencilImageInfo(
 		VkFormat format, VkImage image,
@@ -549,9 +555,9 @@ public:
 	{ 
 		VkAllocationCallbacks result;
 		result.pUserData = (void*)this; 
-		result.pfnAllocation = Allocation; 
-		result.pfnReallocation = Reallocation; 
-		result.pfnFree = Free; 
+//		result.pfnAllocation = VkObjectAllocator::Allocation;
+//		result.pfnReallocation = VkObjectAllocator::Reallocation;
+//		result.pfnFree = VkObjectAllocator::Free;
 		result.pfnInternalAllocation = nullptr; 
 		result.pfnInternalFree = nullptr; 
 		return result; 
@@ -569,24 +575,28 @@ private:
 class CommandBufferManager
 {
 public:
-	CommandBufferManager(VkDevice device, VkCommandBufferLevel bufferLevel, unsigned graphicsQueueIndex);
+	CommandBufferManager(GpuRef gpu, VkCommandBufferLevel bufferLevel, unsigned graphicsQueueIndex);
 	~CommandBufferManager();
-
+	void			Destroy();
 	VkCommandBuffer RequestCommandBuffer();
 	void			BeginFrame();
 
 private:
-	VkDevice device = VK_NULL_HANDLE;
-	VkCommandPool pool = VK_NULL_HANDLE;
-	std::vector<VkCommandBuffer> buffers;
-	VkCommandBufferLevel commandBufferLevel;
-	unsigned count = 0;
+	GpuRef							m_Gpu;
+	VkCommandPool					m_Pool = VK_NULL_HANDLE;
+	std::vector<VkCommandBuffer>	m_Buffers;
+	VkCommandBufferLevel			m_CommandBufferLevel;
+	uint32							m_Count = 0;
 };
+
+using CmdBufManagerRef = SharedPtr<CommandBufferManager>;
 
 extern ::k3d::DynArray<VkLayerProperties>		gVkLayerProps;
 extern ::k3d::DynArray<VkExtensionProperties>	gVkExtProps;
 
 class Instance;
+
+#define __VK_DEVICE_PROC__(name) PFN_vk##name vk##name = NULL
 
 class Gpu
 {
@@ -601,6 +611,141 @@ public:
 	VkResult GetSurfaceFormatsKHR(VkSurfaceKHR surface, uint32_t* pSurfaceFormatCount, VkSurfaceFormatKHR* pSurfaceFormats);
 	VkResult GetSurfacePresentModesKHR(VkSurfaceKHR surface, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes);
 
+	void DestroyDevice();
+	void FreeCommandBuffers(VkCommandPool,uint32,VkCommandBuffer*);
+	VkResult CreateCommdPool(const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool);
+	VkResult AllocateCommandBuffers(const VkCommandBufferAllocateInfo* pAllocateInfo, VkCommandBuffer* pCommandBuffers);
+
+	Instance* GetInstance() const { return m_Inst; }
+
+	__VK_DEVICE_PROC__(DestroyDevice);
+	__VK_DEVICE_PROC__(GetDeviceQueue);
+	__VK_DEVICE_PROC__(QueueSubmit);
+	__VK_DEVICE_PROC__(QueueWaitIdle);
+	__VK_DEVICE_PROC__(QueuePresentKHR);
+	__VK_DEVICE_PROC__(DeviceWaitIdle);
+	__VK_DEVICE_PROC__(AllocateMemory);
+	__VK_DEVICE_PROC__(FreeMemory);
+	__VK_DEVICE_PROC__(MapMemory);
+	__VK_DEVICE_PROC__(UnmapMemory);
+	__VK_DEVICE_PROC__(FlushMappedMemoryRanges);
+	__VK_DEVICE_PROC__(InvalidateMappedMemoryRanges);
+	__VK_DEVICE_PROC__(GetDeviceMemoryCommitment);
+	__VK_DEVICE_PROC__(BindBufferMemory);
+	__VK_DEVICE_PROC__(BindImageMemory);
+	__VK_DEVICE_PROC__(GetBufferMemoryRequirements);
+	__VK_DEVICE_PROC__(GetImageMemoryRequirements);
+	__VK_DEVICE_PROC__(GetImageSparseMemoryRequirements);
+	__VK_DEVICE_PROC__(QueueBindSparse);
+	__VK_DEVICE_PROC__(CreateFence);
+	__VK_DEVICE_PROC__(DestroyFence);
+	__VK_DEVICE_PROC__(ResetFences);
+	__VK_DEVICE_PROC__(GetFenceStatus);
+	__VK_DEVICE_PROC__(WaitForFences);
+	__VK_DEVICE_PROC__(CreateSemaphore);
+	__VK_DEVICE_PROC__(DestroySemaphore);
+	__VK_DEVICE_PROC__(CreateEvent);
+	__VK_DEVICE_PROC__(DestroyEvent);
+	__VK_DEVICE_PROC__(GetEventStatus);
+	__VK_DEVICE_PROC__(SetEvent);
+	__VK_DEVICE_PROC__(ResetEvent);
+	__VK_DEVICE_PROC__(CreateQueryPool);
+	__VK_DEVICE_PROC__(DestroyQueryPool);
+	__VK_DEVICE_PROC__(GetQueryPoolResults);
+	__VK_DEVICE_PROC__(CreateBuffer);
+	__VK_DEVICE_PROC__(DestroyBuffer);
+	__VK_DEVICE_PROC__(CreateBufferView);
+	__VK_DEVICE_PROC__(DestroyBufferView);
+	__VK_DEVICE_PROC__(CreateImage);
+	__VK_DEVICE_PROC__(DestroyImage);
+	__VK_DEVICE_PROC__(GetImageSubresourceLayout);
+	__VK_DEVICE_PROC__(CreateImageView);
+	__VK_DEVICE_PROC__(DestroyImageView);
+	__VK_DEVICE_PROC__(CreateShaderModule);
+	__VK_DEVICE_PROC__(DestroyShaderModule);
+	__VK_DEVICE_PROC__(CreatePipelineCache);
+	__VK_DEVICE_PROC__(DestroyPipelineCache);
+	__VK_DEVICE_PROC__(GetPipelineCacheData);
+	__VK_DEVICE_PROC__(MergePipelineCaches);
+	__VK_DEVICE_PROC__(CreateGraphicsPipelines);
+	__VK_DEVICE_PROC__(CreateComputePipelines);
+	__VK_DEVICE_PROC__(DestroyPipeline);
+	__VK_DEVICE_PROC__(CreatePipelineLayout);
+	__VK_DEVICE_PROC__(DestroyPipelineLayout);
+	__VK_DEVICE_PROC__(CreateSampler);
+	__VK_DEVICE_PROC__(DestroySampler);
+	__VK_DEVICE_PROC__(CreateDescriptorSetLayout);
+	__VK_DEVICE_PROC__(DestroyDescriptorSetLayout);
+	__VK_DEVICE_PROC__(CreateDescriptorPool);
+	__VK_DEVICE_PROC__(DestroyDescriptorPool);
+	__VK_DEVICE_PROC__(ResetDescriptorPool);
+	__VK_DEVICE_PROC__(AllocateDescriptorSets);
+	__VK_DEVICE_PROC__(FreeDescriptorSets);
+	__VK_DEVICE_PROC__(UpdateDescriptorSets);
+	__VK_DEVICE_PROC__(CreateFramebuffer);
+	__VK_DEVICE_PROC__(DestroyFramebuffer);
+	__VK_DEVICE_PROC__(CreateRenderPass);
+	__VK_DEVICE_PROC__(DestroyRenderPass);
+	__VK_DEVICE_PROC__(GetRenderAreaGranularity);
+	__VK_DEVICE_PROC__(CreateCommandPool);
+	__VK_DEVICE_PROC__(DestroyCommandPool);
+	__VK_DEVICE_PROC__(ResetCommandPool);
+	__VK_DEVICE_PROC__(AllocateCommandBuffers);
+	__VK_DEVICE_PROC__(FreeCommandBuffers);
+	__VK_DEVICE_PROC__(BeginCommandBuffer);
+	__VK_DEVICE_PROC__(EndCommandBuffer);
+	__VK_DEVICE_PROC__(ResetCommandBuffer);
+	__VK_DEVICE_PROC__(CmdBindPipeline);
+	__VK_DEVICE_PROC__(CmdSetViewport);
+	__VK_DEVICE_PROC__(CmdSetScissor);
+	__VK_DEVICE_PROC__(CmdSetLineWidth);
+	__VK_DEVICE_PROC__(CmdSetDepthBias);
+	__VK_DEVICE_PROC__(CmdSetBlendConstants);
+	__VK_DEVICE_PROC__(CmdSetDepthBounds);
+	__VK_DEVICE_PROC__(CmdSetStencilCompareMask);
+	__VK_DEVICE_PROC__(CmdSetStencilWriteMask);
+	__VK_DEVICE_PROC__(CmdSetStencilReference);
+	__VK_DEVICE_PROC__(CmdBindDescriptorSets);
+	__VK_DEVICE_PROC__(CmdBindIndexBuffer);
+	__VK_DEVICE_PROC__(CmdBindVertexBuffers);
+	__VK_DEVICE_PROC__(CmdDraw);
+	__VK_DEVICE_PROC__(CmdDrawIndexed);
+	__VK_DEVICE_PROC__(CmdDrawIndirect);
+	__VK_DEVICE_PROC__(CmdDrawIndexedIndirect);
+	__VK_DEVICE_PROC__(CmdDispatch);
+	__VK_DEVICE_PROC__(CmdDispatchIndirect);
+	__VK_DEVICE_PROC__(CmdCopyBuffer);
+	__VK_DEVICE_PROC__(CmdCopyImage);
+	__VK_DEVICE_PROC__(CmdBlitImage);
+	__VK_DEVICE_PROC__(CmdCopyBufferToImage);
+	__VK_DEVICE_PROC__(CmdCopyImageToBuffer);
+	__VK_DEVICE_PROC__(CmdUpdateBuffer);
+	__VK_DEVICE_PROC__(CmdFillBuffer);
+	__VK_DEVICE_PROC__(CmdClearColorImage);
+	__VK_DEVICE_PROC__(CmdClearDepthStencilImage);
+	__VK_DEVICE_PROC__(CmdClearAttachments);
+	__VK_DEVICE_PROC__(CmdResolveImage);
+	__VK_DEVICE_PROC__(CmdSetEvent);
+	__VK_DEVICE_PROC__(CmdResetEvent);
+	__VK_DEVICE_PROC__(CmdWaitEvents);
+	__VK_DEVICE_PROC__(CmdPipelineBarrier);
+	__VK_DEVICE_PROC__(CmdBeginQuery);
+	__VK_DEVICE_PROC__(CmdEndQuery);
+	__VK_DEVICE_PROC__(CmdResetQueryPool);
+	__VK_DEVICE_PROC__(CmdWriteTimestamp);
+	__VK_DEVICE_PROC__(CmdCopyQueryPoolResults);
+	__VK_DEVICE_PROC__(CmdPushConstants);
+	__VK_DEVICE_PROC__(CmdBeginRenderPass);
+	__VK_DEVICE_PROC__(CmdNextSubpass);
+	__VK_DEVICE_PROC__(CmdEndRenderPass);
+	__VK_DEVICE_PROC__(CmdExecuteCommands);
+	__VK_DEVICE_PROC__(AcquireNextImageKHR);	
+	__VK_DEVICE_PROC__(CreateSwapchainKHR);
+	__VK_DEVICE_PROC__(DestroySwapchainKHR);
+	__VK_DEVICE_PROC__(GetSwapchainImagesKHR);
+
+	VkDevice								m_LogicalDevice;
+
 private:
 	friend class Instance;
 	friend class Device;
@@ -609,19 +754,22 @@ private:
 	Gpu(VkPhysicalDevice const&, Instance* inst);
 
 	void QuerySupportQueues();
+	void LoadDeviceProcs();
 
-	Instance*					m_Inst;
-	VkPhysicalDevice			m_Gpu;
-	VkPhysicalDeviceProperties	m_Prop;
-	VkPhysicalDeviceMemoryProperties m_MemProp;
+	Instance*								m_Inst;
+	VkPhysicalDevice						m_PhysicalGpu;
+	VkPhysicalDeviceProperties				m_Prop;
+	VkPhysicalDeviceMemoryProperties		m_MemProp;
 	uint32									m_GraphicsQueueIndex = 0;
 	uint32									m_ComputeQueueIndex = 0;
 	uint32									m_CopyQueueIndex = 0;
 	DynArray<VkQueueFamilyProperties>		m_QueueProps;
 
+	PFN_vkDestroyDevice						fpDestroyDevice = NULL;
+	PFN_vkFreeCommandBuffers				fpFreeCommandBuffers = NULL;
+	PFN_vkCreateCommandPool					fpCreateCommandPool = NULL;
+	PFN_vkAllocateCommandBuffers			fpAllocateCommandBuffers = NULL;
 };
-
-using GpuRef = SharedPtr<Gpu>;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
 	VkDebugReportFlagsEXT flags,
@@ -629,6 +777,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
 	uint64_t object, size_t location, int32_t messageCode,
 	const char * pLayerPrefix,
 	const char * pMessage, void * pUserData);
+
+#define __VK_GLOBAL_LEVEL_PROC__(name)		PFN_vk##name	gp##name = NULL;
+#define __VK_INSTANCE_LEVEL_PROC__(name)	PFN_vk##name	fp##name = NULL
 
 class Instance
 {
@@ -646,13 +797,36 @@ public:
 	bool	WithValidation() const { return m_EnableValidation; }
 	void	AppendLogicalDevice(rhi::DeviceRef logicalDevice);
 
+	VkResult CreateSurfaceKHR(const
+#if K3DPLATFORM_OS_WIN
+							  VkWin32SurfaceCreateInfoKHR
+#elif K3DPLATFORM_OS_ANDROID
+							  VkAndroidSurfaceCreateInfoKHR
+#endif
+							  * pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface)
+	{
+#if K3DPLATFORM_OS_WIN
+		return fpCreateWin32SurfaceKHR(m_Instance, pCreateInfo, pAllocator, pSurface);
+#elif K3DPLATFORM_OS_ANDROID
+		return fpCreateAndroidSurfaceKHR(m_Instance, pCreateInfo, pAllocator, pSurface);
+#endif
+	}
+
+	void DestroySurfaceKHR(VkSurfaceKHR surface, VkAllocationCallbacks* pAllocator)
+	{
+		fpDestroySurfaceKHR(m_Instance, surface, pAllocator);
+	}
+
 	friend class Gpu;
 	friend class Device;
 	friend struct RHIRoot;
 private:
+	void LoadGlobalProcs();
+	void EnumExtsAndLayers();
 	void ExtractEnabledExtsAndLayers();
+
 	void EnumGpus();
-	void EnumProcs();
+	void LoadInstanceProcs();
 
 	bool							m_EnableValidation;
 	::k3d::DynArray<::k3d::String>	m_EnabledExts;
@@ -668,10 +842,38 @@ private:
 
 	//private functions 
 
-	PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
-	PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
-	PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fpGetPhysicalDeviceSurfaceFormatsKHR;
-	PFN_vkGetPhysicalDeviceSurfacePresentModesKHR fpGetPhysicalDeviceSurfacePresentModesKHR;
+	PFN_vkGetPhysicalDeviceSurfaceSupportKHR		fpGetPhysicalDeviceSurfaceSupportKHR;
+	PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR	fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
+	PFN_vkGetPhysicalDeviceSurfaceFormatsKHR		fpGetPhysicalDeviceSurfaceFormatsKHR;
+	PFN_vkGetPhysicalDeviceSurfacePresentModesKHR	fpGetPhysicalDeviceSurfacePresentModesKHR;
+
+
+	__VK_GLOBAL_LEVEL_PROC__(CreateInstance);
+	__VK_GLOBAL_LEVEL_PROC__(EnumerateInstanceExtensionProperties);
+	__VK_GLOBAL_LEVEL_PROC__(EnumerateInstanceLayerProperties);
+	__VK_GLOBAL_LEVEL_PROC__(GetInstanceProcAddr);
+
+	__VK_INSTANCE_LEVEL_PROC__(CreateDebugReportCallbackEXT);
+	__VK_INSTANCE_LEVEL_PROC__(DestroyDebugReportCallbackEXT);
+
+#if K3DPLATFORM_OS_WIN
+	__VK_INSTANCE_LEVEL_PROC__(CreateWin32SurfaceKHR);
+#elif K3DPLATFORM_OS_ANDROID
+	__VK_INSTANCE_LEVEL_PROC__(CreateAndroidSurfaceKHR);
+#endif
+	__VK_INSTANCE_LEVEL_PROC__(DestroySurfaceKHR);
+
+	__VK_INSTANCE_LEVEL_PROC__(EnumeratePhysicalDevices);
+	__VK_INSTANCE_LEVEL_PROC__(GetPhysicalDeviceProperties);
+	__VK_INSTANCE_LEVEL_PROC__(GetPhysicalDeviceFeatures);
+	__VK_INSTANCE_LEVEL_PROC__(GetPhysicalDeviceMemoryProperties);
+	__VK_INSTANCE_LEVEL_PROC__(GetPhysicalDeviceQueueFamilyProperties);
+	__VK_INSTANCE_LEVEL_PROC__(GetPhysicalDeviceFormatProperties);
+	__VK_INSTANCE_LEVEL_PROC__(CreateDevice);
+	__VK_INSTANCE_LEVEL_PROC__(GetDeviceProcAddr);
+	__VK_INSTANCE_LEVEL_PROC__(DestroyInstance);
+
+	dynlib::LibRef	m_VulkanLib;
 };
 
 using InstanceRef = SharedPtr<Instance>;

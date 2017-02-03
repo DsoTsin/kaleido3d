@@ -15,7 +15,9 @@ static const char* LIBVULKAN = "libvulkan.so";
 namespace dynlib
 {
 	Lib::Lib(const char* libName)
-		: m_LibHandle(NULL)
+		: m_pUserData(nullptr)
+		, m_LibHandle(nullptr)
+		, m_CallBack(nullptr)
 	{
 #if K3DPLATFORM_OS_WIN
 		m_LibHandle = LoadLibrary(libName);
@@ -28,8 +30,14 @@ namespace dynlib
 	{
 		if (m_LibHandle)
 		{
+			if (m_CallBack)
+			{
+				m_CallBack(m_pUserData);
+				m_CallBack = nullptr;
+			}
+			VKLOG(Warn, "Vulkan Library will be freed, any vk-call after here(%s@%d) would be dangerous!", __FILE__, __LINE__);
 #if K3DPLATFORM_OS_WIN
-			::FreeLibrary((HMODULE)m_LibHandle);
+			//::FreeLibrary((HMODULE)m_LibHandle);
 #else
 			dlclose(m_LibHandle);
 #endif
@@ -46,9 +54,10 @@ namespace dynlib
 #endif
 	}
 
-	Lib & GetVulkanLib() {
-		static Lib vkLib(LIBVULKAN);
-		return vkLib;
+	void Lib::SetDestroyCallBack(void * userData, CallBack callback)
+	{
+		m_pUserData = userData;
+		m_CallBack = callback;
 	}
 }
 
@@ -206,12 +215,6 @@ _DEF_VK_FUNC_(AcquireNextImageKHR);
 
 int LoadVulkan(VkInstance instance, VkDevice device)
 {
-	vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)dynlib::GetVulkanLib().ResolveEntry("vkGetInstanceProcAddr");
-	vkEnumerateInstanceLayerProperties = (PFN_vkEnumerateInstanceLayerProperties)dynlib::GetVulkanLib().ResolveEntry("vkEnumerateInstanceLayerProperties");
-	vkEnumerateInstanceExtensionProperties = (PFN_vkEnumerateInstanceExtensionProperties)dynlib::GetVulkanLib().ResolveEntry("vkEnumerateInstanceExtensionProperties");
-	vkGetPhysicalDeviceSurfaceSupportKHR = (PFN_vkGetPhysicalDeviceSurfaceSupportKHR)dynlib::GetVulkanLib().ResolveEntry("vkGetPhysicalDeviceSurfaceSupportKHR");
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR = (PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR)dynlib::GetVulkanLib().ResolveEntry("vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
-
 #if K3DPLATFORM_OS_WIN
 	_VK_GET_INSTANCE_POINTER_(instance, CreateWin32SurfaceKHR);
 #elif K3DPLATFORM_OS_ANDROID

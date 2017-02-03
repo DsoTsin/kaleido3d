@@ -149,7 +149,6 @@ public:
 	void						QueryTextureSubResourceLayout(rhi::GpuResourceRef, rhi::TextureResourceSpec const& spec, rhi::SubResourceLayout *) override;
 	SwapChainRef				NewSwapChain(rhi::GfxSetting const& setting);
 
-	//VkQueue const&				GetRawDeviceQueue() const { return m_DefaultQueue; }
 	SpCmdQueue const&			GetDefaultCmdQueue() const { return m_DefCmdQueue; }
 
 	VkDevice const&				GetRawDevice() const { return m_Device; }
@@ -158,7 +157,7 @@ public:
 	PtrCmdAlloc					NewCommandAllocator(bool transient);
 	bool						FindMemoryType(uint32 typeBits, VkFlags requirementsMask, uint32 *typeIndex) const;
 	PtrSemaphore				NewSemaphore();
-	void						WaitIdle() override { vkDeviceWaitIdle(m_Device); }
+	void						WaitIdle() override { m_Gpu->vkDeviceWaitIdle(m_Device); }
 
 	uint32						GetQueueCount() const { return m_Gpu->m_QueueProps.Count(); }
 	SpRenderpass const &		GetTopPass() const { return m_PendingPass.back(); }
@@ -173,6 +172,7 @@ protected:
 	SpCmdQueue					InitCmdQueue(VkQueueFlags queueTypes, uint32 queueFamilyIndex, uint32 queueIndex);
 
 private:
+	CmdBufManagerRef						m_CmdBufManager;
 	PtrResManager							m_ResourceManager;
 	std::unique_ptr<CommandContextPool>		m_ContextPool;
 	std::vector<SpRenderpass>				m_PendingPass;
@@ -223,7 +223,7 @@ public:
 	{
 		if (pDevice) 
 		{
-			K3D_VK_VERIFY(vkCreateFence(GetRawDevice(), &info, nullptr, &m_Fence));
+			K3D_VK_VERIFY(GetGpuRef()->vkCreateFence(GetRawDevice(), &info, nullptr, &m_Fence));
 		}
 	}
 
@@ -231,7 +231,7 @@ public:
 	{
 		if (m_Fence)
 		{
-			vkDestroyFence(GetRawDevice(), m_Fence, nullptr);
+			GetGpuRef()->vkDestroyFence(GetRawDevice(), m_Fence, nullptr);
 			VKLOG(Info, "Fence Destroyed. -- %0x.", m_Fence);
 			m_Fence = VK_NULL_HANDLE;
 		}
@@ -241,13 +241,13 @@ public:
 
 	bool IsSignaled()
 	{
-		return VK_SUCCESS==vkGetFenceStatus(GetRawDevice(), m_Fence);
+		return VK_SUCCESS== GetGpuRef()->vkGetFenceStatus(GetRawDevice(), m_Fence);
 	}
 
-	void Reset() override { vkResetFences(GetRawDevice(), 1, &m_Fence); }
+	void Reset() override { GetGpuRef()->vkResetFences(GetRawDevice(), 1, &m_Fence); }
 	void WaitFor(uint64 time) override 
 	{
-		vkWaitForFences(GetRawDevice(), 1, &m_Fence, VK_TRUE, time);
+		GetGpuRef()->vkWaitForFences(GetRawDevice(), 1, &m_Fence, VK_TRUE, time);
 	}
 private:
 	friend class SwapChain;
@@ -344,7 +344,7 @@ public:
 	VkDeviceMemory				GetDeviceMemory() const { return m_DeviceMem; }
 
 	Resource::Ptr				Map(uint64 offset, uint64 size) override;
-	void						UnMap() override {	vkUnmapMemory(GetRawDevice(), m_DeviceMem); }
+	void						UnMap() override { GetGpuRef()->vkUnmapMemory(GetRawDevice(), m_DeviceMem); }
 	uint64						GetResourceSize() const override { return m_Size; }
 	rhi::ResourceDesc			GetResourceDesc() const override { return m_Desc; }
 
@@ -530,7 +530,7 @@ public:
 	CommandContextPool(Device::Ptr pDevice);
 	~CommandContextPool() override;
 
-	CommandContext* RequestContext(rhi::ECommandType type);
+	rhi::CommandContextRef RequestContext(rhi::ECommandType type);
 
 	PtrCmdAlloc	RequestCommandAllocator();
 
@@ -650,7 +650,7 @@ public:
 
 protected:
 	VkCommandBuffer			m_CommandBuffer;
-	VkCommandPool			m_CommandPool;
+	//VkCommandPool			m_CommandPool;
 	VkRenderPass			m_RenderPass;
 	bool					m_IsRenderPassActive = false;
 	RenderTarget*			m_CurrentRenderTarget = nullptr;
@@ -730,17 +730,7 @@ private:
 	VkFormat								m_ColorAttachFmt = VK_FORMAT_UNDEFINED;
 
 private:
-
-	void InitProcs();
-
 	void Destroy();
-
-	/** private functions */
-	PFN_vkCreateSwapchainKHR fpCreateSwapchainKHR;
-	PFN_vkDestroySwapchainKHR fpDestroySwapchainKHR;
-	PFN_vkGetSwapchainImagesKHR fpGetSwapchainImagesKHR;
-	PFN_vkAcquireNextImageKHR fpAcquireNextImageKHR;
-	PFN_vkQueuePresentKHR fpQueuePresentKHR;
 };
 
 class RenderViewport : public rhi::IRenderViewport, public DeviceChild

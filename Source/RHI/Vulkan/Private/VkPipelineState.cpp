@@ -59,7 +59,7 @@ VkShaderModule CreateShaderModule(VkDevice Device, rhi::IDataBlob * ShaderBytes)
 	return shaderModule;
 }
 
-VkShaderModule CreateShaderModule(VkDevice Device, String ShaderBytes)
+VkShaderModule CreateShaderModule(GpuRef Device, String ShaderBytes)
 {
 	VkShaderModule shaderModule;
 	VkShaderModuleCreateInfo moduleCreateInfo;
@@ -70,13 +70,13 @@ VkShaderModule CreateShaderModule(VkDevice Device, String ShaderBytes)
 	moduleCreateInfo.codeSize = ShaderBytes.Length();
 	moduleCreateInfo.pCode = (const uint32_t*)ShaderBytes.Data();
 	moduleCreateInfo.flags = 0;
-	K3D_VK_VERIFY(vkCreateShaderModule(Device, &moduleCreateInfo, NULL, &shaderModule));
+	K3D_VK_VERIFY(Device->vkCreateShaderModule(Device->m_LogicalDevice, &moduleCreateInfo, NULL, &shaderModule));
 	return shaderModule;
 }
 
 void PipelineStateObject::SetShader(rhi::EShaderType ShaderType, rhi::ShaderBundle const& ShaderBytes)
 {
-	auto sm = CreateShaderModule(GetRawDevice(), ShaderBytes.RawData); 
+	auto sm = CreateShaderModule(GetGpuRef(), ShaderBytes.RawData); 
 	VkPipelineShaderStageCreateInfo shaderStage = {};
 	shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	shaderStage.stage = g_ShaderType[ShaderType];
@@ -97,27 +97,27 @@ void PipelineStateObject::Finalize()
 		return;
 	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
+	K3D_VK_VERIFY(GetGpuRef()->vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
 	if (GetType() == rhi::EPSO_Graphics) 
 	{
-		K3D_VK_VERIFY(vkCmd::CreateGraphicsPipelines(GetRawDevice(), m_PipelineCache, 1, &m_GfxCreateInfo, nullptr, &m_Pipeline));
+		K3D_VK_VERIFY(GetGpuRef()->vkCreateGraphicsPipelines(GetRawDevice(), m_PipelineCache, 1, &m_GfxCreateInfo, nullptr, &m_Pipeline));
 	}
 	else
 	{
 		m_CptCreateInfo.stage = m_ShaderStageInfos[0];
-		K3D_VK_VERIFY(vkCreateComputePipelines(GetRawDevice(), m_PipelineCache, 1, &m_CptCreateInfo, nullptr, &m_Pipeline));
+		K3D_VK_VERIFY(GetGpuRef()->vkCreateComputePipelines(GetRawDevice(), m_PipelineCache, 1, &m_CptCreateInfo, nullptr, &m_Pipeline));
 	}
 }
 
 void PipelineStateObject::SavePSO(const char * path)
 {
 	size_t szPSO = 0;
-	K3D_VK_VERIFY(vkGetPipelineCacheData(GetRawDevice(), m_PipelineCache, &szPSO, nullptr));
+	K3D_VK_VERIFY(GetGpuRef()->vkGetPipelineCacheData(GetRawDevice(), m_PipelineCache, &szPSO, nullptr));
 	if (!szPSO || !path)
 		return;
 	DynArray<char> dataBlob;
 	dataBlob.Resize(szPSO);
-	vkGetPipelineCacheData(GetRawDevice(), m_PipelineCache, &szPSO, dataBlob.Data());
+	GetGpuRef()->vkGetPipelineCacheData(GetRawDevice(), m_PipelineCache, &szPSO, dataBlob.Data());
 	Os::File psoCacheFile(path);
 	psoCacheFile.Open(IOWrite);
 	psoCacheFile.Write(dataBlob.Data(), szPSO);
@@ -133,7 +133,7 @@ void PipelineStateObject::LoadPSO(const char * path)
 	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 	pipelineCacheCreateInfo.pInitialData = psoFile.FileData();
 	pipelineCacheCreateInfo.initialDataSize = psoFile.GetSize();
-	K3D_VK_VERIFY(vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
+	K3D_VK_VERIFY(GetGpuRef()->vkCreatePipelineCache(GetRawDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
 }
 
 void PipelineStateObject::SetRasterizerState(const rhi::RasterizerState& rasterState)
@@ -218,7 +218,7 @@ void PipelineStateObject::SetRenderTargetFormat(const rhi::RenderTargetFormat &)
 
 // Init Shaders
 std::vector<VkPipelineShaderStageCreateInfo> 
-GetShaderStageInfo(VkDevice device, rhi::PipelineDesc const & desc)
+GetShaderStageInfo(GpuRef device, rhi::PipelineDesc const & desc)
 {
 	std::vector<VkPipelineShaderStageCreateInfo> infos;
 	for (uint32 i = 0; i < rhi::EShaderType::ShaderTypeNum; i++)
@@ -239,7 +239,7 @@ GetShaderStageInfo(VkDevice device, rhi::PipelineDesc const & desc)
 
 void PipelineStateObject::InitWithDesc(rhi::PipelineDesc const & desc)
 {
-	m_ShaderStageInfos = GetShaderStageInfo(GetRawDevice(), desc);
+	m_ShaderStageInfos = GetShaderStageInfo(GetGpuRef(), desc);
 	// Init PrimType
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {
 		VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO , nullptr, 0,
@@ -343,18 +343,18 @@ void PipelineStateObject::Destroy()
 	{
 		if(iter.module)
 		{
-			vkDestroyShaderModule(GetRawDevice(), iter.module, nullptr);
+			GetGpuRef()->vkDestroyShaderModule(GetRawDevice(), iter.module, nullptr);
 		}
 	}
 	if (m_PipelineCache)
 	{
-		vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
+		GetGpuRef()->vkDestroyPipelineCache(GetRawDevice(), m_PipelineCache, nullptr);
 		VKLOG(Info, "PipelineCache  Destroyed.. -- %0x.", m_PipelineCache);
 		m_PipelineCache = VK_NULL_HANDLE;
 	}
 	if (m_Pipeline)
 	{
-		vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
+		GetGpuRef()->vkDestroyPipeline(GetRawDevice(), m_Pipeline, nullptr);
 		VKLOG(Info, "PipelineStateObject  Destroyed.. -- %0x.", m_Pipeline);
 		m_Pipeline = VK_NULL_HANDLE;
 	}

@@ -29,7 +29,11 @@ public:
 	explicit TCubeUnitTest(kString const & appName)
 		: App(appName, 1920, 1080)
 	{}
-
+	
+	~TCubeUnitTest()
+	{
+		KLOG(Info, CubeTest, "Destroying..");
+	}
 	bool OnInit() override;
 	void OnDestroy() override;
 	void OnProcess(Message & msg) override;
@@ -48,7 +52,7 @@ protected:
 private:
 
 	rhi::IShCompiler::Ptr				m_Compiler;
-	std::unique_ptr<CubeMesh>		m_TriMesh;
+	std::unique_ptr<CubeMesh>			m_TriMesh;
 
 	rhi::GpuResourceRef					m_ConstBuffer;
 	TextureObject*						m_Texture;
@@ -344,14 +348,14 @@ void TCubeUnitTest::PrepareCommandBuffer()
 void TCubeUnitTest::OnDestroy()
 {
 	App::OnDestroy();
-
-	m_TriMesh->~CubeMesh();
 	m_pFence->WaitFor(1000);
 	if (m_Texture)
 	{
 		delete m_Texture;
 		m_Texture = nullptr;
 	}
+
+	m_TriMesh->~CubeMesh();
 	m_RenderContext.Destroy();
 }
 

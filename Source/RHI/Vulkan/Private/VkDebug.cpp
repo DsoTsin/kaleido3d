@@ -4,9 +4,6 @@
 
 K3D_VK_BEGIN
 
-_DEF_VK_FUNC_(CreateDebugReportCallbackEXT);
-_DEF_VK_FUNC_(DestroyDebugReportCallbackEXT);
-
 PFN_vkDebugReportMessageEXT dbgBreakCallback;
 
 static VkDebugReportCallbackEXT msgCallback = NULL;
@@ -54,6 +51,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
 	return VK_TRUE;
 }
 
+#define __VK_GLOBAL_PROC_GET__(name, functor) fp##name = reinterpret_cast<PFN_vk##name>(functor("vk" K3D_STRINGIFY(name)))
+
 void Instance::SetupDebugging(VkDebugReportFlagsEXT flags, PFN_vkDebugReportCallbackEXT callBack)
 {
 	if (!m_Instance)
@@ -61,26 +60,26 @@ void Instance::SetupDebugging(VkDebugReportFlagsEXT flags, PFN_vkDebugReportCall
 		VKLOG(Error, "SetupDebugging Failed. (m_Instance == null)");
 		return;
 	}
-	_VK_GET_FUNCTION_FROM_LIB_(CreateDebugReportCallbackEXT);
-	if (!vkCreateDebugReportCallbackEXT)
-		_VK_GET_INSTANCE_POINTER_(m_Instance, CreateDebugReportCallbackEXT);
-	_VK_GET_FUNCTION_FROM_LIB_(DestroyDebugReportCallbackEXT);
-	if (!vkDestroyDebugReportCallbackEXT)
-		_VK_GET_INSTANCE_POINTER_(m_Instance, DestroyDebugReportCallbackEXT);
+	__VK_GLOBAL_PROC_GET__(CreateDebugReportCallbackEXT, m_VulkanLib->ResolveEntry);
+	if (!fpCreateDebugReportCallbackEXT)
+		GET_INSTANCE_PROC_ADDR(m_Instance, CreateDebugReportCallbackEXT);
+	__VK_GLOBAL_PROC_GET__(DestroyDebugReportCallbackEXT, m_VulkanLib->ResolveEntry);
+	if (!fpDestroyDebugReportCallbackEXT)
+		GET_INSTANCE_PROC_ADDR(m_Instance, DestroyDebugReportCallbackEXT);
 	VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;
 	dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
 	dbgCreateInfo.pNext = NULL;
 	dbgCreateInfo.pfnCallback = callBack;
 	dbgCreateInfo.pUserData = NULL;
 	dbgCreateInfo.flags = flags;
-	K3D_VK_VERIFY(vkCreateDebugReportCallbackEXT(m_Instance, &dbgCreateInfo, NULL, &m_DebugMsgCallback));
+	K3D_VK_VERIFY(fpCreateDebugReportCallbackEXT(m_Instance, &dbgCreateInfo, NULL, &m_DebugMsgCallback));
 }
 
 void Instance::FreeDebugCallback()
 {
 	if (m_Instance && m_DebugMsgCallback)
 	{
-		vkDestroyDebugReportCallbackEXT(m_Instance, m_DebugMsgCallback, nullptr);
+		fpDestroyDebugReportCallbackEXT(m_Instance, m_DebugMsgCallback, nullptr);
 		m_DebugMsgCallback = VK_NULL_HANDLE;
 	}
 }

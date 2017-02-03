@@ -11,9 +11,9 @@ void Instance::EnumGpus()
 {
 	DynArray<VkPhysicalDevice> gpus;
 	uint32_t gpuCount = 0;
-	K3D_VK_VERIFY(vkEnumeratePhysicalDevices(m_Instance, &gpuCount, nullptr));
+	K3D_VK_VERIFY(fpEnumeratePhysicalDevices(m_Instance, &gpuCount, nullptr));
 	gpus.Resize(gpuCount);
-	K3D_VK_VERIFY(vkEnumeratePhysicalDevices(m_Instance, &gpuCount, gpus.Data()));
+	K3D_VK_VERIFY(fpEnumeratePhysicalDevices(m_Instance, &gpuCount, gpus.Data()));
 	for (auto gpu : gpus)
 	{
 		auto gpuRef = GpuRef(new Gpu(gpu, this));
@@ -54,7 +54,8 @@ void Device::Destroy()
 {
 	if (VK_NULL_HANDLE == m_Device)
 		return;
-	if (!m_CachedDescriptorSetLayout.empty())
+	VKLOG(Info, "Device Destroying .  -- %0x.", m_Device);
+	/*if (!m_CachedDescriptorSetLayout.empty())
 	{
 		m_CachedDescriptorSetLayout.erase(m_CachedDescriptorSetLayout.begin(),
 			m_CachedDescriptorSetLayout.end());
@@ -68,11 +69,15 @@ void Device::Destroy()
 	{
 		m_CachedPipelineLayout.erase(m_CachedPipelineLayout.begin(),
 			m_CachedPipelineLayout.end());
-	}
+	}*/
 	m_PendingPass.~vector();
 	m_ResourceManager->~ResourceManager();
 	m_ContextPool->~CommandContextPool();
-	//vkDestroyDevice(m_Device, nullptr);
+	if (m_CmdBufManager)
+	{
+		m_CmdBufManager->~CommandBufferManager();
+	}
+	vkDestroyDevice(m_Device, nullptr);
 	VKLOG(Info, "Device Destroyed .  -- %0x.", m_Device);
 	m_Device = VK_NULL_HANDLE;
 }
@@ -84,7 +89,7 @@ Device::Create(rhi::IDeviceAdapter* pAdapter, bool withDbg)
 	m_Device = m_Gpu->CreateLogicDevice(withDbg);
 	if(m_Device)
 	{
-		LoadVulkan(m_Gpu->m_Inst->m_Instance, m_Device);
+		//LoadVulkan(m_Gpu->m_Inst->m_Instance, m_Device);
 		if (withDbg)
 		{
 			RHIRoot::SetupDebug(VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT 
@@ -138,7 +143,12 @@ bool Device::FindMemoryType(uint32 typeBits, VkFlags requirementsMask, uint32 *t
 CommandContextRef
 Device::NewCommandContext(rhi::ECommandType Type)
 {
-	return CommandContextRef(m_ContextPool->RequestContext(Type));
+	if (!m_CmdBufManager)
+	{
+		m_CmdBufManager = CmdBufManagerRef(new CommandBufferManager(m_Gpu, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_Gpu->m_GraphicsQueueIndex));
+	}
+	return rhi::CommandContextRef(new CommandContext(this, m_CmdBufManager->RequestCommandBuffer(), VK_NULL_HANDLE, Type));
+	//return m_ContextPool->RequestContext(Type);
 }
 
 SamplerRef
@@ -255,7 +265,7 @@ PtrSemaphore Device::NewSemaphore()
 void Device::QueryTextureSubResourceLayout(rhi::GpuResourceRef resource, rhi::TextureResourceSpec const & spec, rhi::SubResourceLayout * layout)
 {
 	K3D_ASSERT(resource && resource->GetResourceType() != rhi::EGT_Buffer);
-	vkGetImageSubresourceLayout(m_Device, (VkImage)resource->GetResourceLocation(), (const VkImageSubresource*)&spec, (VkSubresourceLayout*)layout);
+	m_Gpu->vkGetImageSubresourceLayout(m_Device, (VkImage)resource->GetResourceLocation(), (const VkImageSubresource*)&spec, (VkSubresourceLayout*)layout);
 }
 
 SwapChainRef

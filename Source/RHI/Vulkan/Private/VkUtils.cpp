@@ -141,6 +141,7 @@ void CommandAllocator::Destroy()
 	{
 		return;
 	}
+	VKLOG(Info, "CommandAllocator destroy.. -- %d. (device:0x%0x)", m_Pool, GetRawDevice());
 	vkDestroyCommandPool(GetRawDevice(), m_Pool, nullptr);
 	m_Pool = VK_NULL_HANDLE;
 }
