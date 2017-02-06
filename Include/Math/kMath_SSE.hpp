@@ -2,7 +2,7 @@
 #ifndef __kMath_SSE_hpp__
 #define __kMath_SSE_hpp__
 
-#include <Config/Config.h>
+#include "../Config/Config.h"
 #include <xmmintrin.h>
 
 #define _MM_PERM2_X			0

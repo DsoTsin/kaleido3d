@@ -2,9 +2,9 @@
 #define __IIODevice_H__
 #pragma once
 
-#include <Math/kTypeTrait.hpp>
-#include <Config/Config.h>
-#include <Config/PlatformTypes.h>
+#include "../Math/kTypeTrait.hpp"
+#include "../Config/Config.h"
+#include "../Config/PlatformTypes.h"
 #include <assert.h>
 
 enum IOFlag

@@ -2,11 +2,11 @@
 #ifndef __IRHIDefs_h__
 #define __IRHIDefs_h__
 
-#include "Config/PlatformTypes.h"
-#include <KTL/DynArray.hpp>
-#include <KTL/SharedPtr.hpp>
-#include <KTL/String.hpp>
-#include <Math/kGeometry.hpp>
+#include "../Config/PlatformTypes.h"
+#include "../KTL/DynArray.hpp"
+#include "../KTL/SharedPtr.hpp"
+#include "../KTL/String.hpp"
+#include "../Math/kGeometry.hpp"
 
 namespace rhi
 {
