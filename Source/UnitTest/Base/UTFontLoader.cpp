@@ -10,7 +10,7 @@ threadptr TestFontManager()
 		FontManager fm;
 		fm.LoadLib("../../Data/Test/calibri.ttf");
 		fm.ChangeFontSize(64);
-		auto & quads = fm.AcquireText("FuckYou");
+		auto quads = fm.AcquireText("FuckYou");
 		quads.Count();
 	});
 }

@@ -4,7 +4,6 @@
 #include "Core/LogUtil.h"
 #include "ImageData.h"
 #include "App.h"
-#include "Variant.h"
 #include "ObjectMesh.h"
 
 #ifdef USE_TBB_MALLOC

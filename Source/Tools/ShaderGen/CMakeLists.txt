@@ -18,9 +18,12 @@ add_plugin(ShaderCompiler
 	SRCS ${COMPILER_SRCS} ${PUB_SRCS}
     LIBS ${GLSLANG_LIBRARIES} ${SPIRV2CROSS_LIBRARY})
 
-if(MACOS)
-    if(BUILD_SHARED)
-        add_custom_command(TARGET ShaderCompiler POST_BUILD COMMAND
-            ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libShaderCompiler.dylib" $<TARGET_FILE:ShaderCompiler>)
-    endif()
+if(MACOS AND BUILD_SHARED)
+    add_custom_command(TARGET ShaderCompiler POST_BUILD COMMAND
+        ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libShaderCompiler.dylib" $<TARGET_FILE:ShaderCompiler>)
 endif()
+
+install(TARGETS ShaderCompiler 
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)

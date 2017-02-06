@@ -3,8 +3,8 @@
 #define __Message_h__
 #include "InputDevice.h"
 
-namespace k3d {
-
+namespace k3d
+{
 	class Message final 
 	{
 	public:

@@ -68,11 +68,38 @@ find_library(FREETYPE2_LIBRARY
 )
 
 if(FREETYPE2_LIBRARY)
+# Find dependencies
+    foreach (d ZLIB BZip2 PNG HarfBuzz)
+        string(TOUPPER "${d}" D)
+
+        if (DEFINED WITH_${d} OR DEFINED WITH_${D})
+            if (WITH_${d} OR WITH_${D})
+            find_package(${d} QUIET REQUIRED)
+            endif ()
+        else ()
+            find_package(${d} QUIET)
+        endif ()
+
+        if (${d}_FOUND OR ${D}_FOUND)
+            message(STATUS "link FreeType with ${d}")
+        endif ()
+    endforeach ()
+
 	include_directories(${FREETYPE2_INCLUDE_DIR})
 	set(HAS_FREETYPE true)
-    if(ANDROID)
-        list(APPEND FREETYPE2_LIBRARY z)
-    endif()
+
+    if (ZLIB_FOUND)
+        list(APPEND FREETYPE2_LIBRARY ${ZLIB_LIBRARIES})
+    endif ()
+    if (BZIP2_FOUND)
+        list(APPEND FREETYPE2_LIBRARY ${BZIP2_LIBRARIES})
+    endif ()
+    if (PNG_FOUND)
+        list(APPEND FREETYPE2_LIBRARY ${PNG_LIBRARIES})
+    endif ()
+    if (HARFBUZZ_FOUND)
+        list(APPEND FREETYPE2_LIBRARY ${HARFBUZZ_LIBRARIES})
+    endif ()
 endif()
 
 message("GLSLang = ${GLSLANG_INCLUDE_DIR}")

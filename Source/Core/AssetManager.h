@@ -4,10 +4,11 @@
 
 #include <KTL/Singleton.hpp>
 #include <Interface/IIODevice.h>
-#include <Core/MeshData.h>
+
+#include "MeshData.h"
+
 #include <atomic>
 #include <memory>
-
 
 namespace k3d
 {

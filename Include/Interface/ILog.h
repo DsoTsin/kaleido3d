@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __ILog_h__
 #define __ILog_h__
 

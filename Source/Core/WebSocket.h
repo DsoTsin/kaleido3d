@@ -1,7 +1,8 @@
 #ifndef __WebSocket_H__
 #define __WebSocket_H__
 
-#include <Core/Os.h>
+#include "Os.h"
+
 #include <vector>
 
 namespace net

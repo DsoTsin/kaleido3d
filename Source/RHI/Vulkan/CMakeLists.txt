@@ -56,7 +56,10 @@ add_plugin(RHI_Vulkan
 	LIBS ShaderCompiler)
 
 if(NOT ANDROID)
-	install(TARGETS RHI_Vulkan ARCHIVE DESTINATION lib)
 	add_precompiled_header(RHI_Vulkan "VkCommon.h" "${Kaleido3D_ROOT_DIR}/Source/RHI/Vulkan" "${Kaleido3D_ROOT_DIR}/Source/RHI/Vulkan/Private/VkRHI.cpp")
 endif()
 
+install(TARGETS RHI_Vulkan 
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)

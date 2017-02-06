@@ -5,8 +5,8 @@
 #include <string>
 #include <map>
 
-namespace k3d {
-
+namespace k3d 
+{
 	class ReflectFactory : public Singleton<ReflectFactory> {
 	public:
 		//template<typename IReflectable* T::(*CreateFunction)()>

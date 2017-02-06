@@ -4,6 +4,7 @@
 #include <queue>
 #include <memory>
 #include <thread>
+
 #include "Os.h"
 
 namespace k3d {

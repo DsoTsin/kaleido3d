@@ -1,7 +1,7 @@
 #pragma once
 
-namespace k3d {
-
+namespace k3d 
+{
 	struct ObjectLoadListener {
 		virtual void OnLoad() = 0;
 	};

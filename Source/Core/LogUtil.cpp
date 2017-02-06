@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <mutex>
 #include <Config/OSHeaders.h>
+#include "Log/Public/ILogModule.h"
 #include "../../Data/style.css.h"
 
 namespace k3d 

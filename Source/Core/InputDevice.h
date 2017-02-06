@@ -1,8 +1,11 @@
 #ifndef __InputDevice_h__
 #define __InputDevice_h__
 #pragma once
+
 #include "Window.h"
+
 #include <Math/kMath.hpp>
+
 namespace k3d 
 {
 	class Mouse

@@ -5,7 +5,6 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <Public/ILog.h>
 #include <Public/ILogModule.h>
 
 #include <Core/App.h>

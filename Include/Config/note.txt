@@ -1,1 +1,0 @@
-this "stdint.h" is copied from llvm-3.5

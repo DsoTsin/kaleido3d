@@ -2,7 +2,8 @@
 #define __k3dTimer_h__
 #pragma once
 
-namespace k3d {
+namespace k3d
+{
 	class K3D_API Timer {
 	public:
 

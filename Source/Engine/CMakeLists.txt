@@ -95,3 +95,8 @@ FOLDER
 	"Runtime")
 
 add_precompiled_header(Engine "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Engine/Engine.cpp")
+
+install(TARGETS Engine 
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)

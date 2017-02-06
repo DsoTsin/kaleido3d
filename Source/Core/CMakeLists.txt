@@ -55,7 +55,6 @@ source_group("XPlatform\\Message" FILES ${MSG_SRCS})
 set(COMMON_SRCS
     Timer.h
     Timer.cpp
-    Variant.h
     Os.h
     Os.cpp
     WebSocket.h
@@ -100,7 +99,6 @@ endif()
 k3d_add_lib(Core SRCS ${CORE_SRCS} LIBS ${CORE_DEP_LIBS} FOLDER "Runtime")
 
 if(WIN32)
-    install(TARGETS Core ARCHIVE DESTINATION lib)
     add_precompiled_header(Core "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Core/App.cpp")
 elseif(MACOS)
     if(BUILD_SHARED)
@@ -109,3 +107,36 @@ elseif(MACOS)
     endif()
 endif()
 
+install(TARGETS Core 
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION include/kaleido3d
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install(FILES ${Kaleido3D_ROOT_DIR}/Include/Kaleido3D.h
+    DESTINATION include/kaleido3d
+)
+
+install(DIRECTORY ${Kaleido3D_ROOT_DIR}/Include/KTL
+    DESTINATION include/kaleido3d
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
+install(DIRECTORY ${Kaleido3D_ROOT_DIR}/Include/Math
+    DESTINATION include/kaleido3d
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
+install(DIRECTORY ${Kaleido3D_ROOT_DIR}/Include/Interface
+    DESTINATION include/kaleido3d
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install(DIRECTORY ${Kaleido3D_ROOT_DIR}/Include/Config
+    DESTINATION include/kaleido3d
+    FILES_MATCHING PATTERN "*.h"
+)

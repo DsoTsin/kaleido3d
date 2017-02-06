@@ -2,8 +2,10 @@
 #ifndef __LogUtil_h__
 #define __LogUtil_h__
 #include "Utils/StringUtils.h"
+
 #include <KTL/Singleton.hpp>
-#include <Log/Public/ILogModule.h>
+#include <Interface/ILog.h>
+
 #include "Os.h"
 
 namespace k3d
