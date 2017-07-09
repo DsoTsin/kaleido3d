@@ -18,7 +18,6 @@ endif()
 if(MAYA_DIRECTORY)
     set(MAYA_FOUND TRUE)
     message(STATUS "Found Maya: ${MAYA_DIRECTORY}")
-    
     if(WIN32)
         set(MAYA_USR_LOCATION $ENV{USERPROFILE}/Documents/maya)
         set(MAYA_USR_PLUGIN ${MAYA_USR_LOCATION}/plug-ins)
@@ -39,6 +38,9 @@ if(MAYA_DIRECTORY)
         set(MAYA_PLUGIN_SUFFIX ".bundle")
         set(MAYA_PLUGIN_TYPE MODULE)
     endif()
+    
+    #set(Qt5_DIR "C:/Program Files/Autodesk/Maya2017/devkit/cmake/Qt5")
+    #find_package(Qt5 COMPONENTS Core Widgets)
 
     include_directories(${MAYA_INCLUDE_DIR})
     link_directories(${MAYA_LIBRARY_DIR})
@@ -57,7 +59,7 @@ function(add_maya_plugin PLUGIN_NAME PLUGIN_FOLDER)
         COMPILE_DEFINITIONS     "${MAYA_DEFINITIONS}"
         SUFFIX                  ${MAYA_PLUGIN_SUFFIX}
         CLEAN_DIRECT_OUTPUT     1)
-    target_link_libraries(${PLUGIN_NAME} Core ${MAYA_LIBRARIES})
+    target_link_libraries(${PLUGIN_NAME} Kaleido3D.Core ${MAYA_LIBRARIES})
     if(WIN32)
         set_target_properties(
             ${PLUGIN_NAME} PROPERTIES 
@@ -65,7 +67,7 @@ function(add_maya_plugin PLUGIN_NAME PLUGIN_FOLDER)
         )
         add_custom_command(TARGET ${PLUGIN_NAME}
             POST_BUILD COMMAND ${CMAKE_COMMAND} -E 
-            copy "$<TARGET_FILE:Core>" "${MAYA_DIRECTORY}/bin/Core.dll"
+            copy "$<TARGET_FILE:Kaleido3D.Core>" "${MAYA_USR_PLUGIN}/Kaleido3D.Core.dll"
         )
     elseif(MACOS)
         set_target_properties(
@@ -73,11 +75,11 @@ function(add_maya_plugin PLUGIN_NAME PLUGIN_FOLDER)
             LINK_FLAGS          "-headerpad_max_install_names -Wl,-exported_symbol,__Z16initializePlugin7MObject -Wl,-exported_symbol,__Z18uninitializePlugin7MObject -Wl,-executable_path,\"${MAYA_LIBRARY_DIR}\""
         )
         add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD COMMAND
-            ${CMAKE_INSTALL_NAME_TOOL} -change "@loader_path/../Frameworks/libCore.dylib" "@executable_path/libCore.dylib" "$<TARGET_FILE:${PLUGIN_NAME}>"
+            ${CMAKE_INSTALL_NAME_TOOL} -change "@loader_path/../Frameworks/libKaleido3D.Core.dylib" "@executable_path/libKaleido3D.Core.dylib" "$<TARGET_FILE:${PLUGIN_NAME}>"
         )
         add_custom_command(TARGET ${PLUGIN_NAME}
             POST_BUILD COMMAND ${CMAKE_COMMAND} -E 
-            copy "$<TARGET_FILE:Core>" "${MAYA_LIBRARY_DIR}/libCore.dylib"
+            copy "$<TARGET_FILE:Kaleido3D.Core>" "${MAYA_LIBRARY_DIR}/libKaleido3D.Core.dylib"
         )
     endif()
     add_custom_command(TARGET ${PLUGIN_NAME}

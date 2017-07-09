@@ -7,20 +7,20 @@ namespace k3d
 {
 	static void RegisterApp();
     
-	App::App(kString const & appName)
+	App::App(String const & appName)
 		: m_Window(nullptr)
 		, m_AppName(appName)
 	{
         RegisterApp();
-		m_Window = MakePlatformWindow(appName.c_str(), 1920, 1080);
+		m_Window = MakePlatformWindow(appName.CStr(), 1920, 1080);
 	}
 
-	App::App(kString const & appName, uint32 width, uint32 height)
+	App::App(String const & appName, uint32 width, uint32 height)
 		: m_Window(nullptr)
 		, m_AppName(appName)
     {
         RegisterApp();
-		m_Window = MakePlatformWindow(appName.c_str(), width, height);
+		m_Window = MakePlatformWindow(appName.CStr(), width, height);
 	}
 
 	App::~App()

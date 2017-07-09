@@ -108,18 +108,20 @@ elseif(MACOS)
     list(APPEND CORE_DEP_LIBS "-framework Cocoa" "-framework AppKit" "-framework QuartzCore" "-framework CoreData" "-framework Foundation")
 endif()
 
-k3d_add_lib(Core SRCS ${CORE_SRCS} LIBS ${CORE_DEP_LIBS} FOLDER "Runtime")
+k3d_add_lib(Core SRCS ${CORE_SRCS} LIBS ${CORE_DEP_LIBS} FOLDER "Runtime"
+    PCH "Kaleido3D.h"
+    PCH_SRC "${Kaleido3D_ROOT_DIR}/Source/Core/App.cpp"
+    PCH_INCLUDE "${Kaleido3D_ROOT_DIR}/Include"
+)
 
-if(WIN32)
-    add_precompiled_header(Core "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Core/App.cpp")
-elseif(MACOS)
+if(MACOS)
     if(BUILD_SHARED)
         add_custom_command(TARGET Core POST_BUILD COMMAND
             ${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libCore.dylib" $<TARGET_FILE:Core>)
     endif()
 endif()
 
-install(TARGETS Core 
+install(TARGETS Kaleido3D.Core 
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)

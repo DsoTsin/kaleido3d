@@ -26,6 +26,9 @@ void TestString()
 	testString += 'B';
     cout << testString.CStr() << endl;
         
+
+    cout << testString.Find("yo") << endl;
+
 	MD5 md5;
 	md5.Update(testString);
 	auto testMd5 = md5.Str();

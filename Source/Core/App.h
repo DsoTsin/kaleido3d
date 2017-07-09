@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "Module.h"
+#include <KTL/String.hpp>
 
 #if K3DPLATFORM_OS_MAC
 #import <Cocoa/Cocoa.h>
@@ -38,11 +39,9 @@ namespace __android_internal
 
 #include "Message.h"
 
-using std::shared_ptr;
-
 namespace k3d
 {
-    class IWindow;
+  class IWindow;
     
 	enum class AppStatus : uint32
 	{
@@ -50,11 +49,11 @@ namespace k3d
 		UnInitialized
 	};
 
-    class K3D_API App
+  class K3D_API App
 	{
-    public:
-        explicit App(kString const & appName);
-		App(kString const & appName, uint32 width, uint32 height);
+  public:
+    explicit App(String const & appName);
+		App(String const & appName, uint32 width, uint32 height);
         virtual ~App();
 
 		virtual void InitWindow(void *param);
@@ -68,7 +67,7 @@ namespace k3d
 
     protected:
 		IWindow::Ptr m_Window;
-		const kString & m_AppName;
+		const String & m_AppName;
         
 #if K3DPLATFORM_OS_MAC
         id m_AppDelegate;
@@ -139,7 +138,7 @@ return new className(#className);\
 #define K3D_APP_MAIN(className) \
 	int WinMain(HINSTANCE,HINSTANCE,LPSTR CmdLine,int) \
 	{ \
-		className app(L## #className); \
+		className app(#className); \
 		return ::k3d::RunApplication(app, L## #className); \
 	}
 #elif K3DPLATFORM_OS_ANDROID

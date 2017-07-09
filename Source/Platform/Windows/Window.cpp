@@ -18,12 +18,12 @@ namespace k3d
 		{
 		public:
 			WindowsWindow() = default;
-			WindowsWindow(const kchar *windowName, int width, int height);
+			WindowsWindow(const char *windowName, int width, int height);
 
 			/**
 			* Interfaces
 			*/
-			void	SetWindowCaption(const kchar * name) override
+			void	SetWindowCaption(const char * name) override
 			{
 				SetCaption(name);
 			}
@@ -71,7 +71,7 @@ namespace k3d
 			LONG_PTR	callback;
 
 			int			Init();
-			void		SetCaption(const kchar * name);
+			void		SetCaption(const char * name);
 			void		Show(WindowMode mode) override;
 			void		Resize(int width, int height) override;
 			void		Move(int x, int y) override;
@@ -236,7 +236,7 @@ namespace k3d
 			return DefWindowProc(hwnd, msg, wParam, lParam);
 		}
 
-		WindowsWindow::WindowsWindow(const kchar * windowName, int width, int height)
+		WindowsWindow::WindowsWindow(const char * windowName, int width, int height)
 		{
 			Init();
 			SetCaption(windowName);
@@ -266,9 +266,9 @@ namespace k3d
 			return S_OK;
 		}
 
-		void WindowsWindow::SetCaption(const kchar * name) {
+		void WindowsWindow::SetCaption(const char * name) {
 			assert(handle != nullptr && "handle cannot be nullptr");
-			::SetWindowTextW(handle, name);
+			::SetWindowTextA(handle, name);
 		}
 
 		void WindowsWindow::Show(WindowMode mode) {
@@ -686,8 +686,8 @@ namespace k3d
 
 
 
-	IWindow::Ptr MakePlatformWindow(const kchar *windowName, int width, int height)
+	IWindow::Ptr MakePlatformWindow(const char *windowName, int width, int height)
 	{
-		return std::make_shared<WindowImpl::WindowsWindow>(windowName, width, height);
+		return MakeShared<WindowImpl::WindowsWindow>(windowName, width, height);
 	}
 }

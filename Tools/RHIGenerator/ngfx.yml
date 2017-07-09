@@ -37,12 +37,18 @@ protype:
 
     - MultiSample flag:
         type: enum
+        vulkan: VkSampleCountFlagBits
         enums:
-          - MS 1x
-          - MS 2x
-          - MS 4x
-          - MS 8x
-          - MS 16x
+          - MS 1x:
+                vulkan: VK_SAMPLE_COUNT_1_BIT
+          - MS 2x:
+                vulkan: VK_SAMPLE_COUNT_2_BIT
+          - MS 4x:
+                vulkan: VK_SAMPLE_COUNT_4_BIT
+          - MS 8x:
+                vulkan: VK_SAMPLE_COUNT_8_BIT
+          - MS 16x:
+                vulkan: VK_SAMPLE_COUNT_16_BIT
 
     - load action:
         type: enum
@@ -71,6 +77,13 @@ protype:
             - F32C2
             - F32C3
             - F32C4
+
+    - stencil face ref:
+        type: enum
+        enums:
+            - front
+            - back
+            - front and back
 
     - primitive type:
         type: enum
@@ -175,7 +188,7 @@ protype:
             - Common
             - Vertex Buffer
             - Constant Buffer
-            - Render Target
+            - frame buffer
             - Pixel Shader Resource
             - Transfer Source
             - Transfer Dest
@@ -191,16 +204,52 @@ protype:
             - Unorder Access Texture
             - Unorder Access Buffer
     
-    - texture dimension:
+    - buffer view bit:
+        type: enum
+        bitmask: true
+        enums:
+            - UnOrdered Access
+            - Shader Resource
+            - Constant Buffer
+            - Vertex Buffer
+            - Index Buffer
+            - Indirect Buffer
+
+    - texture view bit:
+        type: enum
+        bitmask: true
+        enums:
+            - Shader Read
+            - Shader Write
+            - Render Target
+            - Depth Stencil
+
+    - storage option:
         type: enum
         enums:
-            - Tex1D
-            - Tex2D
-            - Tex2D MS
-            - Tex2D Array
-            - Tex3D
-            - Tex3D Array
-            - TexCube
+            - shared
+            - private
+            - managed
+
+    - texture dimension:
+        type: enum
+        comment: Dimension Of Texture
+        vulkan: VkImageViewType
+        enums:
+            - Tex1D:
+                vulkan: VK_IMAGE_VIEW_TYPE_1D
+            - Tex2D:
+                vulkan: VK_IMAGE_VIEW_TYPE_2D
+            - Tex2D MS:
+                vulkan: VK_IMAGE_VIEW_TYPE_2D
+            - Tex2D Array:
+                vulkan: VK_IMAGE_VIEW_TYPE_2D_ARRAY
+            - Tex3D:
+                vulkan: VK_IMAGE_VIEW_TYPE_3D
+            - Tex3D Array:
+                vulkan: VK_IMAGE_VIEW_TYPE_3D_ARRAY
+            - TexCube:
+                vulkan: VK_IMAGE_VIEW_TYPE_CUBE
 
     - fill mode:
         type: enum
@@ -222,6 +271,23 @@ protype:
             - Back:
                 vulkan: VK_CULL_MODE_BACK_BIT
 
+    - logic operation:
+        type: enum
+        vulkan: VkLogicOp
+        enums:
+            - clear:
+                vulkan: VK_LOGIC_OP_CLEAR
+            - and:
+                vulkan: VK_LOGIC_OP_AND
+            - xor:
+                vulkan: VK_LOGIC_OP_XOR
+            - or:
+                vulkan: VK_LOGIC_OP_OR
+            - nor:
+                vulkan: VK_LOGIC_OP_NOR
+            - invert:
+                vulkan: VK_LOGIC_OP_INVERT
+
     - rasterizer state:
         type: struct
         members:
@@ -234,14 +300,24 @@ protype:
             - name: frontCCW
               type: Bool32
               default: true
+            - name: depthClipEnable
+              type: Bool32
+            - name: depthBiasClamp
+              type: Float32
+            - name: depthBiasSlope
+              type: Float32
             - name: depthBias
               type: int32_t
               default: 0
             - name: multiSampleEnable
               type: Bool32
               default: false
+            - name: sampleCount
+              type: uint32_t
+            - name: alphaToCoverageEnable
+              type: Bool32
 
-    - blend state:
+    - rt blend state:
         type: struct
         members:
             - name: enable
@@ -265,6 +341,18 @@ protype:
             - name: colorWriteMask
               type: uint32_t
               default: 0xF
+
+    - blend state:
+        type: struct
+        members:
+            - name: alphaToCoverageEnable
+              type: Bool32
+            - name: renderTargets[8]
+              type: rt blend state
+            - name: logicOpEnable
+              type: Bool32
+            - name: logicOp
+              type: logic operation
 
     - depth stencil state:
         type: struct
@@ -359,7 +447,16 @@ protype:
         type: struct
         comment: Description of a buffer
         members:
+            - name: allowedViewBits
+              type: buffer view bit
+              default: Constant Buffer
+            - name: option
+              type: storage option
+              default: managed
             - name: size
+              type: uint64_t
+              default: 0
+            - name: deviceMask
               type: uint64_t
 
     - buffer view desc:
@@ -381,6 +478,12 @@ protype:
         type: struct
         comment: Description of a texture
         members:
+            - name: allowedViewBits
+              type: texture view bit
+            - name: option
+              type: storage option
+            - name: samples
+              type: MultiSample flag
             - name: format
               type: pixel format
             - name: width
@@ -393,6 +496,8 @@ protype:
               type: uint32_t
             - name: mipLevels
               type: uint32_t
+            - name: deviceMask
+              type: uint64_t
 
     - texture view desc:
         type: struct
@@ -409,6 +514,7 @@ protype:
 
     - vertex input rate:
         type: enum
+        vulkan: VkVertexInputRate
         enums:
             - PerVertex:
                 vulkan: VK_VERTEX_INPUT_RATE_VERTEX
@@ -458,12 +564,20 @@ protype:
               type: depth stencil state
             - name: inputState
               type: vertex input state
+            - name: numRenderTargets
+              type: uint32_t
+            - name: renderTargetFormats[8]
+              type: pixel format
+            - name: depthStencilFormat
+              type: pixel format
             - name: primitiveTopology
               type: primitive type
             - name: vertexFunction
               type: function *
             - name: pixelFunction
               type: function *
+            - name: deviceMask
+              type: uint64_t
 
     - binding type:
         type: enum
@@ -544,10 +658,11 @@ protype:
           - Buffer
           - Constant
 
-    - pipeline layout desc:
+    - shader binding:
         type: struct
-        comment: Description of Pipeline Layout (How to layout bindings)
         members:
+          - name: name
+            type: const char *
           - name: visibility
             type: shader stage bit
           - name: bindingType
@@ -555,6 +670,51 @@ protype:
           - name: slot
             type: uint32_t
           - name: count
+            type: uint32_t
+
+    - bind table layout initializer:
+        type: interface
+        inherit: ref counted<false>
+        functions:
+            - add buffer:
+                params:
+                    - name: slot
+                      type: uint32_t
+                    - name: count
+                      type: uint32_t
+                    - name: visibility
+                      type: shader stage bit
+            - add texture:
+                params:
+                    - name: slot
+                      type: uint32_t
+                    - name: count
+                      type: uint32_t
+                    - name: visibility
+                      type: shader stage bit
+            - add sampler:
+                params:
+                    - name: slot
+                      type: uint32_t
+                    - name: visibility
+                      type: shader stage bit
+            - initialize:
+                params:
+                    - name: ppBindTableLayout
+                      type: bind table layout **
+                return: result
+                    
+    - bind table layout:
+        type: interface
+        inherit: ref counted<false>
+
+    - pipeline layout desc:
+        type: struct
+        comment: Description of Pipeline Layout (How to layout bindings)
+        members:
+          - name: pShaderLayout
+            type: const bind table layout *
+          - name: shaderLayoutCount
             type: uint32_t
 
     - attachment desc:
@@ -594,12 +754,16 @@ protype:
           - name: pDepthStencilAttachment
             type: depth stencil attachment desc *
   
-    - render target desc:
+    - frame buffer desc:
         type: struct
-        comment: Description of Render Target
+        comment: Description of frame buffer
         members:
-          - name: XX
-            type: int32_t
+          - name: colorAttachments[8]
+            type: texture *
+          - name: depthStencilAttachment
+            type: texture *
+          - name: layers
+            type: uint32_t
 
     - draw indexed instanced desc:
         type: struct
@@ -632,17 +796,25 @@ protype:
         enums:
             - Graphics
             - Compute
+            - Copy
 
     - shader type:
         type: enum
         comment: Type of shader
+        glslang: EShLanguage
         enums:
-            - Vertex
-            - Fragment
-            - Compute
-            - Geometry
-            - TessailationEval
-            - TessailationControl
+            - Vertex:
+                glslang: EShLangVertex
+            - Fragment:
+                glslang: EShLangFragment
+            - Compute:
+                glslang: EShLangCompute
+            - Geometry:
+                glslang: EShLangGeometry
+            - TessailationEval:
+                glslang: EShLangTessEvaluation
+            - TessailationControl:
+                glslang: EShLangTessControl
 
     - viewport:
         type: struct
@@ -677,6 +849,10 @@ protype:
         inherit: named object<false>
         comment: Present drawables
         functions:
+            - current drawable:
+                return: drawable *
+            - next drawable:
+                return: drawable *
             - get texture:
                 params:
                   - name: ppTexture
@@ -684,7 +860,12 @@ protype:
                   - name: index
                     type: uint32_t
                 return: result
-            - present
+            - buffer count:
+                return: uint32_t
+            - init with render pass:
+                params:
+                    - name: pRenderPass
+                      type: render pass *
 
     - function:
         type: interface
@@ -692,12 +873,30 @@ protype:
         functions:
           - type:
               return: shader type
+              const: true
           - name:
               return: const char *
+              const: true
+
+    - library:
+        type: interface
+        inherit: ref counted<false>
+        functions:
+           - make function:
+                params:
+                    - name: name
+                      type: const char *
+                    - name: ppFunction
+                      type: function **
+                return: result
 
     - shader option:
         type: struct
         members:
+          - name: stage
+            type: shader type
+          - name: language
+            type: shader lang
           - name: entryName
             type: const char *
           - name: profile
@@ -705,28 +904,145 @@ protype:
           - name: format
             type: shader format
 
-    - compiler:
+    - data type:
+        type: enum
+        comment: For shader reflection
+        enums:
+            - none
+            - struct
+            - array
+            - pointer
+            - texture
+            - bool
+            - bool2
+            - bool3
+            - bool4
+            - int
+            - int2
+            - int3
+            - int4
+            - uint
+            - uint2
+            - uint3
+            - uint4
+            - float
+            - float2
+            - float3
+            - float4
+            - mat2
+            - mat2x3
+            - mat2x4
+            - mat3x2
+            - mat3
+            - mat3x4
+            - mat4x2
+            - mat4
+
+    - variable type:
+        type: interface
+        comment: For shader reflection
+        inherit: ref counted<false>
+        functions:
+            - get type:
+                return: data type
+        
+    - argument access:
+        type: enum
+        bitmask: true
+        enums:
+            - read only
+            - write only
+
+    - variable:
+        type: interface
+        comment: For shader reflection
+        inherit: ref counted<false>
+        functions:
+            - name:
+                return: const char *
+            - access:
+                return: argument access
+            - type:
+                return: variable type *
+            - index:
+                return: uint32_t
+            - active:
+                return: bool
+
+    - struct type:
+        type: interface
+        comment: Not ready yet
+        inherit: variable type
+
+    - array type:
+        type: interface
+        comment: uniform buffer
+        inherit: variable type
+        functions:
+            - length:
+                return: uint32_t
+            - element type:
+                return: data type
+            - stride:
+                return: uint32_t
+            - elements:
+                return: variable type *
+    
+    - pointer type:
+        type: interface
+        comment: storage class buffer
+        inherit: variable type
+        functions:
+            - access:
+                return: argument access
+            - alignment:
+                return: uint32_t
+            - data size:
+                return: uint32_t
+            - element type:
+                return: data type
+
+    - texture refer type:
+        type: interface
+        inherit: variable type
+        functions:
+            - access:
+                return: argument access
+            - texture data type:
+                return: data type
+            - texture dim:
+                return: texture dimension
+
+    - pipeline reflection:
         type: interface
         inherit: ref counted<false>
         functions:
-          - compile:
-              params:
-                - name: option
-                  type: const shader option *
-                - name: pData
-                  type: void *
-                - name: size
-                  type: uint32_t
-                - name: output
-                  type: function **
-              return: result
-          - reflect:
-              params:
-                - name: pData
-                  type: void *
-                - name: size
-                  type: uint32_t
-              return: result
+            - variable count:
+                return: uint32_t
+                const: true
+            - variable at:
+                params:
+                    - name: id
+                      type: uint32_t
+                return: variable *
+                const: true
+            - get stage:
+                return: shader type
+                const: true
+
+    - compile option:
+        type: struct
+        members:
+          - name: stripDebugSymbols
+            type: Bool32
+          - name: optimizeSize
+            type: Bool32
+          - name: language
+            type: shader lang
+          - name: profile
+            type: shader profile
+          - name: format
+            type: shader format
 
     - factory:
         type: interface
@@ -743,26 +1059,24 @@ protype:
             - create swapchain:
                 params:
                     - name: desc
-                      type: const swap chain desc *
+                      type: NotNull const swap chain desc *
                     - name: pCommandQueue
-                      type: command queue *
+                      type: NotNull command queue *
                     - name: pWindow
                       type: void *
                     - name: pSwapchain
-                      type: swap chain **
-                return: result
-            - create compiler:
-                params:
-                  - name: shaderLang
-                    type: shader lang
-                  - name: compiler
-                    type: compiler **
+                      type: NotNull swap chain **
                 return: result
 
-
-    - render target:
+    - frame buffer:
         type: interface
         inherit: named object<false>
+        functions:
+            - compat with:
+                params:
+                    - name: pRenderPass
+                      type: const render pass *
+                return: Bool32
 
     - render pass:
         type: interface
@@ -774,6 +1088,34 @@ protype:
         functions:
             - type:
                 return: pipeline type
+                const: true
+            - get cache:
+                params:
+                  - name: pSize
+                    type: uint64_t *
+                  - name: pOutData
+                    type: void *
+                return: result
+
+    - pipeline library:
+        type: interface
+        inherit: ref counted<false>
+        functions:
+            - store pipeline:
+                params:
+                    - name: key
+                      type: const char *
+                    - name: pPipeline
+                      type: pipeline *
+            - get serialized size:
+                return: uint64_t
+                const: true
+            - serialize:
+                params:
+                    - name: pData
+                      type: void *
+                    - name: Size
+                      type: uint64_t
 
     - compute pipeline:
         type: interface
@@ -793,13 +1135,13 @@ protype:
         type: interface
         inherit: named object<false>
         functions:
-            - create binding table:
+            - create bind table:
                 params:
                     - name: ppBindingTable
-                      type: binding table **
+                      type: bind table **
                 return: result
 
-    - binding table:
+    - bind table:
         type: interface
         inherit: named object<true>
         comment: Shader binding table
@@ -865,6 +1207,13 @@ protype:
                     - name: pDesc
                       type: buffer desc *
                 return: result
+            - create view:
+                params:
+                    - name: pDesc
+                      type: const buffer view desc *
+                    - name: ppView
+                      type: buffer view **
+                return: result
 
     - buffer view:
         type: interface
@@ -879,10 +1228,24 @@ protype:
                     - name: pDesc
                       type: texture desc *
                 return: result
+            - create view:
+                params:
+                    - name: pDesc
+                      type: const texture view desc *
+                    - name: ppView
+                      type: texture view **
+                return: result
 
     - texture view:
         type: interface
         inherit: named object<false>
+
+    - drawable:
+        type: interface
+        inherit: ref counted<true>
+        functions:
+            - texture:
+                return: texture *
 
     - device:
         type: interface
@@ -892,7 +1255,7 @@ protype:
             - get desc:
                 params:
                     - name: pDesc
-                      type: device desc *
+                      type: NotNull device desc *
             - create command queue:
                 params:
                     - name: queueType
@@ -900,94 +1263,128 @@ protype:
                     - name: pQueue
                       type: command queue **
                 return: result
+            - create bind table layout initializer:
+                params:
+                    - name: ppBTLInitializer
+                      type: NotNull bind table layout initializer **
             - create pipeline layout:
                 params:
                     - name: pPipelineLayoutDesc
-                      type: const pipeline layout desc *
+                      type: NotNull const pipeline layout desc *
                     - name: ppPipelineLayout
                       type: pipeline layout **
                 return: result
-            - create binding table:
+            - create bind table:
                 params:
-                    - name: pPipelineLayout
-                      type: pipeline layout *
+                    - name: pBindTableLayout
+                      type: NotNull const bind table layout *
                     - name: ppBindingTable
-                      type: binding table **
+                      type: bind table **
                 return: result
             - create render pipeline:
                 params:
                     - name: pPipelineDesc
-                      type: const render pipeline desc *
+                      type: NotNull const render pipeline desc *
                     - name: pPipelineLayout
-                      type: pipeline layout *
+                      type: Nullable pipeline layout *
                     - name: pRenderPass
-                      type: render pass *
+                      type: Nullable render pass *
                     - name: pPipelineState
                       type: pipeline **
                 return: result
+                
+            - create render pipeline:
+                params:
+                    - name: pPipelineDesc
+                      type: NotNull const render pipeline desc *
+                    - name: pRenderPass
+                      type: Nullable render pass *
+                    - name: pPipelineState
+                      type: pipeline **
+                    - name: ppReflection
+                      type: NotNull pipeline reflection **
+                return: result
+
             - create compute pipeline:
                 params:
                     - name: pComputeFunction
-                      type: function *
+                      type: NotNull function *
                     - name: pPipelineLayout
-                      type: pipeline layout *
-                    - name: pPipeline
+                      type: Nullable pipeline layout *
+                    - name: ppPipeline
                       type: pipeline **
+                return: result
+                
+            - create compute pipeline:
+                params:
+                    - name: pComputeFunction
+                      type: NotNull function *
+                    - name: ppPipeline
+                      type: pipeline **
+                    - name: ppReflection
+                      type: NotNull pipeline reflection **
+                return: result
+
+            - create pipeline library:
+                params:
+                    - name: pData
+                      type: const void *
+                    - name: Size
+                      type: uint64_t
+                    - name: ppPipelineLibrary
+                      type: pipeline library **
+                return: result
+            - create library:
+                params:
+                    - name: compileOption
+                      type: const compile option *
+                    - name: pData
+                      type: const void *
+                    - name: Size
+                      type: uint64_t
+                    - name: ppLibrary
+                      type: library **
                 return: result
             - create render pass:
                 params:
                   - name: desc
-                    type: const render pass desc *
+                    type: NotNull const render pass desc *
                   - name: ppRenderpass
                     type: render pass **
                 return: result
-            - create render target:
+            - create frame buffer:
                 params:
                   - name: desc
-                    type: const render target desc *
+                    type: NotNull const frame buffer desc *
                   - name: ppRenderTarget
-                    type: render target **
+                    type: frame buffer **
                 return: result
             - create sampler:
                 params:
                     - name: desc
-                      type: const sampler desc*
+                      type: NotNull const sampler desc*
                     - name: pSampler
                       type: sampler **
                 return: result
             - create buffer:
                 params:
                     - name: desc
-                      type: const buffer desc*
+                      type: NotNull const buffer desc*
                     - name: pBuffer
                       type: buffer **
-                return: result
-            - create buffer view:
-                params:
-                    - name: desc
-                      type: const buffer view desc *
-                    - name: pBuffer
-                      type: buffer *
-                    - name: pBufView
-                      type: buffer view **
                 return: result
             - create texture:
                 params:
                     - name: desc
-                      type: const texture desc *
+                      type: NotNull const texture desc *
                     - name: pTexture
                       type: texture **
                 return: result
-            - create texture view:
+            - create fence:
                 params:
-                    - name: desc
-                      type: const texture view desc *
-                    - name: pTexture
-                      type: texture *
-                    - name: pTexView
-                      type: texture view **
+                    - name: ppFence
+                      type: fence **
                 return: result
-            #- create shader
             - wait idle
 
     #device child:
@@ -1000,16 +1397,15 @@ protype:
           - wait
           - reset
 
-    - frame buffer:
-        type: interface
-        inherit: named object<false>
-
     - command queue:
         type: interface
         inherit: named object<true>
         functions:
-            - command buffer:
-                return: command buffer *
+            - create command buffer:
+                params:
+                    - type: command buffer **
+                      name: ppComandBuffer
+                return: result
 
     - command buffer:
         type: interface
@@ -1020,37 +1416,69 @@ protype:
                 params:
                   - type: fence *
                     name: pFence
-            - render command encoder:
-                return: render command encoder *
-            - compute command encoder:
-                return: compute command encoder *
-            - parallel command encoder:
-                return: parallel render command encoder *
+            - create render command encoder:
+                params:
+                  - name: pDrawable
+                    type: drawable *
+                  - name: pRenderPass
+                    type: render pass *                    
+                  - name: ppRenderCommandEncoder
+                    type: render command encoder **
+                return: result
+            - create compute command encoder:
+                params:
+                  - name: ppComputeCommandEncoder
+                    type: compute command encoder **
+                return: result
+            - create copy command encoder:
+                params:
+                  - name: ppCopyCommandEncoder
+                    type: copy command encoder **
+                return: result
+            - create parallel command encoder:
+                params:
+                  - name: ppCopyCommandEncoder
+                    type: parallel render command encoder **
+                return: result
 
     - command encoder:
         type: interface
         inherit: named object<true>
+        functions:
+            - barrier:
+                params:
+                    - name: pResource
+                      type: resource *
+            - set pipeline:
+                params:
+                  - name: pPipelineState
+                    type: pipeline*
+            - set bind table:
+                params:
+                  - name: pBindingTable
+                    type: bind table *
+            - end encode
+
+    - copy command encoder:
+        type: interface
+        inherit: command encoder
+        comment: Command Encoder used for Copy and Blit
         functions:
             - copy texture:
                 params:
                   -
             - copy buffer:
                 params:
-                  -
-            - set pipeline:
-                params:
-                  - name: pPipelineState
-                    type: pipeline*
-            - set pipeline layout:
-                params:
-                  - name: pPipelineLayout
-                    type: pipeline layout *
-            - set binding table:
-                params:
-                  - name: pBindingTable
-                    type: binding table *
-            - end encode
-
+                  - name: srcOffset
+                    type: uint64_t
+                  - name: dstOffset
+                    type: uint64_t
+                  - name: size
+                    type: uint64_t
+                  - name: srcBuffer
+                    type: buffer *
+                  - name: dstBuffer
+                    type: buffer *
 
     - render command encoder:
         type: interface
@@ -1071,6 +1499,34 @@ protype:
                 params:
                     - name: pViewport
                       type: const viewport *
+            - set depth bias:
+                params:
+                    - name: biasConst
+                      type: Float32
+                    - name: biasClamp
+                      type: Float32
+                    - name: biasSlope
+                      type: Float32
+            - set depth bounds:
+                params:
+                    - name: minDepth
+                      type: Float32
+                    - name: maxDepth
+                      type: Float32
+            - set stencil reference:
+                params:
+                    - name: face
+                      type: stencil face ref
+                    - name: value
+                      type: uint32_t
+            - set blend consts:
+                params:
+                    - name: constant
+                      type: Float32x4
+            - set line width:
+                params:
+                    - name: width
+                      type: Float32
             - set index buffer:
                 params:
                     - name: pIndexBuffer
@@ -1083,10 +1539,6 @@ protype:
                       type: uint64_t
                     - name: pVertexBuffer
                       type: buffer *
-            - set primitive type:
-                params:
-                    - name: primitive
-                      type: primitive type
             - draw instanced:
                 params:
                     - name: drawParam
@@ -1095,10 +1547,20 @@ protype:
                 params:
                     - name: drawParam
                       type: const draw indexed instanced desc *
+            - draw indirect:
+                params:
+                    - name: pIndirectBuffer
+                      type: buffer *
+                    - name: offset
+                      type: uint32_t
+                    - name: drawCount
+                      type: uint32_t
+                    - name: stride
+                      type: uint32_t
             - present:
                 params:
-                    - name: pSwapChain
-                      type: swap chain *
+                    - name: pDrawable
+                      type: drawable *
 
     - compute command encoder:
         type: interface
@@ -1119,3 +1581,14 @@ protype:
         functions:
           - encoder:
               return: render command encoder *
+
+    - create factory:
+        type: function
+        comment: Create NGFX API factory
+        exported: true
+        params:
+            - name: ppFactory
+              type: factory **
+            - name: debugEnabled
+              type: bool
+        return: result

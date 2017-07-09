@@ -11,8 +11,7 @@
 #include <KTL/SharedPtr.hpp>
 #include <KTL/DynArray.hpp>
 
-#include <Tools/ShaderGen/Public/ShaderCompiler.h>
-
+#include <ShaderCompiler/Public/ShaderCompiler.h>
 #include <Renderer/FontRenderer.h>
 
 #include <memory>

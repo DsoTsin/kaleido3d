@@ -18,12 +18,12 @@ class TriangleMesh;
 class MultiThreadRenderingApp : public RHIAppBase
 {
 public:
-  MultiThreadRenderingApp(kString const& appName, uint32 width, uint32 height)
+  MultiThreadRenderingApp(String const& appName, uint32 width, uint32 height)
     : RHIAppBase(appName, width, height, true)
   {
   }
 
-  explicit MultiThreadRenderingApp(kString const& appName)
+  explicit MultiThreadRenderingApp(String const& appName)
     : RHIAppBase(appName, 1920, 1080, true)
   {
   }

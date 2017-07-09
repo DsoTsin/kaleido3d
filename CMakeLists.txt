@@ -22,6 +22,7 @@ include(Platform)
 include(Compiler)
 include(Common)
 include(NDKStlConfig)
+include(FindPyYaml)
 
 find_package(ThirdParty)
 find_package(LibClang)
@@ -33,7 +34,7 @@ option(BUILD_WITH_EDITOR "Build With Editor" OFF)
 option(BUILD_WITH_D3D12 "Build With D3D12 RHI" OFF)
 option(BUILD_WITH_V8 "Build With V8 Script Module" OFF)
 option(BUILD_WITH_UNIT_TEST "Build With Unit Test" ON)
-option(BUILD_NGFX "Build NGFX Standalone Library" OFF)
+#option(BUILD_NGFX "Build NGFX Standalone Library" OFF)
 option(ENABLE_SHAREDPTR_TRACK "Enable SharedPtr Track" OFF)
 
 if(IOS OR MACOS)
@@ -128,13 +129,24 @@ if(MACOS)
 	find_package(Maya)
 endif()
 
+add_custom_target(CMakeFiles SOURCES
+Project/Common.cmake
+Project/Compiler.cmake
+Project/FindMaya.cmake
+Project/FindLibClang.cmake
+Project/FindThirdParty.cmake
+Project/Platform.cmake
+)
+
 add_subdirectory(Source/Core)
 add_subdirectory(Source/Log)
 add_subdirectory(Source/Renderer)
 add_subdirectory(Source/Engine)
 add_subdirectory(Source/RHI)
+add_subdirectory(Source/ShaderCompiler)
 
-if(BUILD_NGFX)
+if(PY_YAML_FOUND)
+	message(STATUS "NGFX Will Be Built")
 	add_subdirectory(Source/NGFX)
 endif()
 
@@ -145,21 +157,22 @@ if(BUILD_WITH_V8)
 endif()
 
 if(MAYA_FOUND)
-	add_subdirectory(Source/Tools/MayaDCC)
+	add_subdirectory(Tools/MayaDCC)
 endif()
 
-add_subdirectory(Source/Tools/ShaderGen)
-
 if(LibClang_FOUND)
-message(STATUS "libclang found, cpp_reflector will be built!")
-add_subdirectory(Source/Tools/CppReflector)
+	message(STATUS "libclang found, cpp_reflector will be built!")
+	add_subdirectory(Tools/CppReflector)
 endif(LibClang_FOUND)
 
-if(BUILD_WITH_EDITOR)
+if(BUILD_WITH_EDITOR AND (NOT Qt5_FOUND))
 	set(CMAKE_AUTOMOC ON)
 	set(CMAKE_AUTOUIC ON)
 	set(CMAKE_INCLUDE_CURRENT_DIR ON)
-	set(Qt5_DIR "C:/bin/Qt/Qt5.8.0/msvc2017_dynamic/lib/cmake/Qt5")
+	set(Qt5_DIR "C:/Usr/bin/Qt5.8.0/lib/cmake/Qt5")
 	find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
-	add_subdirectory(Source/Tools/Editor)
 endif()
+
+if(Qt5_FOUND)
+	add_subdirectory(Tools/Editor)
+endif(Qt5_FOUND)

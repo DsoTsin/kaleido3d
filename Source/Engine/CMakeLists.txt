@@ -90,13 +90,19 @@ SRCS
 	${MAT_SRCS}
 	${PARAM_SRCS} 
 LIBS 
-	Core 
+	Kaleido3D.Core 
 FOLDER 
-	"Runtime")
+	"Runtime"
+PCH
+    "Kaleido3D.h"
+PCH_SRC
+    "${Kaleido3D_ROOT_DIR}/Source/Engine/Engine.cpp"
+PCH_INCLUDE
+    "${Kaleido3D_ROOT_DIR}/Include"
+)
 
-add_precompiled_header(Engine "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Engine/Engine.cpp")
 
-install(TARGETS Engine 
+install(TARGETS Kaleido3D.Engine 
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)

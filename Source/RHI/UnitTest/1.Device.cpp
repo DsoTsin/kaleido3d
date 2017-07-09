@@ -11,11 +11,11 @@ using namespace k3d;
 class UnitTestRHIDevice : public App
 {
 public:
-	explicit UnitTestRHIDevice(kString const & appName)
+	explicit UnitTestRHIDevice(String const & appName)
 		: App(appName, 1920, 1080)
 	{}
 
-	UnitTestRHIDevice(kString const & appName, uint32 width, uint32 height)
+	UnitTestRHIDevice(String const & appName, uint32 width, uint32 height)
 		: App(appName, width, height)
 	{}
 

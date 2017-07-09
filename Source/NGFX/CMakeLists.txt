@@ -1,17 +1,19 @@
-set(NGFX_HEADER ${Kaleido3D_SOURCE_DIR}/Source/NGFX/ngfx.h)
-set(NGFX_YML ${Kaleido3D_SOURCE_DIR}/Tools/RHIGenerator/ngfx.yml)
+include_directories(src)
+add_subdirectory(src)
+add_subdirectory(examples)
+add_subdirectory(tools)
 
-set_source_files_properties(${NGFX_HEADER}
-	PROPERTIES GENERATED TRUE)
-
-add_library(ngfx SHARED 
-${NGFX_HEADER}
-${NGFX_YML}
-vulkan.cpp
+find_path(GTEST_DIR 
+NAMES
+	third_party/googletest 
+PATHS 
+	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_custom_command(TARGET ngfx PRE_BUILD COMMAND
-	${PYTHON_EXECUTABLE} ${Kaleido3D_SOURCE_DIR}/Tools/RHIGenerator/run.py -o 
-	${NGFX_HEADER} ${NGFX_YML})
-
-target_link_libraries(ngfx Core ${VULKAN_LIB})
+if(GTEST_DIR_FOUND)
+	set(gtest_force_shared_crt ON)
+	add_subdirectory(third_party/googletest)
+	add_subdirectory(gtest)
+else()
+	message(STATUS "GTest Not Found, NGFX Test won't be built!")
+endif()

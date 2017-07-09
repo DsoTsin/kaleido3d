@@ -2,6 +2,7 @@
 
 #include "Allocator.hpp"
 #include "Archive.hpp"
+#include "DynArray.hpp"
 #include <stdarg.h>
 
 K3D_COMMON_NS
@@ -20,10 +21,18 @@ template <typename BaseChar, typename Allocator>
 class StringBase
 {
 public:
-	typedef BaseChar*						CharPointer;
-	typedef const BaseChar*					ConstCharPointer;
+  typedef int64							              CharPosition;
+  typedef BaseChar*						            CharPointer;
+	typedef const BaseChar*					        ConstCharPointer;
 	typedef StringBase<BaseChar, Allocator> ThisString;
-	typedef uint64							CharPosition;
+	
+  enum CaseOption
+  {
+    CaseSensitive,
+    CaseIgnore
+  };
+
+  static const CharPosition npos = (CharPosition)-1;
 
 	StringBase() K3D_NOEXCEPT
 		: m_pStringData(nullptr)
@@ -90,20 +99,26 @@ public:
 		m_StringLength = 0;
 	}
 
-	uint64				Length() const { return m_StringLength; }
-	ConstCharPointer	Data() const { return m_pStringData; }
-	ConstCharPointer	CStr() const { return m_pStringData; }
+	uint64				      Length() const { return m_StringLength; }
+	ConstCharPointer	  Data() const { return m_pStringData; }
+	ConstCharPointer	  CStr() const { return m_pStringData; }
 
-	ThisString&			operator=(const ThisString& rhs) { Assign(rhs); return *this; }
-	ThisString&			operator=(ThisString&& rhs) { MoveAssign(Move(rhs)); return *this; }
+	ThisString&			    operator=(const ThisString& rhs) { Assign(rhs); return *this; }
+	ThisString&			    operator=(ThisString&& rhs) { MoveAssign(Move(rhs)); return *this; }
 	ThisString&         operator+=(const ThisString& rhs);
 	ThisString&         operator+=(const BaseChar& rhs);
-	BaseChar			operator[](uint64 id) const;
+	BaseChar			      operator[](uint64 id) const;
 	ThisString&         AppendSprintf(const BaseChar* fmt, ...);
-	void				Swap(ThisString& rhs);
+	void				        Swap(ThisString& rhs);
 
-	void				Resize(int newSize);
-	//CharPosition		FindFirstOf(BaseChar _char);
+	void				        Resize(int newSize);
+	CharPosition		    FindFirstOf(BaseChar _char);
+  CharPosition        FindFirstNotOf(BaseChar _BaseChar);
+  CharPosition        FindLastNotOf(BaseChar _BaseChar);
+  CharPosition        Find(ConstCharPointer _Str, CharPosition StartPos = 0, CaseOption Opt = CaseSensitive);
+
+  ThisString          ToUpper() const;
+  ThisString          ToLower() const;
 
 	template <typename T, typename A>
 	friend Archive&     operator<<(Archive & ar, StringBase<T,A> const& str);
@@ -297,6 +312,92 @@ KFORCE_INLINE bool operator==(StringBase<BaseChar, Allocator> const& lhs, String
 		return true;
 	return ((lhs.Length() == rhs.Length())
 		&& (memcmp(lhs.Data(), rhs.Data(), lhs.Length() * sizeof(BaseChar)) == 0));
+}
+
+template <typename BaseChar, typename Allocator>
+KFORCE_INLINE typename StringBase<BaseChar, Allocator>::CharPosition
+  StringBase<BaseChar, Allocator>::FindFirstOf(BaseChar _BaseChar)
+{
+  StringBase<BaseChar, Allocator>::CharPosition p = 0;
+  while(p < m_StringLength)
+  {
+    if (m_pStringData[p] == _BaseChar)
+      return p;
+    ++p;
+  }
+  return StringBase<BaseChar, Allocator>::npos;
+}
+
+template <typename BaseChar, typename Allocator>
+KFORCE_INLINE typename StringBase<BaseChar, Allocator>::CharPosition
+StringBase<BaseChar, Allocator>::FindFirstNotOf(BaseChar _BaseChar)
+{
+  CharPosition p = 0;
+  while (p < m_StringLength)
+  {
+    if (m_pStringData[p] != _BaseChar)
+      return p;
+    ++p;
+  }
+  return StringBase<BaseChar, Allocator>::npos;
+}
+
+template <typename BaseChar, typename Allocator>
+KFORCE_INLINE typename StringBase<BaseChar, Allocator>::CharPosition
+StringBase<BaseChar, Allocator>::FindLastNotOf(BaseChar _BaseChar)
+{
+  CharPosition p = m_StringLength - 1;
+  while (p != StringBase<BaseChar, Allocator>::npos 
+    && p >= 0)
+  {
+    if (m_pStringData[p] != _BaseChar)
+      return p;
+    --p;
+  }
+  return StringBase<BaseChar, Allocator>::npos;
+}
+
+/**
+ * KMP String searching
+ */
+template <typename BaseChar, typename Allocator>
+KFORCE_INLINE typename StringBase<BaseChar, Allocator>::CharPosition
+StringBase<BaseChar, Allocator>::Find(ConstCharPointer _Str, CharPosition StartPos, CaseOption Opt)
+{
+  if (m_pStringData == nullptr || _Str==nullptr || m_pStringData[0] == 0 || _Str[0] == 0) 
+    return ThisString::npos;
+  auto len = CharLength(_Str);
+  if (len > m_StringLength) return ThisString::npos;
+  DynArray<CharPosition> match(len, ThisString::npos);
+  CharPosition j = ThisString::npos;
+  for(CharPosition i = 1; i<len ; i++)
+  {
+    while (j > 0 && _Str[i] != _Str[j + 1]) j = match[j];
+    if (_Str[i] == _Str[j + 1]) j++;
+    match[i] = j;
+  }
+  j = ThisString::npos;
+  for(CharPosition i=0;i<m_StringLength;i++)
+  {
+    while (j >= 0 && m_pStringData[i] != _Str[j + 1]) j = match[j];
+    if (m_pStringData[i] == _Str[j + 1]) j++;
+    if (j == len - 1) return i - len + 1;
+  }
+  return ThisString::npos;
+}
+
+template <typename BaseChar, typename Allocator>
+KFORCE_INLINE typename StringBase<BaseChar, Allocator>::ThisString
+StringBase<BaseChar, Allocator>::ToUpper() const
+{
+  return ThisString();
+}
+
+template <typename BaseChar, typename Allocator>
+KFORCE_INLINE typename StringBase<BaseChar, Allocator>::ThisString
+StringBase<BaseChar, Allocator>::ToLower() const
+{
+  return ThisString();
 }
 
 template <typename BaseChar, typename Allocator>

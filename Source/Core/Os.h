@@ -131,6 +131,13 @@ extern K3D_API uint32
 GetCpuCoreNum();
 extern K3D_API float*
 GetCpuUsage();
+extern K3D_API uint32
+GetGpuCount();
+/**
+ * Get Gpu load by ID
+ */
+extern K3D_API float
+GetGpuUsage(int GpuId);
 
 extern K3D_API uint64 GetTicks();
 

@@ -25,12 +25,12 @@ struct ConstantBuffer
 class TCubeUnitTest : public RHIAppBase
 {
 public:
-  TCubeUnitTest(kString const& appName, uint32 width, uint32 height)
+  TCubeUnitTest(String const& appName, uint32 width, uint32 height)
     : RHIAppBase(appName, width, height)
   {
   }
 
-  explicit TCubeUnitTest(kString const& appName)
+  explicit TCubeUnitTest(String const& appName)
     : RHIAppBase(appName, 1920, 1080)
   {
   }

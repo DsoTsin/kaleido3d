@@ -1,0 +1,3 @@
+add_subdirectory(ProcedureAsteroids)
+add_subdirectory(MNIST)
+add_subdirectory(SimpleCL)

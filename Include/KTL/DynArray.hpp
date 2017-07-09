@@ -34,6 +34,13 @@ K3D_COMMON_NS
         new (iter) T();
       }
     }
+
+    static void DoInitWithValue(T* begin, T* end, T const& value)
+    {
+      for (T* iter = begin; iter != end; iter++) {
+        new (iter) T(value);
+      }
+    }
   };
 
   template<class T>
@@ -42,6 +49,13 @@ K3D_COMMON_NS
     static void DoInit(T* begin, T* end)
     {
       memset(begin, 0, (end - begin) * sizeof(T));
+    }
+
+    static void DoInitWithValue(T* begin, T* end, T const& value)
+    {
+      for (T* iter = begin; iter != end; iter++) {
+        new (iter) T(value);
+      }
     }
   };
 
@@ -86,15 +100,26 @@ K3D_COMMON_NS
       __Initializer<ElementType>::DoInit(m_pElement, m_pElement + m_Capacity);
     }
 
-    DynArray(int size) K3D_NOEXCEPT
+    DynArray(int capacity) K3D_NOEXCEPT
       : m_ElementIndex(0)
       , m_ElementCount(0)
-      , m_Capacity(size)
+      , m_Capacity(capacity)
       , m_pElement(nullptr)
     {
       m_pElement =
         (ElementType*)m_Allocator.allocate(m_Capacity * sizeof(ElementType), 0);
       __Initializer<ElementType>::DoInit(m_pElement, m_pElement + m_Capacity);
+    }
+
+    DynArray(int size, ElementType const& value) K3D_NOEXCEPT
+      : m_ElementIndex(size-1)
+      , m_ElementCount(size)
+      , m_Capacity(size)
+      , m_pElement(nullptr)
+    {
+      m_pElement =
+        (ElementType*)m_Allocator.allocate(m_Capacity * sizeof(ElementType), 0);
+      __Initializer<ElementType>::DoInitWithValue(m_pElement, m_pElement + m_Capacity, value);
     }
 
     DynArray(DynArray&& rhs)

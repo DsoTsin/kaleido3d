@@ -21,4 +21,9 @@ if(ANDROID) # Android will above vars
     set(K3D_TARGET_SYSTEM "Android")
 endif(ANDROID)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "WindowsStore")
+    set(K3D_TARGET_SYSTEM "Windows UWP")
+    add_definitions(-DK3DPLATFORM_OS_WIN_UWP=1)
+endif()
+
 message(STATUS "Host System = ${CMAKE_SYSTEM_NAME}, Target System = ${K3D_TARGET_SYSTEM}")

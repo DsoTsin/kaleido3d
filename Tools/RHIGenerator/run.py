@@ -1,12 +1,19 @@
 from generator import ProtypeLoader, TemplateGenerator
 
-import sys
+import sys, os
 import argparse
 parser = argparse.ArgumentParser(description='test parsing arguments')
 
 parser.add_argument('input', nargs='*', help='input file path')
 parser.add_argument('-o', help='specify output file path')
 arg = parser.parse_args(sys.argv[1:])
+
+if os.path.exists(arg.o):
+	otime = os.path.getmtime(arg.o)
+	itime = os.path.getmtime(arg.input[0])
+	if itime < otime:
+		print('Source File Unchanged, Skip generating .....')
+		sys.exit(0)
 
 protype = ProtypeLoader(arg.input[0])
 protype_gen = TemplateGenerator()

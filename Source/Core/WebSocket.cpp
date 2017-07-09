@@ -130,9 +130,6 @@ namespace net
             string  theDelimiter,
             bool    theIncludeEmptyStrings)
     {
-        //printf("EXPLODE\n");
-        //UASSERT( theDelimiter.size(), >, 0 );
-
         vector<string> theStringVector;
 		size_t  start = 0, end = 0, length = 0;
 

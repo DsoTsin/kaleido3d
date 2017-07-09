@@ -41,7 +41,33 @@ unset(FREETYPE2_INCLUDE_DIR CACHE)
 unset(STEAMSDK_INCLUDE_DIR CACHE)
 
 set(FREETYPE2_LIBRARY freetype)
-set(GLSLANG_LIBRARIES glslang HLSL OGLCompiler OSDependent SPIRV SPVRemapper)
+
+macro(_imported_khr_target_properties TNAME Configuration IMPLIB_LOCATION)
+    set_property(TARGET KHR::${TNAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS ${Configuration})
+    if(NOT "${IMPLIB_LOCATION}" STREQUAL "")
+        set_target_properties(KHR::${TNAME} PROPERTIES
+        "IMPORTED_IMPLIB_${Configuration}" "${ThirdParty_PREBUILT_DIR}/lib/${IMPLIB_LOCATION}"
+        )
+    endif()
+endmacro()
+
+macro(_imported_khr_target TNAME)
+    add_library(KHR::${TNAME} SHARED IMPORTED)
+    if(WIN32)
+        _imported_khr_target_properties(${TNAME} RELEASE "${TNAME}.lib" )
+        _imported_khr_target_properties(${TNAME} DEBUG "${TNAME}d.lib")
+    endif()
+endmacro()
+
+_imported_khr_target(glslang)
+_imported_khr_target(HLSL)
+_imported_khr_target(OGLCompiler)
+_imported_khr_target(OSDependent)
+_imported_khr_target(SPIRV)
+_imported_khr_target(SPVRemapper)
+
+set(GLSLANG_LIBRARIES KHR::glslang KHR::HLSL KHR::OGLCompiler KHR::OSDependent KHR::SPIRV KHR::SPVRemapper)
+
 set(SPIRV2CROSS_LIBRARY spirv-cross-core spirv-cross-msl spirv-cross-glsl)
 set(STEAMSDK_LIBRARY steam_api64)
 
@@ -76,13 +102,13 @@ find_path(RAPIDJSON_INCLUDE_DIR
 )
 
 find_path(GLSLANG_INCLUDE_DIR
-    glslang/GlslangToSpv.h
+    SPIRV/GlslangToSpv.h
     PATH_SUFFIXES include
     PATHS ${ThirdParty_PREBUILT_DIR}
 )
 
 find_path(SPIRV2CROSS_INCLUDE_DIR
-    spirv2cross/spirv.hpp
+    spirv_cross/spirv.hpp
     PATH_SUFFIXES include
     PATHS ${ThirdParty_PREBUILT_DIR}
 )

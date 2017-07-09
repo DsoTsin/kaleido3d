@@ -35,7 +35,7 @@ struct MVPMatrix
 class RHIAppBase : public App
 {
 public:
-  RHIAppBase(kString const& appName,
+  RHIAppBase(String const& appName,
              uint32 width,
              uint32 height,
              bool valid = false)

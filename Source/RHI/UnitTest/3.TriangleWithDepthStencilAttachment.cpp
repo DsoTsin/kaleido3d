@@ -24,12 +24,12 @@ struct ConstantBuffer
 class TriangleDSApp : public RHIAppBase
 {
 public:
-  TriangleDSApp(kString const& appName, uint32 width, uint32 height)
+  TriangleDSApp(String const& appName, uint32 width, uint32 height)
     : RHIAppBase(appName, width, height, true)
   {
   }
 
-  explicit TriangleDSApp(kString const& appName)
+  explicit TriangleDSApp(String const& appName)
     : RHIAppBase(appName, 1920, 1080, true)
   {
   }

@@ -18,7 +18,7 @@ endif()
 
 source_group(Render FILES ${RENDER_SRCS})
 
-set(RENDER_DEPLIB Core)
+set(RENDER_DEPLIB Kaleido3D.Core)
 
 if(HAS_FREETYPE)
 	set(FTRENDER_SRC FontRenderer.h FontRenderer.cpp)
@@ -34,7 +34,7 @@ if(MACOS AND BUILD_SHARED)
 		${CMAKE_INSTALL_NAME_TOOL} -id "@loader_path/../Frameworks/libRender.dylib" $<TARGET_FILE:Render>)
 endif()
 
-install(TARGETS Render 
+install(TARGETS Kaleido3D.Render 
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)

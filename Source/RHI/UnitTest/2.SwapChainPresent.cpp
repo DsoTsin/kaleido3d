@@ -19,9 +19,9 @@ using namespace render;
 
 class SwapchainPresent : public App {
 public:
-  explicit SwapchainPresent(kString const &appName)
+  explicit SwapchainPresent(String const &appName)
       : App(appName, 1920, 1080) {}
-  SwapchainPresent(kString const &appName, uint32 width, uint32 height)
+  SwapchainPresent(String const &appName, uint32 width, uint32 height)
       : App(appName, width, height) {}
 
   bool OnInit() override;

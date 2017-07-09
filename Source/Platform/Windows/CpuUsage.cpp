@@ -126,6 +126,73 @@ int __Init(void)
 	return 1;
 }
 
+namespace GPUPerf
+{
+  namespace NV
+  {
+#define NVAPI_MAX_PHYSICAL_GPUS   64
+#define NVAPI_MAX_USAGES_PER_GPU  34
+    bool inited = false;
+    HMODULE nvapi = NULL;
+    typedef int *(*NvAPI_QueryInterface_t)(unsigned int offset);
+    typedef int(*NvAPI_Initialize_t)();
+    typedef int(*NvAPI_EnumPhysicalGPUs_t)(int **handles, int *count);
+    typedef int(*NvAPI_GPU_GetUsages_t)(int *handle, unsigned int *usages);
+
+    NvAPI_QueryInterface_t      NvAPI_QueryInterface = NULL;
+    NvAPI_Initialize_t          NvAPI_Initialize = NULL;
+    NvAPI_EnumPhysicalGPUs_t    NvAPI_EnumPhysicalGPUs = NULL;
+    NvAPI_GPU_GetUsages_t       NvAPI_GPU_GetUsages = NULL;
+
+    int                         NvGpuCount = 0;
+    int*                        NvGpuHandles[NVAPI_MAX_PHYSICAL_GPUS] = { NULL };
+    unsigned int                NvGpuUsages[NVAPI_MAX_USAGES_PER_GPU] = { 0 };
+    float                       NvGpuUsagesPercents[NVAPI_MAX_USAGES_PER_GPU] = { 0 };
+
+    void Init()
+    {
+      nvapi = LoadLibrary("nvapi64.dll");
+      if (nvapi == NULL)
+      {
+        return;
+      }
+      NvAPI_QueryInterface = (NvAPI_QueryInterface_t)GetProcAddress(nvapi, "nvapi_QueryInterface");
+      // some useful internal functions that aren't exported by nvapi.dll
+      NvAPI_Initialize = (NvAPI_Initialize_t)(*NvAPI_QueryInterface)(0x0150E828);
+      NvAPI_EnumPhysicalGPUs = (NvAPI_EnumPhysicalGPUs_t)(*NvAPI_QueryInterface)(0xE5AC921F);
+      NvAPI_GPU_GetUsages = (NvAPI_GPU_GetUsages_t)(*NvAPI_QueryInterface)(0x189A1FDF);
+      if (NvAPI_Initialize == NULL || NvAPI_EnumPhysicalGPUs == NULL ||
+        NvAPI_EnumPhysicalGPUs == NULL || NvAPI_GPU_GetUsages == NULL)
+      {
+        return;
+      }
+      (*NvAPI_Initialize)();
+
+      // gpuUsages[0] must be this value, otherwise NvAPI_GPU_GetUsages won't work
+      NvGpuUsages[0] = (NVAPI_MAX_USAGES_PER_GPU * 4) | 0x10000;
+
+      (*NvAPI_EnumPhysicalGPUs)(NvGpuHandles, &NvGpuCount);
+      inited = true;
+    }
+
+    float GetGpuUsage(int Id)
+    {
+      if(!inited)
+      {
+        Init();
+      }
+      if(nvapi)
+      {
+        (*NvAPI_GPU_GetUsages)(NvGpuHandles[Id], NvGpuUsages);
+        NvGpuUsagesPercents[0] = 1.0f * NvGpuUsages[3] / 100;
+      }
+      return NvGpuUsagesPercents[0];
+    }
+
+  }
+}
+
+
 namespace Os
 {
 float* GetCpuUsage()
@@ -135,5 +202,16 @@ float* GetCpuUsage()
 		__Init();
 	}
 	return __GetCpuUsage();
+}
+
+uint32
+GetGpuCount()
+{
+  return GPUPerf::NV::NvGpuCount;
+}
+
+float GetGpuUsage(int Id)
+{
+  return GPUPerf::NV::GetGpuUsage(Id);
 }
 }

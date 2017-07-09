@@ -24,7 +24,7 @@ struct VS_OUT
     float3 outColor: COLOR;
 };
 
-float4 main(VS_OUT psIn) : SV_TARGET {
+[pixelshader] float4 main(VS_OUT psIn) : SV_TARGET {
     return float4(psIn.outColor, 1.0);
 }
 

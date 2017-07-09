@@ -42,12 +42,12 @@ static Vec3f random_vector(float minmag = 0.0f, float maxmag = 1.0f)
 class UTComputeParticles : public RHIAppBase
 {
 public:
-  UTComputeParticles(kString const& appName, uint32 width, uint32 height)
+  UTComputeParticles(String const& appName, uint32 width, uint32 height)
     : RHIAppBase(appName, width, height)
   {
   }
 
-  explicit UTComputeParticles(kString const& appName)
+  explicit UTComputeParticles(String const& appName)
     : RHIAppBase(appName, 1920, 1080)
   {
   }
@@ -104,7 +104,7 @@ UTComputeParticles::OnInit()
   // create buffers
   auto PositionBuffer = AllocateVertexBuffer<Vec4f>([](Vec4f* Pointer)
   {
-    std::vector<shared_ptr<std::thread>> threadPool;
+    std::vector<std::shared_ptr<std::thread>> threadPool;
     // divide
     int ThreadCount = 8;
     int PerGroup = PARTICLE_COUNT / 8;
@@ -135,7 +135,7 @@ UTComputeParticles::OnInit()
 
   auto VelocityBuffer = AllocateVertexBuffer<Vec4f>([](Vec4f* Pointer)
   {
-    std::vector<shared_ptr<std::thread>> threadPool;
+    std::vector<std::shared_ptr<std::thread>> threadPool;
     // divide
     int ThreadCount = 8;
     int PerGroup = PARTICLE_COUNT / 8;
@@ -315,6 +315,8 @@ UTComputeParticles::OnUpdate()
   computeCmdBuffer->Commit(m_pFence.Get());
 
   last_ticks = current_ticks;
+
+  KLOG(Info, GPUPerf, "usage %.3f.", Os::GetGpuUsage(0));
 }
 
 void

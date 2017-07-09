@@ -2,12 +2,15 @@
 #ifndef __Window_h__
 #define __Window_h__
 
+#include <KTL/SharedPtr.hpp>
+
 namespace k3d
 {
 	class Message;
 	class App;
 
-	enum class WindowMode {
+	enum class WindowMode 
+  {
 		NORMAL,
 		FULLSCREEN
 	};
@@ -15,11 +18,11 @@ namespace k3d
 	class K3D_API IWindow
 	{
 	public:
-		typedef std::shared_ptr<IWindow> Ptr;
+		typedef SharedPtr<IWindow> Ptr;
 
 		virtual ~IWindow() {}
 
-		virtual void	SetWindowCaption(const kchar * name) = 0;
+		virtual void	SetWindowCaption(const char * name) = 0;
 		virtual void	Show(WindowMode mode = WindowMode::NORMAL) = 0;
 		virtual void	Resize(int width, int height) = 0;
 		virtual void	Move(int x, int y) = 0;
@@ -37,12 +40,12 @@ namespace k3d
 
 	protected:
 		IWindow() {} 
-		IWindow(const kchar *windowName, int width, int height) {}
+		IWindow(const char *windowName, int width, int height) {}
 
-		friend Ptr MakePlatformWindow(const kchar *windowName, int width, int height);
+		friend Ptr MakePlatformWindow(const char *windowName, int width, int height);
 	};
 
-	extern IWindow::Ptr MakePlatformWindow(const kchar *windowName, int width, int height);
+	extern IWindow::Ptr MakePlatformWindow(const char *windowName, int width, int height);
 
 #if K3DPLATFORM_OS_ANDROID
 	extern IWindow::Ptr MakeAndroidWindow(void * window);

@@ -91,4 +91,4 @@ NameUtil = {
 }
 
 # type regex
-TypeRegEx = re.compile(r'\s*(?P<const>(const\s+)?)(?P<type>[\w\s]*\w)(?P<pointer>[\*\s]*)', re.I)
+TypeRegEx = re.compile(r'\s*(?P<annotate>(NotNull|Nullable)*)\s*(?P<const>(const\s+)?)(?P<type>[\w\s]*\w)(?P<pointer>[\*\s]*)', re.I)
