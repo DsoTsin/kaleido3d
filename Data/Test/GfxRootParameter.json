@@ -1,0 +1,38 @@
+[
+  {
+    "Table": "Graphics_PS_SRVs",
+    "ShaderVisibility": 5,
+    "DescriptorRangeType": 0,
+    "Count": 16,
+    "BaseShaderReg": 0
+  },
+  {
+    "Table": "Graphics_PS_CBVs",
+    "ShaderVisibility": 5,
+    "DescriptorRangeType": 2,
+    "Count": 8,
+    "BaseShaderReg": 0
+  },
+  {
+    "Table": "Graphics_PS_Samplers",
+    "ShaderVisibility": 5,
+    "DescriptorRangeType": 3,
+    "Count": 16,
+    "BaseShaderReg": 0
+  },
+
+  {
+    "Table": "Graphics_VS_SRVs",
+    "ShaderVisibility": 1,
+    "DescriptorRangeType": 0,
+    "Count": 16,
+    "BaseShaderReg": 0
+  },
+  {
+    "Table": "Graphics_VS_CBVs",
+    "ShaderVisibility": 1,
+    "DescriptorRangeType": 2,
+    "Count": 8,
+    "BaseShaderReg": 0
+  }
+]

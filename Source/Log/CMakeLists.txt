@@ -1,0 +1,6 @@
+set(MODULE_NAME KawaLog)
+include_directories(.. ../../Include .)
+set(LOG_SRCS Public/ILogModule.h Private/LogImpl.cpp)
+source_group(Log FILES ${LOG_SRCS})
+add_plugin(KawaLog FOLDER "Runtime/Plugins" SRCS ${LOG_SRCS})
+add_precompiled_header(${MODULE_NAME} "Kaleido3D.h" "${Kaleido3D_ROOT_DIR}/Include" "${Kaleido3D_ROOT_DIR}/Source/Log/Private/LogImpl.cpp")

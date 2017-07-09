@@ -1,0 +1,61 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        minSdkVersion 13
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_PLATFORM=android-23',
+                		  '-DCMAKE_BUILD_TYPE=Debug',
+                          '-DANDROID_TOOLCHAIN=clang',
+                          '-DANDROID_STL=gnustl_shared',
+                          '-DANDROID_CPP_FEATURES=rtti'
+                // explicitly build libs
+                targets 'Core','ShaderCompiler','RHI_Vulkan','Render'
+            }
+        }
+
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    sourceSets {
+        main {
+            java.srcDir '../Source/Platform/Android/src'
+            res.srcDir '../Source/Platform/Android/res'
+            manifest.srcFile '../Source/Platform/Android/AndroidManifest.xml'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                          'proguard-rules.pro'
+        }
+    }
+
+    task createJar(type: Jar) {
+        def srcClassDir = [project.buildDir.absolutePath + "/intermediates/classes/release"]
+        from srcClassDir
+        include "**/*.class"
+    }
+
+    externalNativeBuild {
+        cmake {
+            path '../Source/CMakeLists.txt'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}

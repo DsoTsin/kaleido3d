@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- 由 Microsoft Visio, SVG Export 生成 rhi_design.svg 页-1 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="4.41in" height="1.62285in"
+		viewBox="0 0 317.52 116.845" xml:space="preserve" color-interpolation-filters="sRGB" class="st10">
+	<v:documentProperties v:langID="2052" v:metric="true" v:viewMarkup="false"/>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {visibility:visible}
+		.st2 {fill:#625986;fill-opacity:0.098;stroke:#625986;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.098}
+		.st3 {fill:#625986;stroke:#ffffff;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.5}
+		.st4 {fill:#feffff;font-family:Calibri;font-size:0.833336em;font-weight:bold}
+		.st5 {fill:#73ae42;stroke:#ffffff;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.5}
+		.st6 {fill:#ffffff;font-family:Calibri;font-size:0.833336em}
+		.st7 {fill:#5b9bd5;stroke:#ffffff;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.5}
+		.st8 {fill:#3862ae;stroke:#ffffff;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.5}
+		.st9 {fill:#feffff;font-family:Calibri;font-size:0.833336em}
+		.st10 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<title>页-1</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<g id="shape1-1" v:mID="1" v:groupContext="shape" transform="translate(0.375006,-85.5471)">
+			<title>矩形</title>
+			<desc>Renderer</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="157.323" cy="101.384" width="314.65" height="30.9234"/>
+			<g id="shadow1-2" v:groupContext="shadow" v:shadowOffsetX="2.12399" v:shadowOffsetY="-2.12399" v:shadowType="1"
+					transform="matrix(1,0,0,1,2.12399,2.12399)" class="st1">
+				<rect x="0" y="85.922" width="314.646" height="30.9234" class="st2"/>
+			</g>
+			<rect x="0" y="85.922" width="314.646" height="30.9234" class="st3"/>
+			<text x="138.04" y="104.38" class="st4" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>Renderer</text>		</g>
+		<g id="shape2-6" v:mID="2" v:groupContext="shape" transform="translate(0.375006,-45.6043)">
+			<title>矩形.2</title>
+			<desc>Renderer Hardware Interface</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="92.126" cy="101.384" width="184.26" height="30.9234"/>
+			<rect x="0" y="85.922" width="184.252" height="30.9234" class="st5"/>
+			<text x="32.55" y="104.38" class="st6" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>Renderer Hardware Interface</text>		</g>
+		<g id="shape3-9" v:mID="3" v:groupContext="shape" transform="translate(0.375006,-0.25)">
+			<title>矩形.3</title>
+			<desc>D3D12</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="24.0945" cy="101.384" width="48.19" height="30.9234"/>
+			<rect x="0" y="85.922" width="48.189" height="30.9234" class="st7"/>
+			<text x="10.34" y="104.38" class="st6" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>D3D12</text>		</g>
+		<g id="shape4-12" v:mID="4" v:groupContext="shape" transform="translate(65.5719,-0.25)">
+			<title>矩形.4</title>
+			<desc>Vulkan</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="24.0945" cy="101.384" width="48.19" height="30.9234"/>
+			<rect x="0" y="85.922" width="48.189" height="30.9234" class="st7"/>
+			<text x="10.19" y="104.38" class="st6" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>Vulkan</text>		</g>
+		<g id="shape5-15" v:mID="5" v:groupContext="shape" transform="translate(130.769,-0.25)">
+			<title>矩形.5</title>
+			<desc>Metal</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="26.9291" cy="101.384" width="53.86" height="30.9234"/>
+			<rect x="0" y="85.922" width="53.8583" height="30.9234" class="st7"/>
+			<text x="14.95" y="104.38" class="st6" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>Metal</text>		</g>
+		<g id="shape6-18" v:mID="6" v:groupContext="shape" transform="translate(201.635,-0.25)">
+			<title>矩形.6</title>
+			<desc>Shader Binding Utils</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="56.6929" cy="78.5777" width="113.39" height="76.5354"/>
+			<rect x="0" y="40.31" width="113.386" height="76.5354" class="st8"/>
+			<text x="15.87" y="81.58" class="st9" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>Shader Binding Utils</text>		</g>
+	</g>
+</svg>

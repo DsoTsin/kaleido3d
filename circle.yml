@@ -1,0 +1,27 @@
+general:
+  branches:
+    ignore:
+      - gh-pages # list of branches to ignore
+machine:
+  environment:
+    ANDROID_HOME: /usr/local/android-sdk-linux
+    ANDROID_NDK_HOME: /usr/local/android-sdk-linux/ndk-bundle
+    GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx512m -XX:+HeapDumpOnOutOfMemoryError"'
+  java:
+    version: 'oraclejdk8'
+
+dependencies:
+  override:
+    - wget -O cmake.zip https://dl.google.com/android/repository/cmake-3.6.3155560-linux-x86_64.zip
+    - mkdir /usr/local/android-sdk-linux/cmake
+    - unzip cmake.zip -d /usr/local/android-sdk-linux/cmake
+    - /usr/local/android-sdk-linux/cmake/bin/cmake --version
+    - git clone https://github.com/TsinStudio/android-ndk.git /usr/local/android-sdk-linux/ndk-bundle
+    - export ANDROID_NDK_HOME=/usr/local/android-sdk-linux/ndk-bundle
+    - export NDK=/usr/local/android-sdk-linux/ndk-bundle
+    - echo y | android update sdk --no-ui --all --filter tools,platform-tools,build-tools-23.0.2,android-23,extra-google-m2repository,extra-android-support
+    - chmod 777 gradlew
+
+test:
+    override:
+        - ./gradlew assemble

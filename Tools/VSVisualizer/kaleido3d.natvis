@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="k3d::DynArray&lt;*,*&gt;">
+  		<DisplayString>{{ size={m_ElementCount} capacity={m_Capacity} }}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple">m_Capacity</Item>
+			<Item Name="[allocator]" ExcludeView="simple">m_Allocator</Item>
+			<ArrayItems>
+				<Size>m_ElementCount</Size>
+				<ValuePointer>m_pElement</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="k3d::StringBase&lt;*,*&gt;">
+  		<DisplayString>{m_pStringData}</DisplayString>
+	</Type>
+</AutoVisualizer>

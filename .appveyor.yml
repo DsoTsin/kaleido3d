@@ -1,0 +1,6 @@
+
+environment:
+  matrix:
+  - TOOLSET: vs2015
+
+build_script: make.cmd nopause

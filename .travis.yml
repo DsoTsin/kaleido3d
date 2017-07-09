@@ -1,0 +1,9 @@
+language: objective-c
+
+osx_image: xcode8.1
+
+install:
+  - brew install cmake
+
+script:
+  - chmod 777 make_macos.sh && ./make_macos.sh
