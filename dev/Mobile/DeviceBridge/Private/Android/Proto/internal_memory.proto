@@ -1,0 +1,71 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+
+import "memory.proto";
+
+service InternalMemoryService {
+  // Register a memory agent in perfd and open a stream where perfd can send
+  // control requests to the agent.
+  rpc RegisterMemoryAgent(RegisterMemoryAgentRequest)
+    returns (stream MemoryControlRequest) {}
+
+  rpc RecordGcStats(GcStatsRequest) returns (EmptyMemoryReply) {}
+  rpc RecordAllocStats(AllocStatsRequest) returns (EmptyMemoryReply) {}
+
+  rpc RecordAllocationEvents(BatchAllocationSample)
+    returns (EmptyMemoryReply) {}
+}
+
+message RegisterMemoryAgentRequest {
+  int64 pid = 1;
+}
+
+message MemoryControlRequest {
+  message EnableTracking {
+    int64 timestamp = 1;
+  }
+
+  message DisableTracking {
+    int64 timestamp = 1;
+  }
+
+  message SuspendTracking {}
+
+  message ResumeTracking {}
+
+  int64 pid = 1;
+  oneof control {
+    EnableTracking enable_request = 2;
+    DisableTracking disable_request = 3;
+    SuspendTracking suspend_request = 4;
+    ResumeTracking resume_request = 5;
+  }
+}
+
+message AllocStatsRequest {
+  int32 process_id = 1;
+  MemoryData.AllocStatsSample alloc_stats_sample = 2;
+}
+
+message GcStatsRequest {
+  int32 process_id = 1;
+  MemoryData.GcStatsSample gc_stats_sample = 2;
+}
+
+message EmptyMemoryReply {}

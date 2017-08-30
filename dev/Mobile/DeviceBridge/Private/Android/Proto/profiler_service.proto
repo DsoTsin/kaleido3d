@@ -1,0 +1,183 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Profiler";
+
+import "profiler.proto";
+
+service ProfilerService {
+  // Gets current timestamp that used in the device's profiling data.
+  // A client may use this API to relate profiling data' timestamps to other
+  // clocks such as the desktop's calendar time.
+  // TODO(b/29223899): Add device's calendar time.
+  rpc GetCurrentTime(TimeRequest) returns (TimeResponse) {
+  }
+
+  // Gets version.
+  rpc GetVersion(VersionRequest) returns (VersionResponse) {
+  }
+
+  // Gets the currently connected devices.
+  // TODO: expand with timing information for historical requests.
+  rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse) {
+  }
+
+  // Gets the running processes of a given device
+  // TODO expand with timing information for historical requests.
+  rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {
+  }
+
+  // Query for cached byte data associated with some ID. Other services may
+  // return an ID which can be used to fetch data using this central cache.
+  rpc GetBytes(BytesRequest) returns (BytesResponse) {
+  }
+
+  // Query for whether the agent is alive.
+  rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
+  }
+
+  rpc AttachAgent(AgentAttachRequest) returns (AgentAttachResponse) {
+  }
+}
+
+message AgentAttachRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  // TODO: This is temporary, remove when moving process discovery.
+  string agent_lib_file_name = 3;
+}
+
+message AgentAttachResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}
+
+message TimeRequest {
+  Session session = 1;
+}
+
+message TimeResponse {
+
+  // What's used as timestamps in all profiler data (unless otherwise specified).
+  // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
+  int64 timestamp_ns = 1;
+
+  // The number of microseconds since the Epoch.
+  // (a.k.a: Timestamp from gettimeofday, us precision.)
+  int64 epoch_timestamp_us = 2;
+}
+
+message VersionRequest {
+  Session session = 1;
+}
+
+message VersionResponse {
+  string version = 1;
+}
+
+message GetDevicesRequest {
+}
+
+message GetDevicesResponse {
+  repeated Device device = 1;
+}
+
+message GetProcessesRequest {
+  Session session = 1;
+}
+
+message GetProcessesResponse {
+  repeated Process process = 2;
+}
+
+message BytesRequest {
+  // ID for fetching contents from a cache. The value will always be safe to use
+  // as a filename, if you want to cache the contents locally to disk for
+  // example.
+  string id = 1;
+  Session session = 2;
+}
+
+message BytesResponse {
+  // Byte contents from a cache, or "" if no data was found associated with the
+  // cache key used to fetch it, or if the data was removed after some timeout.
+  bytes contents = 1;
+}
+
+message AgentStatusRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message AgentStatusResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    ATTACHED = 1;
+    DETACHED = 2;
+  }
+  Status status = 1;
+  // The last time a heartbeat was received from the requested agent.
+  // If no heartbeat was ever detected, this returns INT64_MIN.
+  int64 last_timestamp = 2;
+}
+
+message DeviceProcesses {
+  Device device = 1;
+  repeated Process process = 2;
+}
+
+message Device {
+  enum State {
+    UNSPECIFIED = 0;
+    ONLINE = 1;
+    OFFLINE = 2; // e.g. emulator that is turned off
+    DISCONNECTED = 3; // e.g. unplugged
+  }
+  string manufacturer = 1; // e.g. 'Google', 'Motorola'
+  string model = 2; // e.g. 'Nexus 5', 'Pixel XL'
+  string serial = 3; // unique ID for this device
+  string version = 4; // e.g. '5.1.1', '8.0.0'
+  int32 api_level = 5; // e.g. 19, 25
+  string codename = 10; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
+  // |feature_level| will either be the same as |api_level| or |api_level + 1| if the current
+  // device is a preview version. Code should check against |feature_level|, not |api_level|, to
+  // see if a feature is available in the framework or not. If |feature_level != api_level|, then
+  // |codename| will also be set.
+  int32 feature_level = 6;
+  string boot_id = 7; // unique ID regenerated each boot time
+  bool is_emulator = 8;
+  State state = 9;
+}
+
+message Process {
+  enum State {
+    UNSPECIFIED = 0;
+    ALIVE = 1;
+    DEAD = 2;
+  }
+  string name = 1;
+  int32 pid = 2;
+  State state = 3;
+  int64 start_timestamp_ns = 4;
+  string abi_cpu_arch = 5;
+}

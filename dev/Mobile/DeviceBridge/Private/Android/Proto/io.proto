@@ -1,0 +1,146 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "IoProfiler";
+
+import "profiler.proto";
+
+service IoService {
+  // Starts collecting I/O data of a running app.
+  // Does nothing if the app is already being monitored.
+  rpc StartMonitoringApp(IoStartRequest) returns (IoStartResponse) {
+  }
+
+  // Stops monitoring a running app. Does nothing if the app is not being
+  // monitored, or is not running.
+  rpc StopMonitoringApp(IoStopRequest) returns (IoStopResponse) {
+  }
+
+  // Get all sampled I/O data for an app.
+  // These include files opened, amount of bytes read/written.
+  rpc GetData(IoDataRequest) returns (IoDataResponse) {
+  }
+}
+
+message IoStartRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message IoStartResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE_APP_NOT_RUNNING = 2;
+    FAILURE = 3;
+  }
+  Status status = 1;
+}
+
+message IoStopRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message IoStopResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+  Status status = 1;
+}
+
+message IoDataRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_timestamp = 3;  // exclusive
+  int64 end_timestamp = 4;    // inclusive
+}
+
+message IoDataResponse {
+  enum Status {
+    UNSPECIFIED_STATUS = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+
+  enum Type {
+    UNSPECIFIED_TYPE = 0;
+    READ = 1;
+    WRITE = 2;
+  }
+
+  // Contains for each file operated on in this period, when it was
+  // opened, closed, written to or read from.
+  message FileData {
+    enum TimestampPosition {
+      // has already happened at the serving time but the timestamp
+      // is not known to the I/O profiler
+      UNKNOWN = 0;
+
+      // hasn't happened yet at the serving time
+      FUTURE = -1;
+    }
+    // A FileSession represents a session of operating on a file from
+    // when it was opened until it is closed.
+    // e.g. {open, read, read, write, read, close}
+    message FileSession {
+      // Corresponds to a single write/read system call
+      message IoSystemCall {
+
+        Type type = 1;
+        // Timestamp when the system call started
+        int64 start_timestamp = 2;
+        // Timestamp when the system call ended or FUTURE if it hasn't yet
+        int64 end_timestamp = 3;
+        // Amount of bytes read or written
+        int64 bytes_count = 4;
+      }
+
+      // Timestamp of opening the file
+      int64 open_timestamp = 1;
+      // Timestamp of closing the file or FUTURE if it's not closed yet
+      int64 close_timestamp = 2;
+      repeated IoSystemCall io_system_calls = 3;
+    }
+
+    string file_path = 1;
+    repeated FileSession file_sessions = 2;
+  }
+
+  // Contains the current overall speed of writing/reading
+  message SpeedData {
+    Type type = 1;
+
+    // The speed of writing/reading in bytes/second
+    int64 speed = 2;
+  }
+
+  message IoData {
+    oneof data {
+      FileData file_data = 1;
+      SpeedData speed_data = 2;
+    }
+    CommonData common_data = 3;
+  }
+
+  Status status = 1;
+  repeated IoData io_data = 2;
+}

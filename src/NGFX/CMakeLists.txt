@@ -1,0 +1,10 @@
+include_directories(src)
+add_subdirectory(src)
+add_subdirectory(examples)
+add_subdirectory(tools)
+
+if(GTEST_LIBRARIES AND BUILD_WITH_UNIT_TEST)
+	add_subdirectory(gtest)
+else()
+	message(STATUS "GTest Not Found, NGFX Test won't be built!")
+endif()

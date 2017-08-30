@@ -1,0 +1,5 @@
+solution("kaleido3d") {
+    import "dependencies.ibconf"
+    import "src/Core/build.ib"
+    import "src/NGFX/build.ib"
+}

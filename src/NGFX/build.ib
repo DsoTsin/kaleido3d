@@ -1,0 +1,53 @@
+cproj("ngfx_vk") {
+    type = "shared_lib"
+    srcs = [
+        "Public/**.h",
+        "Private/ShaderLab/**.cpp",
+        "Private/ShaderFormats/**.cpp",
+        "Private/ShaderCompiler/**.cpp",
+        "IDL/ngfx.interface.hpp",
+        "IDL/ngfx.enums.hpp",
+        "IDL/ngfx.structs.hpp",
+        "Private/Vulkan/**.cpp",
+        "Private/Vulkan/**.h",
+        "Private/Vulkan/**.c",
+        "../../dev/IrisBuild/cpp_gen.py"
+    ]
+    srcs = list_files(srcs)
+    private = {
+        inc_dirs = ["Public", "../Core"]
+    }
+    link_targets = ["vulkan", "kCore"]
+    on_prebuild = () {
+        echo("Generate NGFX")
+        ret = execute("python ${root_dir}/dev/IrisBuild/cpp_gen.py -o ${root_dir}/src/NGFX/Public/ngfx.h ${root_dir}/src/NGFX/IDL/ngfx.interface.hpp")
+        echo(ret)
+    }
+}
+cproj("vk_gfx_test") {
+    type = "executable"
+    inc_dirs = [".", "Public", "../Core"]
+    srcs = [
+        "Test/vk_ngfx.cpp"
+    ]
+    link_targets = ["ngfx_vk", "kCore"]
+}
+cproj("ngfx_dx12") {
+    type = "shared_lib"
+    srcs = [
+        "Public/**.h",
+        "Private/ShaderLab/**.cpp",
+        "Private/ShaderFormats/**.cpp",
+        "Private/ShaderCompiler/**.cpp"
+    ]
+    match($target_os) {
+        "windows" => {
+            srcs += "Private/D3D12/d3d12.cpp"
+        }
+    }
+    srcs = list_files(srcs)
+    private = {
+        inc_dirs = ["Public"]
+    }
+    link_targets = ["vulkan", "kCore"]
+}

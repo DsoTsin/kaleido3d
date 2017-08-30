@@ -1,0 +1,35 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "intelliSenseMode": "clang-x64",
+            "includePath": [
+                "${workspaceRoot}/Include",
+                "${workspaceRoot}/Source",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/um",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/ucrt",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/shared",
+                "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.11.25503/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "__GNUC__=7",
+                "__cdecl=__attribute__((__cdecl__))",
+                "K3DPLATFORM_OS_WIN=1"
+            ],
+            "browse": {
+                "path": [
+                    "C:/llvm/x86_64-w64-mingw32/include",
+                    "C:/llvm/lib/gcc/x86_64-w64-mingw32/7.1.0/include",
+                    "C:/llvm/lib/gcc/x86_64-w64-mingw32/7.1.0/include-fixed",
+                    "C:/llvm/include/*",
+                    "${workspaceRoot}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 4
+}

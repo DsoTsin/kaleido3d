@@ -1,0 +1,5 @@
+#pragma once
+
+#define K3D_CORE_MAJOR_VERSION 0
+#define K3D_CORE_MINOR_VERSION 1
+#define K3D_CORE_PATCH_VERSION 0

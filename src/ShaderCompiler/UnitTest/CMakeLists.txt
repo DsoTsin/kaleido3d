@@ -1,0 +1,6 @@
+if(BUILD_SHARED)
+add_definitions(-DBUILD_SHARED_LIB -DBUILD_WITH_PLUGIN)
+endif()
+add_executable(TestShaderCompiler UTTools.ShaderCompiler.cpp)
+target_link_libraries(TestShaderCompiler Kaleido3D.Core ShaderCompiler)
+set_target_properties(TestShaderCompiler PROPERTIES FOLDER "Unit Test/Tools")

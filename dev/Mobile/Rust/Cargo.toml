@@ -1,0 +1,7 @@
+[package]
+name = "Mobile"
+version = "0.1.0"
+authors = ["alexqzhou <alexqzhou@tencent.com>"]
+
+[dependencies]
+libc = "0.2.17"

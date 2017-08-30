@@ -1,3 +1,0 @@
-[submodule "Source/NGFX/third_party/googletest"]
-	path = Source/NGFX/third_party/googletest
-	url = https://github.com/google/googletest

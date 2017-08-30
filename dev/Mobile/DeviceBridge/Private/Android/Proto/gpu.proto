@@ -1,0 +1,61 @@
+
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "GpuProfiler";
+
+import "profiler.proto";
+
+service GpuService {
+  rpc GetData(GpuDataRequest) returns (GpuDataResponse) {}
+  rpc StartMonitoringApp(GpuStartRequest) returns (GpuStartResponse) {}
+  rpc StopMonitoringApp(GpuStopRequest) returns (GpuStopResponse) {}
+}
+
+message GpuDataRequest {
+  string app_package_name = 1;
+  string activity_name = 2;
+  Session session = 3;
+  int64 start_timestamp = 4;  // Use -2^63 if no data is too old to return.
+  int64 end_timestamp = 5; 
+}
+
+message GpuDataResponse {
+  repeated GpuData data = 1;
+}
+
+message GpuData {
+  CommonData basic_info = 1;
+  float      utilization = 2;
+}
+
+message GpuStartRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message GpuStartResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE_APP_NOT_RUNNING = 2;
+    FAILURE_UNKNOWN = 3;
+    FAILURE = 4;
+  }
+  Status status = 1;
+}
+
+message GpuStopRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message GpuStopResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}

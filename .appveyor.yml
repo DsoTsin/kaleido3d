@@ -3,4 +3,4 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
-build_script: make.cmd nopause
+build_script: python Tools\Build.py

@@ -1,0 +1,14 @@
+[package]
+name = "NGFX"
+version = "0.1.0"
+authors = ["alexqzhou <alexqzhou@tencent.com>"]
+
+[dependencies]
+libc = "0.2.27"
+
+[features]
+unstable = []
+
+[lib]
+name = "ngfx_lib"
+path = "src/ngfx_lib.rs"

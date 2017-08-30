@@ -1,0 +1,49 @@
+cproj("kCore") {
+    type = "shared_lib"
+    srcs = [ 
+        "Base/**.h",
+        "Base/*.cpp",
+        "Base/Memory/*.cpp",
+        "Math/**.h",
+        "Math/**.cpp",
+        "Net/**.h",
+        "Net/**.cpp",
+        "XPlatform/**.h",
+        "XPlatform/**.cpp"
+    ]
+    private = {
+        defines = [ "LIB_BUILD=1", "BUILD_SHARED_LIB=1" ]
+    }
+    match(${target_os}) {
+        "windows" => { 
+            defines = ["K3DPLATFORM_OS_WIN=1","K3D_USE_SSE=1"] 
+            srcs += "../Platform/Microsoft/Win32/**.cpp"
+        }
+        "android" => {
+            defines = ["K3DPLATFORM_OS_ANDROID=1", "K3D_USE_NEON=1"] 
+            srcs += "../Platform/Android/cpp/**.cpp"
+        }
+        "ios" => {
+            defines = ["K3DPLATFORM_OS_IOS=1", "K3D_USE_NEON=1"] 
+            srcs += "../Platform/Apple/iOS/**.mm"
+            srcs += "../Platform/Apple/CpuUsage.mm"
+        }
+        "macos" | "linux" => {
+            defines = ["K3DPLATFORM_OS_MAC=1", "K3D_USE_SSE=1"] 
+            srcs += "../Platform/Apple/MacOS/**.cpp"
+            srcs += "../Platform/Apple/CpuUsage.mm"
+        }
+        "linux" => {
+            defines = ["K3DPLATFORM_OS_LINUX=1", "K3D_USE_SSE=1"] 
+            srcs += "../Platform/Linux/**.cpp"
+        }
+    }
+    srcs = list_files(srcs)
+    inc_dirs = [ "." ]
+    on_init = () {
+        url = "https://ci.appveyor.com/api/projects/tomicyo/third-party-clibs/artifacts/build/third_party_clibs_windows_shared.zip"
+        download_and_extract(url, "${build_dir}/third_party")
+        glslang_url = "https://ci.appveyor.com/api/projects/tomicyo/glslang/artifacts/build/install/glslang-x64-Release.zip?job=Configuration%3A+Release"
+        download_and_extract(glslang_url, "${build_dir}/third_party")
+    }
+}

@@ -1,0 +1,285 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "NetworkProfiler";
+
+import "profiler.proto";
+
+service NetworkService {
+  // Requests profiler data from the app with ID being |process_id|, in the time range
+  // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
+  // mathematically written as in interval (start_timestamp, end_timestamp].
+  rpc GetData(NetworkDataRequest) returns (NetworkDataResponse) {
+  }
+
+  // Starts collecting execution metrics of a running app, such as received and
+  // transmitted states. Does nothing if the app is already being monitored.
+  rpc StartMonitoringApp(NetworkStartRequest) returns (NetworkStartResponse) {
+  }
+
+  // Stops monitoring a running app. Does nothing if the app is not being
+  // monitored, or is not running.
+  rpc StopMonitoringApp(NetworkStopRequest) returns (NetworkStopResponse) {
+  }
+
+  // Returns a list of HTTP requests active over some given time range. See the
+  // HttpRangeRequest message for more details.
+  // Note: HTTP requests may live across time ranges, so the same instances may
+  // be returned across multple calls to this rpc.
+  rpc GetHttpRange(HttpRangeRequest) returns (HttpRangeResponse) {
+  }
+
+  // Gets misc metadata about a http request, given its |conn_id| and a
+  // |HttpDetailsRequest::Type|. Use |GetHttpRange| to get this ids.
+  rpc GetHttpDetails(HttpDetailsRequest) returns (HttpDetailsResponse) {
+  }
+}
+
+
+message NetworkProfilerData {
+  CommonData basic_info = 1;
+  oneof data {
+    SpeedData speed_data = 2;
+    ConnectionData connection_data = 3;
+    ConnectivityData connectivity_data = 4;
+  }
+}
+
+// TODO: Break these up into their own messages (since tx and rx speeds can
+// have unique timestamps), unless the error we get by combining them in the
+// same message ends up being too subtle to matter
+message SpeedData {
+  int64 sent = 1; // bytes / sec
+  int64 received = 2; // bytes / sec
+}
+
+message ConnectionData { int32 connection_number = 1; }
+
+message ConnectivityData {
+  enum RadioState {
+    UNSPECIFIED = 0;
+    // The radio is in a high-energy state, having recently sent out some
+    // network traffic
+    HIGH = 1;
+    // The radio is in a low-energy state, having powered down after a period
+    // of inactivity.
+    LOW = 3; // Set to 3 for backwards-compatibility reasons
+  }
+
+  RadioState radio_state = 1;
+
+  enum NetworkType {
+    INVALID = 0;
+    MOBILE = 1;
+    WIFI = 2;
+  }
+  NetworkType default_network_type = 2;
+}
+
+message NetworkDataRequest {
+  enum SpecialValues {
+    // First enum value is required to be zero.
+    UNSPECIFIED = 0;
+    // process_id field special value, it means these data is applicable to any app.
+    ANY_APP = -1;
+  }
+  enum Type {
+    // All types of network data are requested.
+    ALL = 0;
+    // Default network type (wifi or mobile) and radio power state.
+    // This data is device-wide and the same values will be returned across all
+    // valid |process_id| values.
+    CONNECTIVITY = 1;
+    // Network transmitted and received speeds (in bytes / sec).
+    SPEED = 2;
+    // Number of open connections.
+    CONNECTIONS = 3;
+  }
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
+  Type type = 5;
+}
+
+message NetworkDataResponse {
+  repeated NetworkProfilerData data = 1;
+}
+
+message NetworkStartRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+// TODO: Dig more about network collector start response.
+message NetworkStartResponse {
+}
+
+message NetworkStopRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+// TODO: Dig more about network collector stop response.
+message NetworkStopResponse {
+}
+
+// Request to fetch all http connections that were alive between some time
+// range.
+//
+// Given a range [start, end] and requests a-f...
+//
+//              start            end
+// a: [===========|===============|=========...
+// b: [=======]   |               |
+// c:         [===|===]           |
+// d:             |   [=======]   |
+// e:             |           [===|===]
+// f:             |               |   [=======]
+//
+// Keep a, c, d, and e; exclude b and f
+//
+// The time range match is inclusive, so requests ending on time |start| and
+// requests starting on time |end| will be included in the results.
+message HttpRangeRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
+}
+
+// Thread information obtained from Java, which is different from the thread data we would obtain from a JNI context.
+// See also: https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html
+message JavaThread {
+  // ID of the thread obtained from Java, which is different from the thread ID obtained in a JNI context.
+  int64 id = 1;
+  // Name of the thread.
+  // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html#getName().
+  string name = 2;
+}
+
+// An HTTP connection represents the full lifetime of a single HTTP request /
+// response network communication.
+message HttpConnectionData {
+  // A unique identifer used to fetch any further details about this request.
+  // This id is guaranteed unique across all actively running apps.
+  int64 conn_id = 1;
+  // Always set. Time this network request was first opened.
+  int64 start_timestamp = 2;
+  // If not 0, time when the first byte was received. Always > start.
+  int64 downloading_timestamp = 3;
+  // If not 0, time when request was closed. Always > start.
+  int64 end_timestamp = 4;
+}
+
+message HttpRangeResponse {
+  repeated HttpConnectionData data = 1;
+}
+
+// Message for querying metadata about an HTTP connection (by ID). Note that if
+// the user queries details before they are ready, they will all be set to their
+// default values (e.g. 0, empty string, etc.).
+// TODO: Consider adding an error boolean if client queries at the wrong time.
+// Is it necessary / helpful?
+message HttpDetailsRequest {
+  enum Type {
+    UNSPECIFIED = 0;
+
+    // Metadata about a sent request. This data can be queried as soon as you
+    // have a connection ID to fetch it.
+    REQUEST = 1;
+
+    // Metadata about a received response. This data can be safely be queried
+    // for any connection that has its end_timestamp set to a non-zero value.
+    // (Otherwise, all the fields in the returned details will be empty)
+    // TODO: This detail type is not yet implemented.
+    RESPONSE = 2;
+
+    // Fetch a path to the request body which can then be fetched over adb.
+    // TODO: This detail type is not yet implemented.
+    REQUEST_BODY = 3;
+
+    // Fetch a handle to the response body which can be fetched over adb. This
+    // data can be safely queried for any connection that has its end_timestamp
+    // set to a non-zero value.
+    // TODO: Can this type be combined with RESPONSE? Will reponse details be
+    // available before this is ready, or only at the same time?
+    RESPONSE_BODY = 4;
+
+    // Fetch accessed threads of a connection.
+    // This data can be queried as soon as you have a connection ID, however
+    // as a different thread may be added during the lifetime of the connection, it's advised to repeat the request
+    // when its end_timestamp is a non-zero value.
+    ACCESSING_THREADS = 5;
+  }
+
+  int64 conn_id = 1;
+  Session session = 2;
+  Type type = 3;
+}
+
+message HttpDetailsResponse {
+  message Request {
+    string url = 1;
+    // The request's method, e.g. GET, PUT, POST, etc.
+    string method = 2;
+
+    // Key/value pairs associated with the request
+    string fields = 3;
+
+    // Code stack trace for where this request was generated
+    string trace = 4;
+  }
+
+  message Response {
+    // Response code, e.g. OK, 404, etc.
+    string code = 1;
+
+    // Key/value pairs associated with the response
+    string fields = 2;
+  }
+
+  message Body {
+    // An ID which will uniquely identify the contents of an http body. It can
+    // be used to fetch payload bytes via |ProfilerService.GetBytes|.
+    //
+    // This value will be a hash of the contents, and the same hash always
+    // indicates the same contents. This hash value calculation is independent
+    // of app, device, etc., and can always* be relied upon to indicate content
+    // equality.
+    // (*) with negligible probability of a collision
+    //
+    // Looks something like: "d652e629bcf87c998c614"
+    string payload_id = 1;
+  }
+
+  message AccessingThreads {
+    // Threads that access a connection.
+    // The first thread is the thread that creates the connection.
+    repeated JavaThread thread = 1;
+  }
+
+  oneof details {
+    Request request = 1;
+    Response response = 2;
+    Body request_body = 3;
+    Body response_body = 4;
+    AccessingThreads accessing_threads = 5;
+  }
+}

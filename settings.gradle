@@ -1,3 +1,0 @@
-include ':Project'
-include ':Source:RHI:UnitTest:Android:Triangle'
-include ':Source:RHI:UnitTest:Android:TexturedCube'

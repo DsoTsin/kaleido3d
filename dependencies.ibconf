@@ -1,0 +1,3 @@
+impclib("vulkan") {
+    inc_dirs = [".build/third_party/include"]
+}

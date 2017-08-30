@@ -1,0 +1,60 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Agent";
+
+import "profiler.proto";
+
+service AgentService {
+  // A simple ping mechanism to notify perfd of the agent's existence, vice versa.
+  rpc HeartBeat(CommonData) returns (HeartBeatResponse) {}
+}
+
+message HeartBeatResponse {
+}
+
+enum SocketType {
+  UNSPECIFIED_SOCKET = 0;
+  ABSTRACT_SOCKET = 1;
+}
+
+// Proto used for configuring perfd + perfa.
+// The message itself is created and pushed to device from Studio
+// and can be access via profiler::Config::Instance().
+message AgentConfig {
+  message MemoryConfig {
+    // equivalent to profiler.livealloc flag in Studio.
+    bool use_live_alloc = 1;
+    // the maximum depth of allocation stack traces to record.
+    int32 max_stack_depth = 2;
+  }
+
+  // equivalent to profiler.jvmti flag in Studio
+  bool use_jvmti = 1;
+  MemoryConfig mem_config = 2;
+  // Which socket type we are using when setting up our service
+  // if the device is O+ we use service_socket_name and
+  // ABSTRACT_SOCKET. If the device is pre O we use
+  // UNSPECIFIED_SOCKET and use the service_address.
+  SocketType socket_type = 3;
+  // address used for legacy devices (Nougat or older).
+  string service_address = 4;
+  // address used for jvmti devices that use unix sockets.
+  string service_socket_name = 5;
+}

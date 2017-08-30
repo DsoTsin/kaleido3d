@@ -1,0 +1,566 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "MemoryProfiler";
+
+import "profiler.proto";
+
+service MemoryService {
+  rpc StartMonitoringApp(MemoryStartRequest) returns (MemoryStartResponse) {
+  }
+  rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
+  }
+
+  // Get all memory data not related to live allocation for an app
+  // within a specified time request.
+  // These include the various memory levels, allocation count + gc events.
+  rpc GetData(MemoryRequest) returns (MemoryData) {
+  }
+  // Get live allocation memory data for an app within a specified time request.
+  // These includes alloc events, dealloc events and callstacks
+  rpc GetJvmtiData(MemoryRequest) returns (MemoryData) {
+  }
+  rpc TriggerHeapDump(TriggerHeapDumpRequest) returns (TriggerHeapDumpResponse) {
+  }
+  rpc GetHeapDump(DumpDataRequest) returns (DumpDataResponse) {
+  }
+  // List all heap dump records for an app within a specified time request.
+  rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
+  }
+
+  // Enable or disable an allocation tracking session.
+  // Note that for pre-O, this call is handled on Studio side within the proxy
+  // layer, and allocation records are fetched upon the completion of a tracking
+  // session. For O+, this toggles live allocation tracking within the app,
+  // and allocation data is returned while the session is in progress.
+  rpc TrackAllocations(TrackAllocationsRequest)
+      returns (TrackAllocationsResponse) {}
+
+  // Post-O only: Suspend allocation tracking when switching to another
+  // session to optimize the performance.
+  // This call will disable allocation callbacks and clear the event queue.
+  rpc SuspendTrackAllocations(SuspendTrackAllocationsRequest)
+      returns (SuspendTrackAllocationsResponse) {}
+  // Post-O only: Resume allocation tracking when switching back.
+  // This call will retrieve class data from beginning and enable allocation
+  // callbacks.
+  rpc ResumeTrackAllocations(ResumeTrackAllocationsRequest)
+      returns (ResumeTrackAllocationsResponse) {}
+
+  // Pre-O only: Returns all allocation data associated with a tracking session.
+  rpc GetLegacyAllocationEvents(LegacyAllocationEventsRequest)
+      returns (LegacyAllocationEventsResponse) {}
+  // Pre-O only: Returns class names and callstacks info associated with the
+  // ids provided in the request.
+  rpc GetLegacyAllocationContexts(LegacyAllocationContextsRequest)
+      returns (AllocationContextsResponse) {}
+  // Pre-O only: Used by Studio only for exporting legacy tracking data.
+  rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
+
+  // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
+  // This returns a snapshot of all objects that have been allocated and free_data
+  // within the request's start and end times. Note that if an object is allocated
+  // and collected within the time range, it would not be included in the result.
+  rpc GetAllocations(AllocationSnapshotRequest)
+      returns (BatchAllocationSample) {}
+
+  // O+ studio-side only: Grabs the allocation classes and callstack info for
+  // GetAllocations results.
+  rpc GetAllocationContexts(AllocationContextsRequest)
+      returns (AllocationContextsResponse) {}
+
+  // O+ studio-side only: Fetches the class + method names associated with
+  // a |method_id| within a tracking session.
+  rpc GetStackFrameInfo(StackFrameInfoRequest)
+      returns (StackFrameInfoResponse) {}
+
+  rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
+      returns (ForceGarbageCollectionResponse) {}
+}
+
+message MemoryStartRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message MemoryStartResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}
+
+message MemoryStopRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message MemoryStopResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}
+
+message SuspendTrackAllocationsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message SuspendTrackAllocationsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_PROFILING = 2;
+    FAILURE_UNKNOWN = 3;
+  }
+  Status status = 1;
+}
+
+message ResumeTrackAllocationsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message ResumeTrackAllocationsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_PROFILING = 2;
+    FAILURE_UNKNOWN = 3;
+  }
+  Status status = 1;
+}
+
+message MemoryRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3;  // exclusive
+  int64 end_time = 4;    // inclusive
+}
+
+message MemoryData {
+  message MemorySample {
+    int64 timestamp = 1;
+    int64 java_mem = 2;
+    int64 native_mem = 3;
+    int64 stack_mem = 4;
+    int64 graphics_mem = 5;
+    int64 code_mem = 6;
+    int64 others_mem = 7;
+    int64 total_mem = 8;
+  }
+
+  message AllocStatsSample {
+    int64 timestamp = 1;
+    int32 java_allocation_count = 2;
+    int32 java_free_count = 3;
+  }
+
+  message GcStatsSample {
+    int64 start_time = 1;
+    int64 end_time = 2;
+    // TODO add deallocation stats
+  }
+
+  // end timestamp after which values are yet to be queried for
+  int64 end_timestamp = 1;
+  repeated MemorySample mem_samples = 2;
+  repeated AllocStatsSample alloc_stats_samples = 3;
+  repeated GcStatsSample gc_stats_samples = 4;
+  repeated HeapDumpInfo heap_dump_infos = 5;
+  repeated AllocationsInfo allocations_info = 6;
+  repeated BatchAllocationSample allocation_samples = 7;
+}
+
+// Proto for describing a heap dump record.
+// A HeapDumpInfo is returned if either the start_time or end_time falls
+// within the requested time window.
+// e.g. An info can be returned across multiple requests:
+// 1. When a heap dump is first triggered with start_time specified.
+// 2. When the heap dump completes/fails with end_time specified.
+//
+// It is the responsibility of the requester to dedupe a completed info if
+// there was an unfinished info that was previously sent.
+message HeapDumpInfo {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  string file_name = 3;
+  bool success = 4;
+}
+
+message TriggerHeapDumpRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 request_time = 3;
+}
+
+message TriggerHeapDumpResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    IN_PROGRESS = 2;
+    NOT_PROFILING = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  // Returns the HeapDumpInfo immediately so the caller can
+  // optionally track its completion
+  HeapDumpInfo info = 2;
+}
+
+message DumpDataRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 dump_time = 3;
+}
+
+message DumpDataResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_READY = 2;
+    NOT_FOUND = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  bytes data = 2;
+}
+
+message ListDumpInfosRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3;  // exclusive
+  int64 end_time = 4;    // inclusive
+}
+
+message ListHeapDumpInfosResponse {
+  repeated HeapDumpInfo infos = 1;
+}
+
+// Proto for describing an allocation tracking record.
+// Simliar to HeapDumpInfo, an AllocationsInfo is returned if either the
+// start_time or end_time falls within the requested time window.
+// It is the responsibility of the requester to dedupe a completed info if
+// there was an unfinished info that was previously sent.
+message AllocationsInfo {
+  enum Status {
+    UNSPECIFIED = 0;
+    IN_PROGRESS = 1;
+    COMPLETED = 2;
+    FAILURE_UNKNOWN = 3;
+  }
+
+  Status status = 1;
+  int64 start_time = 2;
+  int64 end_time = 3;
+  bool legacy = 4;
+}
+
+message TrackAllocationsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    IN_PROGRESS = 2;
+    NOT_ENABLED = 3;
+    NOT_PROFILING = 4;
+    FAILURE_UNKNOWN = 5;
+  }
+  Status status = 1;
+  AllocationsInfo info = 2;
+}
+
+message TrackAllocationsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 request_time = 3;
+  // Requests whether an allocation tracking session is
+  // to be enabled/disabled. If a session is already in
+  // progress, re-enabling it does nothing, this is also
+  // true for disabling a session when no tracking is in
+  // progress.
+  bool enabled = 4;
+  // A flag to indicate whether the request is initiated
+  // via the legacy allocation tracking path. On pre-O
+  // setups, legacy tracking would simply mark the start
+  // and end times of a session. On O+ setups, perfd +
+  // the agent would perform allocation tracking.
+  bool legacy = 5;
+}
+
+message LegacyAllocationEventsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3; // exclusive
+  int64 end_time = 4;   // inclusive
+}
+
+message LegacyAllocationEventsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_READY = 2;
+    NOT_FOUND = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  repeated LegacyAllocationEvent events = 2;
+}
+
+message LegacyAllocationEvent {
+  // capture_time associates with a particular tracking session.
+  // TODO: include endTime for de-allocation tracking
+  int64 capture_time = 1;
+  int64 timestamp = 2;
+  int32 size = 3;
+  int32 thread_id = 4;
+  int32 class_id = 5;
+  int32 stack_id = 6;
+}
+
+message LegacyAllocationContextsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  repeated int32 class_ids = 3;
+  repeated int32 stack_ids = 4;
+}
+
+message AllocationContextsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3;
+  int64 end_time = 4;
+}
+
+message AllocationContextsResponse {
+  // O+ only. Records the timestamp of the latest class/stack
+  // entry returned by the response.
+  int64 timestamp = 1;
+  repeated AllocatedClass allocated_classes = 2;
+  repeated AllocationStack allocation_stacks = 3;
+  // O+ only. All seen thread Ids -> Strings mapping
+  repeated ThreadInfo allocation_threads = 4;
+}
+
+message AllocatedClass {
+  int32 class_id = 1;
+  string class_name = 2;
+  int32 class_loader_id = 3;
+}
+
+// Proto format for handling stack data for both pre-O and O+.
+message AllocationStack {
+  message StackFrame {
+    // O+ only for uniquely idenfitying a method.
+    int64 method_id = 1;
+    string class_name = 2;
+    string method_name = 3;
+
+    // Pre-O only. File name info is unavailable in JVMTI.
+    // TODO: investigate/feature request.
+    string file_name = 4;
+
+    int32 line_number = 5;
+  }
+
+  // studio-side only - a smaller proto format to store lazy-
+  // loaded stack frame objects. This is used specifically
+  // for showing live allocation tracking data (O+ JVMTI),
+  // where an app can run up to 2M+ unique frames. Given
+  // proto objects do not support null values, each string
+  // field in StackFrame holds default values that can add
+  // up to hundreds of MBs for these apps.
+  message SmallFrame {
+    int64 method_id = 1;
+    int32 line_number = 2;
+  }
+
+  // Wrapper proto for StackFrame since oneof does not
+  // support repeated fields.
+  message StackFrameWrapper {
+    repeated StackFrame frames = 1;
+  }
+
+  // Wrapper proto for SmallFrame since oneof does not
+  // support repeated fields.
+  message SmallFrameWrapper {
+    repeated SmallFrame frames = 1;
+  }
+
+  int32 stack_id = 1;
+  oneof frame {
+    StackFrameWrapper full_stack = 2;
+    SmallFrameWrapper small_stack = 3;
+  }
+}
+
+message StackFrameInfoRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 method_id = 3;
+}
+
+message StackFrameInfoResponse {
+  string class_name = 2;
+  string method_name = 3;
+}
+
+// Proto format for storing and transmitting O+ stack data efficiently.
+// The |stack_id| field uniquely identifies a stack within an app, each
+// |method_id| is referenced by AllocationStack.StackFrame which contains
+// detailed info about the method.
+message EncodedAllocationStack {
+  // The time when this stack was first seen. It should match the first
+  // AllocationEvent::Allocation that generated the stack.
+  int64 timestamp = 1;
+  int32 stack_id = 2;
+  repeated int64 method_ids = 3;
+  repeated int32 line_numbers = 4;
+}
+
+// Proto format for storing and transmitting O+ thread data.
+// JVMTI provides an API to get a thread's name but not id. To avoid
+// sending too much duplicated string datas, we encode thread names to
+// id manually and resolve them on Studio-side.
+message ThreadInfo {
+  // The time when this thread was first seen. It should match the first
+  // AllocationEvent::Allocation that generated the stack.
+  int64 timestamp = 1;
+  int32 thread_id = 2;
+  string thread_name = 3;
+}
+
+message AllocationSnapshotRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  // The start time (id) of the tracking session from which
+  // allocation data should be returned.
+  int64 capture_time = 3;
+  int64 start_time = 4;  // inclusive;
+  // NOTE that compared to other proto request, end_time here
+  // is exclusive as ongoing live instances are set to have a
+  // free_timestamp of Long.MAX_VALUE. This allows us to naturally
+  // query for all current live instances by passing in MAX_VALUE
+  // as the end_time, without having to special case an invalid
+  // duration value.
+  int64 end_time = 5; // exclusive;
+}
+
+// Batched AllocationEvents to minimize number of grpc
+// calls compared to transferring them individually.
+message BatchAllocationSample {
+  int32 process_id = 1;
+  // From Perfa->Perfd and Perfd->Studio, this marks the
+  // time(ns) when the sample was first created in the agent.
+  // Within Studio, this indicates the latest timestamp amongst
+  // the events list.
+  int64 timestamp = 2;
+  repeated AllocationEvent events = 3;
+
+  // The following fields are used for transfering stack info
+  // from device to studio only. Within studio, stack info are
+  // retrieved via GetAllocationContexts.
+  repeated AllocationStack.StackFrame methods = 4;
+  repeated EncodedAllocationStack stacks = 5;
+  repeated ThreadInfo thread_infos = 6;
+}
+
+// Proto format for handling O+ allocation data.
+message AllocationEvent {
+  message Allocation {
+    int32 tag = 1;
+    int32 class_tag = 2;
+    int64 size = 3;
+    // Length for array objects. For non-arrays, set to -1.
+    int32 length = 4;
+
+    // Profiler-generated Id representing a thread.
+    // Valid id starts at 1 as 0 is used as a default no-value.
+    int32 thread_id = 5;
+
+    // Profiler-Id representing the allocation stack.
+    // Valid id starts at 1 as 0 is used as a default no-value.
+    int32 stack_id = 6;
+
+    // Which heap an object was allocated from.
+    // The id's are manually mapped to their corresponding names
+    // in Studio (e.g. Zygote vs App).
+    int32 heap_id = 7;
+
+    // Entire list of methods corresponding to the allocation stack.
+    // Note that this is only used for temporary storage in perfa.
+    // When the data is sent from perfa->perfd, the list is encoded
+    // as |stack_id| above, and the encoded data is stored/sent
+    // separately using EncodedAllocationStack.
+    // First entry is top of stack.
+    repeated int64 method_ids = 8;
+    // Similar to |method_ids| above, this is only for temporary
+    // storage. The actual converted line numbers are stored/sent to
+    // studio via EncodedAllocationStack.
+    repeated int64 location_ids = 9;
+    // Temporary storage in perfa only. The thread info will be
+    // encoded into |thread_id| before transfer from perfa->perfd.
+    // The thread id -> name mapping is sent separately via ThreadInfo
+    // messages.
+    string thread_name = 10;
+  }
+
+  message Deallocation {
+    int32 tag = 1;
+
+    // The following are host/client-side only (e.g. Studio-only).
+    int32 class_tag = 2;
+    int64 alloc_time = 3;
+    int64 size = 4;
+    // Length for array objects. For non-arrays, set to -1.
+    int32 length = 5;
+
+    // Thread + Stack Id of the allocation of the same object.
+    int32 thread_id = 6;
+    int32 stack_id = 7;
+
+    int32 heap_id = 8;
+  }
+
+  // If it is an allocation event, this marks the exact time
+  // when the alloc happens. If it is a deallocation event, this
+  // should match the last gc end time.
+  int64 timestamp = 2;
+
+  oneof event {
+    // Special case for java/lang/Class object allocations.
+    // Note that a Klass event is expected to precede
+    // any Allocation which references its class via
+    // the class_tag field.
+    AllocatedClass class_data = 3;
+    Allocation alloc_data = 4;
+    Deallocation free_data = 5;
+  }
+}
+
+message ForceGarbageCollectionRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message ForceGarbageCollectionResponse {}
