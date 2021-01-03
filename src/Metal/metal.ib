@@ -1,0 +1,37 @@
+if (!path_exists("../../build/deps/include"))
+{
+    download(
+        "https://github.com/DsoTsin/kaleido3d/releases/download/v1.0/llvm_ir_support.7z",
+        "third_party/llvm_ir_support.7z"
+    )
+    un7z("third_party/llvm_ir_support.7z", "../../build/deps")
+}
+
+shared_library("mtlspv") {
+    sources = [
+        "source/converter/metalib.cc",
+        "source/converter/metalib2spirv.cc",
+        "source/converter/spirv_builder.cc",
+        "source/converter/spirv_builder.h",
+        "source/converter/spirv_writer.cc",
+        "source/converter/spirv_util.cc",
+        "source/converter/spirv_util.h"
+    ]
+    include_dirs = [ "source", "include", "../../build/deps/include" ]
+    match (target_config) {
+        "debug" => {
+            lib_dirs = [ "../../build/deps/lib/win64/x64/debug" ]
+        }
+        "release" => {
+            lib_dirs = [ "../../build/deps/lib/win64/x64" ]
+        }
+    }
+    libs = [
+        "LLVMCore.lib",
+        "LLVMBitReader.lib",
+        "LLVMBitstreamReader.lib",
+        "LLVMSupport.lib",
+        "LLVMRemarks.lib",
+        "LLVMBinaryFormat.lib"
+    ]
+}

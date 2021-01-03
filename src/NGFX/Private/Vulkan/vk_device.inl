@@ -152,4 +152,28 @@ namespace vulkan
 	{
 		this->__DestroySemaphore(device_, semaphore, NGFXVK_ALLOCATOR);
 	}
+	inline VkResult GpuDevice::createCommandPool(const VkCommandPoolCreateInfo* info, VkCommandPool* commandPool)
+	{
+		return this->__CreateCommandPool(device_, info, NGFXVK_ALLOCATOR, commandPool);
+	}
+	inline void GpuDevice::destroyCommandPool(VkCommandPool commandPool)
+	{
+		this->__DestroyCommandPool(device_, commandPool, NGFXVK_ALLOCATOR);
+	}
+	inline VkResult GpuDevice::resetCommandPool(VkCommandPool commandPool, VkCommandPoolResetFlags flags)
+	{
+		return this->__ResetCommandPool(device_, commandPool, flags);
+	}
+	inline VkResult GpuDevice::allocateCommandBuffer(const VkCommandBufferAllocateInfo* info, VkCommandBuffer* cmds)
+	{
+		return this->__AllocateCommandBuffers(device_, info, cmds);
+	}
+	inline void GpuDevice::freeCommandBuffer(VkCommandPool commandPool, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers)
+	{
+		this->__FreeCommandBuffers(device_, commandPool, commandBufferCount, pCommandBuffers);
+	}
+	inline VkResult GpuDevice::queueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
+	{
+		return this->__QueueSubmit(queue, submitCount, pSubmits, fence);
+	}
 }

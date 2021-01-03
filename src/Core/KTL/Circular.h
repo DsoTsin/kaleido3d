@@ -81,16 +81,16 @@ namespace k3d
         {}
 
         bool IsEmpty() const { return m_Head == m_Tail; }
-        bool IsFull() const { return NextIndex(m_Tail) == m_Head; }
+        bool IsFull() const { return Super::NextIndex(m_Tail) == m_Head; }
         void Empty() { m_Head == m_Tail; }
 
         bool Enqueue(const T& InElem)
         {
-            auto _Tail = NextIndex(m_Tail);
+            U32 _Tail = Super::NextIndex(m_Tail);
             if (_Tail != m_Head)
             {
                 m_Data[m_Tail] = InElem;
-                __intrinsics__::AtomicCAS(&m_Tail, _Tail, m_Tail);
+                __intrinsics__::AtomicCAS((int*)&m_Tail, _Tail, m_Tail);
                 return true;
             }
             return false;
@@ -98,11 +98,11 @@ namespace k3d
 
         bool EnQueue(T&& InElem)
         {
-            auto _Tail = NextIndex(m_Tail);
+            auto _Tail = Super::NextIndex(m_Tail);
             if (_Tail != m_Head)
             {
                 m_Data[m_Tail] = InElem;
-                __intrinsics__::AtomicCAS(&m_Tail, _Tail, m_Tail);
+                __intrinsics__::AtomicCAS((int*)&m_Tail, _Tail, m_Tail);
                 return true;
             }
             return false;
@@ -113,7 +113,7 @@ namespace k3d
             if (m_Head != m_Tail)
             {
                 OutElem = m_Data[m_Head];
-                __intrinsics__::AtomicCAS(&m_Head, NextIndex(m_Head), m_Head);
+                __intrinsics__::AtomicCAS((int*)&m_Head, Super::NextIndex(m_Head), m_Head);
                 return true;
             }
             return false;

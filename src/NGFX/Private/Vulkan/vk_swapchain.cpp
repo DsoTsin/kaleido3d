@@ -78,13 +78,16 @@ namespace vulkan {
 	GpuFactory::newPresentLayer(const ngfx::PresentLayerDesc* desc,
 		ngfx::Device* device, ngfx::PresentLayer* old, ngfx::Result* result)
 	{
-		//VK_AMD_display_native_hdr
-		//VK_EXT_full_screen_exclusive
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
+		VkResult code = VK_SUCCESS;
+#if _WIN32
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
 		surfaceCreateInfo.hinstance = (HINSTANCE)desc->extraData;
 		surfaceCreateInfo.hwnd = reinterpret_cast<HWND>(desc->winHandle);
-		VkResult code = __CreateWin32SurfaceKHR(instance_, &surfaceCreateInfo, NGFXVK_ALLOCATOR, &surface);
+		code = __CreateWin32SurfaceKHR(instance_, &surfaceCreateInfo, NGFXVK_ALLOCATOR, &surface);
+#elif __ANDROID__
+
+#endif
 		check(code == VK_SUCCESS);
 
 		VkBool32 supportPresent = VK_FALSE;
@@ -118,6 +121,9 @@ namespace vulkan {
 		__GetPhysicalDeviceSurfaceFormatsKHR(vkdevice->physical_device_, surface, &formatCount, &surfaceFormats[0]);
 		check(formatCount > 0);
 		
+		// TODO: match
+		desc->format;
+        desc->colorSpace;
 		surfaceFormats[0].format;
 		surfaceFormats[0].colorSpace;
 		/*
@@ -156,11 +162,11 @@ namespace vulkan {
 		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		create_info.queueFamilyIndexCount = 1;
 		create_info.pQueueFamilyIndices = &presentQueueFamilyIndex;
-		create_info.preTransform;
-		create_info.compositeAlpha;
-		create_info.presentMode;
-		create_info.clipped;
-		create_info.oldSwapchain;
+        create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        create_info.presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
+		create_info.clipped = VK_FALSE;
+		create_info.oldSwapchain = VK_NULL_HANDLE;
 
 		VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 		code = vkdevice->createSwapchain(&create_info, &swapchain);

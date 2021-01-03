@@ -1,5 +1,8 @@
 #include "CoreMinimal.h"
 
+#include "Regex/re2/re2/re2.h"
+
+
 #define PCRE2_STATIC 1
 #define PCRE2_CODE_UNIT_WIDTH 8
 

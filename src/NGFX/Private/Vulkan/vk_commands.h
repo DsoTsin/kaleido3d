@@ -25,6 +25,7 @@ namespace vulkan
 		DrawIndirect,
 		Present,
 		DispatchCompute,
+		DispatchComputeIndirect,
 		DispatchRays,
 		DispatchMesh,
 		NumMaxCommands

@@ -25,6 +25,7 @@ class NodeFlag:
 
 xige = cdll.LoadLibrary(os.path.join(cur_dir, 'xige.dll'))
 
+
 node_begin = CFUNCTYPE(None, c_void_p, c_int, c_void_p)
 node_end = CFUNCTYPE(None, c_void_p, c_void_p)
 node_err = CFUNCTYPE(None, c_char_p, c_void_p)
@@ -40,8 +41,7 @@ class Node(object):
 
     def get_name(self):
         cname = self._dll.node_get_name(self._node)
-        name = c_char_p(cname).value
-        return name
+        return cname.decode('utf-8')
 
     def get_attrib(self, name):
         cval = self._dll.node_get_attribute(self._node, name)
@@ -73,6 +73,7 @@ class InterfaceGenerator(object):
         self.stack = []
         self.source = ''
         self.dll = cdll.LoadLibrary(os.path.join(cur_dir, 'xige.dll'))
+        self.dll.node_get_name.restype = c_char_p
         self.generator = None
 
     def set_generator(self, gen):
@@ -82,7 +83,7 @@ class InterfaceGenerator(object):
         self.dll.add_instrinsic(intrin)
 
     def load(self, path):
-        self.dll.node_load_callback(path, 
+        self.dll.node_load_callback(path.encode(), 
             node_begin(InterfaceGenerator.begin_fn), 
             node_end(InterfaceGenerator.end_fn),
             node_err(InterfaceGenerator.on_error),
@@ -103,9 +104,9 @@ class InterfaceGenerator(object):
     @staticmethod
     def begin_fn(p_node, c_int, p_arg):
         gen = cast(p_arg, py_object).value
-        gen.on_begin(p_node, c_int)
+        gen.on_begin(c_void_p(p_node), c_int)
 
     @staticmethod
     def end_fn(p_node, p_arg):
         gen = cast(p_arg, py_object).value
-        gen.on_end(p_node)
+        gen.on_end(c_void_p(p_node))

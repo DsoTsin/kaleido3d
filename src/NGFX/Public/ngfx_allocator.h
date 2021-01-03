@@ -25,7 +25,21 @@
 #ifndef __ngfx_allocator_h__
 #define __ngfx_allocator_h__
 
-extern "C" void k3d_free(void * ptr, size_t size);
+#ifndef BUILD_SHARED_LIB
+#define BUILD_SHARED_LIB 0
+#endif
+
+#if BUILD_SHARED_LIB
+#if _MSC_VER
+#define NGFX_API __declspec(dllexport)
+#else
+#define NGFX_API __attribute__((visibility("default"))) 
+#endif
+#else
+#define NGFX_API __declspec(dllimport)
+#endif
+
+extern "C" NGFX_API void k3d_free(void * ptr, size_t size);
 
 namespace ngfx
 {

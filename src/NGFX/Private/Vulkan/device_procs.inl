@@ -1,4 +1,5 @@
 VK_PROTO_FN(GetDeviceQueue);
+VK_PROTO_FN(QueueSubmit);
 
 VK_PROTO_FN(AllocateMemory);
 VK_PROTO_FN(FreeMemory);

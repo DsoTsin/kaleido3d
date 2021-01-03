@@ -213,7 +213,9 @@ namespace __intrinsics__
 #if defined(K3DCOMPILER_MSVC)
         return _InterlockedCompareExchange64(i64, newValue, comparand) == comparand;
 #else
-
+		// __atomic_exchange (type *ptr, type *val, type *ret, int memorder)
+		__atomic_exchange(i64, &newValue, i64, __ATOMIC_ACQUIRE);
+		return true;
 #endif
     }
 
@@ -230,7 +232,7 @@ namespace __intrinsics__
 #if defined(K3DCOMPILER_MSVC)
         return _InterlockedCompareExchangePointer((void*volatile*)Destination, NewValue, OldValue) == OldValue;
 #else
-
+		__atomic_exchange(Destination, &NewValue, Destination, __ATOMIC_ACQUIRE);
 #endif
     }
 }
@@ -271,6 +273,8 @@ namespace __intrinsics__
 #include "KTL/LockFreeQueue.h"
 
 #include "Net/Net.h"
-
+#include "Base/Handle.h"
+#include "Base/Compress.h"
+#include "Base/Image.h"
 
 #endif

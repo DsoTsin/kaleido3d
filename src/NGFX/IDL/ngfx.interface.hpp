@@ -41,9 +41,48 @@ namespace ngfx {
 		uint32				maxTraceRecurseDepth;
 		array<Function*>	functions;
     };
-	struct RenderpassDesc {
+	
+    struct ClearColor {
+        float red;
+        float green;
+        float blue;
+        float alpha;
+    };
 
+    interface Texture;
+    struct RenderpassAttachmentDesc {
+        Texture* texture;
+        uint32 level;
+        uint32 slice;
+        uint32 depth;
+        uint32 resolveLevel;
+        uint32 resolveSlcie;
+        uint32 resolveDepthPlane;
+        LoadAction loadAction;
+        StoreAction storeAction;
+    };
+
+    struct RenderpassColorAttachmentDesc : RenderpassAttachmentDesc {
+        ClearColor clearColor;
+    };
+
+    struct RenderpassDepthAttachmentDesc : RenderpassAttachmentDesc {
+        double clearDepth;
+    };
+
+    struct RenderpassStencilAttachmentDesc : RenderpassAttachmentDesc {
+        uint32 clearStencil;
+    };
+
+    struct RenderpassDesc {
+        array<RenderpassColorAttachmentDesc, 8> colorAttachments;
+        RenderpassDepthAttachmentDesc depthAttachment;
+        RenderpassStencilAttachmentDesc stencilAttachment;
+        uint32 renderTargetArrayLenth;
+        uint32 renderTargetWidth;
+        uint32 renderTargetHeight;
 	};
+
     interface Resource : LabeledObject {
 		void*				map(uint64 offset, uint64 size);
 		void				unmap(void* addr);
@@ -117,13 +156,11 @@ namespace ngfx {
     interface RenderPipeline : Pipeline {
 
     };
-	[[vk("VkRenderpass"), refcount("true")]]
-	interface Renderpass {
-		RenderPipeline*		newRenderPipeline(const RenderPipelineDesc* desc, Result* result);
-	};
+	
     interface ComputePipeline : Pipeline {
 
     };
+
     interface RaytracePipeline : Pipeline {
         
     };
@@ -132,15 +169,17 @@ namespace ngfx {
 	interface RaytraceEncoder;
     interface ParallelEncoder;
     interface BlitEncoder;
-	[[vk("VkCommandBuffer"), mtl("id<MTLCommandBuffer>")]]
+	
+    [[vk("VkCommandBuffer"), mtl("id<MTLCommandBuffer>")]]
     interface CommandBuffer : LabeledObject {
-        RenderEncoder *		newRenderEncoder(Result* result);
+        RenderEncoder*      newRenderEncoder(const RenderpassDesc* desc, Result* result);
+        ParallelEncoder*    newParallelRenderEncoder(const RenderpassDesc* desc, Result* result);
         ComputeEncoder*		newComputeEncoder(Result* result);
         BlitEncoder*		newBlitEncoder(Result* result);
-        ParallelEncoder*	newParallelRenderEncoder(Result* result);
         RaytraceEncoder*	newRaytraceEncoder(Result* result);
         Result				commit();
     };
+
 	[[refcount("true"), vk("VkQueue"), mtl("id<MTLQueue>")]]
     interface CommandQueue {
 		CommandBuffer*		newCommandBuffer() [[transient("true")]];
@@ -154,8 +193,10 @@ namespace ngfx {
         void                setViewport(Viewport viewport);
 		void                setViewports(int numViewports, const Viewport* pViewport);
         void                setScissors(int numScirssors, const Rect* pRects);
-		void				setStencilRef();
-		void				setDepthBias();
+		void				setStencilRef(uint32 referenceValue);
+        void                setDepthStencilState();
+        void                setDepthClipMode(DepthClipMode clipMode);
+		void				setDepthBias(float depthBias, float slopeScale, float clamp);
         void				drawPrimitives(PrimitiveType primType, 
 								int vertexStart, int vertexCount, int instanceCount, int baseInstance);
         void                drawIndexedPrimitives(PrimitiveType primType,
@@ -165,12 +206,18 @@ namespace ngfx {
 								const Buffer* buffer, uint64 offset, uint32 drawCount, uint32 stride);
         void				present(Drawable* drawable);
     };
+
     interface ComputeEncoder : CommandEncoder {
         void				dispatch(int x, int y, int z);
     };
+    
     interface ParallelEncoder : CommandEncoder {
+        void                setColorStoreAction(StoreAction storeAction, int index);
+        void                setDepthStoreAction(StoreAction storeAction);
+        void                setStencilAction(StoreAction storeAction);
         RenderEncoder*      subRenderEncoder(Result* result);
     };
+    
     struct BufferStride {
         Buffer*     buffer;
         uint32      stride;
@@ -226,7 +273,7 @@ namespace ngfx {
         DeviceType          getType() const;
 		CommandQueue*		newQueue(Result* result);
         Shader*				newShader();
-        Renderpass*			newRenderpass(const RenderpassDesc* desc, Result* result) [[gen_rc("true")]];
+        RenderPipeline* newRenderPipeline(const RenderPipelineDesc* desc, Result* result) [[gen_rc("true")]];
 		ComputePipeline*	newComputePipeline(const ComputePipelineDesc* desc, Result* result)[[gen_rc("true")]];
 		RaytracePipeline*	newRaytracePipeline(const RaytracePipelineDesc* desc, Result* result)[[gen_rc("true")]];
 		Texture*			newTexture(const TextureDesc* desc, StorageMode mode, Result* result)[[gen_rc("true")]];

@@ -1,0 +1,4 @@
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-L", "C:/vcpkg/installed/x64-windows/lib"]
+
+#[target.x86_64-pc-windows-msvc.libssl]

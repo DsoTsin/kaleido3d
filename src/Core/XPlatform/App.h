@@ -27,7 +27,9 @@
 #include <memory>
 
 #if K3DPLATFORM_OS_MAC
+#ifdef __OBJC__
 #import <Cocoa/Cocoa.h>
+#endif
 #elif K3DPLATFORM_OS_ANDROID
 #include <poll.h>
 #include <pthread.h>
@@ -94,7 +96,9 @@ namespace k3d
 		const String & m_AppName;
         
 #if K3DPLATFORM_OS_MAC
+#ifdef __OBJC__
         id m_AppDelegate;
+#endif
 #endif
     };
 
@@ -129,12 +133,14 @@ namespace k3d
 }
 
 #if K3DPLATFORM_OS_MAC
+#ifdef __OBJC__
 #import <AppKit/NSApplication.h>
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 {
     k3d::App * m_App;
 }
 @end
+#endif
 #define K3D_APP_MAIN(className) \
     int main(int argc, char *argv[]) \
     {\

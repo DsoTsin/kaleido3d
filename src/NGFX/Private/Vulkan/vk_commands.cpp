@@ -65,6 +65,7 @@ namespace vulkan {
 				break;
 			case CommandType::DispatchCompute:
 				NextCommand<GfxCmdDispatchCompute>();
+				//vkCmdDispatch();
 				break;
 				/*case CommandType::DispatchRays:
 					break;
@@ -203,12 +204,25 @@ namespace vulkan {
 	}
 
     GpuCommandBuffer::GpuCommandBuffer(GpuQueue * queue)
+	: encoder_context_(nullptr)
+	, command_buffer_(VK_NULL_HANDLE)
+	, queue_(queue)
     {
+		
     }
     
 	GpuCommandBuffer::~GpuCommandBuffer()
     {
     }
+
+	void GpuCommandBuffer::setLabel(const char* label)
+	{
+	}
+
+	const char* GpuCommandBuffer::label() const
+	{
+		return nullptr;
+	}
 
     ngfx::RenderEncoder* GpuCommandBuffer::newRenderEncoder(ngfx::Result* result)
     {
@@ -237,6 +251,77 @@ namespace vulkan {
 
     ngfx::Result GpuCommandBuffer::commit()
     {
+		//
+		queue_->submit(this);
+
         return ngfx::Result();
     }
+
+	/*
+	typedef enum VkCommandPoolCreateFlagBits {
+		VK_COMMAND_POOL_CREATE_TRANSIENT_BIT = 0x00000001,
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT = 0x00000002,
+		VK_COMMAND_POOL_CREATE_PROTECTED_BIT = 0x00000004,
+		VK_COMMAND_POOL_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+	} VkCommandPoolCreateFlagBits;
+	typedef VkFlags VkCommandPoolCreateFlags;
+
+	typedef enum VkCommandPoolResetFlagBits {
+		VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT = 0x00000001,
+		VK_COMMAND_POOL_RESET_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+	} VkCommandPoolResetFlagBits;
+	typedef VkFlags VkCommandPoolResetFlags;
+
+	typedef enum VkCommandBufferUsageFlagBits {
+		VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT = 0x00000001,
+		VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT = 0x00000002,
+		VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT = 0x00000004,
+		VK_COMMAND_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+	} VkCommandBufferUsageFlagBits;
+	typedef VkFlags VkCommandBufferUsageFlags;
+
+	typedef enum VkCommandBufferResetFlagBits {
+		VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = 0x00000001,
+		VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+	} VkCommandBufferResetFlagBits;
+	typedef VkFlags VkCommandBufferResetFlags;
+	*/
+	ngfx::CommandBuffer* GpuQueue::newCommandBuffer()
+	{
+		// or lazy init?
+		VkCommandPoolCreateInfo cinfo = {
+			VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			nullptr,
+			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT, // flags, one shot
+			0, // queueFamilyIndex
+		};
+		VkCommandPool pool;
+		device_->createCommandPool(&cinfo, &pool);
+		VkCommandBufferAllocateInfo ainfo = {
+			VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			nullptr,
+			pool,
+			VK_COMMAND_BUFFER_LEVEL_PRIMARY, // level
+			1, // count
+		};
+		VkCommandBuffer cmdbuf;
+		device_->allocateCommandBuffer(&ainfo, &cmdbuf);
+		return new vulkan::GpuCommandBuffer(this);
+	}
+
+	void GpuQueue::submit(GpuCommandBuffer* cmdBuf)
+	{
+		VkSubmitInfo sinfo = {
+			VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			nullptr,
+
+		};
+		VkSubmitInfo2KHR sinfo2 = {
+
+		};
+		VkFence fence = VK_NULL_HANDLE;
+		// fence is an optional handle to a fence to be signaled once all submitted command buffers have completed execution.
+		// If fence is not VK_NULL_HANDLE, it defines a fence signal operation.
+		device_->queueSubmit(queue_, 1, &sinfo, fence);
+	}
 }

@@ -4,6 +4,7 @@
 #endif
 
 #include "vk_common.h"
+#include "vk_commands.h"
 #include <unordered_map>
 
 #define VULKAN_STANDARD_LAYER "VK_LAYER_LUNARG_standard_validation"
@@ -15,6 +16,7 @@ namespace vulkan {
 		, mem_alloc_(this)
 	{
 		VK_PROTO_FN_ZERO(GetDeviceQueue);
+		VK_PROTO_FN_ZERO(QueueSubmit);
 
 		VK_PROTO_FN_ZERO(AllocateMemory);
 		VK_PROTO_FN_ZERO(FreeMemory);
@@ -155,9 +157,15 @@ namespace vulkan {
 		if (extensions.hasExtension(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME)) {
 			required_extensions.push(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME);
 		}
+#if _WIN32
 		if (extensions.hasExtension(VK_KHR_WIN32_SURFACE_EXTENSION_NAME)) {
 			required_extensions.push(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 		}
+#elif defined(__ANDROID__)
+		if (extensions.hasExtension(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME)) {
+			required_extensions.push(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+	}
+#endif
 		if (extensions.hasExtension(VK_EXT_HDR_METADATA_EXTENSION_NAME)) {
 			required_extensions.push(VK_EXT_HDR_METADATA_EXTENSION_NAME);
 		}
@@ -185,8 +193,9 @@ namespace vulkan {
 
 	void GpuDevice::loadDeviceFunctions()
 	{
-#define VK_DEVICE_FN_RSV(name)	__##name = (PFN_vk##name)factory_->__GetDeviceProcAddr(device_, "vk" ## #name)
+#define VK_DEVICE_FN_RSV(name)	__##name = (PFN_vk##name)factory_->__GetDeviceProcAddr(device_, VK_FN_STRNAME(name))
 		VK_DEVICE_FN_RSV(GetDeviceQueue);
+		VK_DEVICE_FN_RSV(QueueSubmit);
 
 		VK_DEVICE_FN_RSV(AllocateMemory);
 		VK_DEVICE_FN_RSV(FreeMemory);
@@ -379,13 +388,6 @@ namespace vulkan {
     
 	GpuQueue::~GpuQueue()
     {
-    }
-
-    ngfx::CommandBuffer* GpuQueue::newCommandBuffer()
-    {
-
-
-        return nullptr;
     }
 
 }

@@ -37,7 +37,7 @@ namespace k3d
         {
             while (Begin < End) 
             {
-                Iterator Mid = Begin + (End - Begin) >> 1;
+                Iterator Mid = (Begin + (End - Begin)) >> 1;
                 ValueType MidVal = *Mid;
                 if (MidVal < Value) 
                 {

@@ -38,7 +38,7 @@ namespace k3d
         const float EPSILON = 0.0001f;
 
         // Available for SIMD acceralation
-        KALIGN(16) class Plane
+        class KALIGN(16) Plane
         {
         public:
             enum Face { COPLANAR, FRONT, BACK };
@@ -99,7 +99,7 @@ namespace k3d
         }; // !Plane
 
         //! Sphere
-        KALIGN(16) class Sphere
+        class KALIGN(16) Sphere
         {
         public:
             Sphere()
@@ -131,7 +131,7 @@ namespace k3d
         }; //! Sphere
 
         //! AABB
-        KALIGN(16) class AABB
+        class KALIGN(16) AABB
         {
         public:
             AABB() {}

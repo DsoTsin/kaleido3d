@@ -1,0 +1,175 @@
+/**
+ * MIT License
+ *
+ * Copyright (c) 2021 Zhou Qin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+#pragma once
+
+#ifdef __cplusplus
+#define unmasked   
+#define uniform  
+#define export extern "C"
+#define programCount 8
+#endif
+
+#ifdef __cplusplus
+namespace simd {
+#endif
+enum ClipFlag
+{
+    ClipNone = 0,
+    ClipLeft = 1,
+    ClipRight = 2,
+    ClipTop = 4,
+    ClipBottom = 8,
+    ClipNear = 16,
+    ClipDiscard = 32, // Polygon using this vertex should be discarded
+};
+
+struct SBoxInt {
+  int32 minX;
+  int32 minY;
+  int32 maxX;
+  int32 maxY;
+};
+
+struct SScreenTriangle {
+  float sx0;
+  float sy0;
+
+  float sx1;
+  float sy1;
+
+  float sx2;
+  float sy2;
+
+  // aabb
+  float minX;
+  float minY;
+  float maxX;
+  float maxY;
+
+  // clipSpaceZ
+  float cz0;
+  float cz1;
+  float cz2;
+
+  // clipZ bound
+  float minDepth;
+  float maxDepth;
+  
+#ifdef __cplusplus
+  simd::ClipFlag flag;
+#else
+  int32 flag;
+#endif
+
+#ifdef __cplusplus
+  bool intersect(const SBoxInt& box) const;
+#endif
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+typedef unmasked void (*FnReceiveTris)(uniform struct SRenderContext *uniform ctx, void* uniform userData,
+                                     uniform int tid, 
+#ifdef __cplusplus
+                                     simd::SScreenTriangle* st
+#else
+                                     uniform SScreenTriangle* uniform st
+#endif
+                                     );
+
+                                     
+typedef unmasked void (*FnBinTiles)(void* uniform self, uniform int32 triId, uniform int32 tileId);
+typedef unmasked void (*FnBinTriangle2Tiles)(void* uniform self, 
+#ifdef __cplusplus
+                                     simd::SScreenTriangle* st,
+#else
+                                     uniform SScreenTriangle* uniform st,
+#endif
+uniform int32 tileId);
+
+struct SRenderContextIspc {
+  FnReceiveTris recv;
+  struct SRenderContext *ctx;
+};
+
+struct SRenderParams
+{
+    int32 width;
+    int32 height;
+    float wClip;
+};
+
+struct SDepthBufferIspc32
+{
+    int32 width;
+    int32 height;
+    float* depth;
+};
+
+struct SDepthBufferIspc16
+{
+    int32 width;
+    int32 height;
+    int16* depth;
+};
+
+// todo check hand
+inline float edgeFunctionVarying(
+    const uniform float& v0x, const uniform float& v0y,
+    const uniform float& v1x, const uniform float& v1y,
+    const float& v2x, const float& v2y) 
+{ 
+    return (v2y - v0y) * (v1x - v0x) -  (v2x - v0x) * (v1y - v0y);
+}
+
+inline uniform float edgeFunctionUniform(
+    const uniform float& v0x, const uniform float& v0y,
+    const uniform float& v1x, const uniform float& v1y,
+    const uniform float& v2x, const uniform float& v2y) 
+{ 
+    return (v2y - v0y) * (v1x - v0x) - (v2x - v0x) * (v1y - v0y);
+}
+
+inline float edgeFunction(
+    const float& v0x, const float& v0y,
+    const float& v1x, const float& v1y,
+    const float& v2x, const float& v2y) 
+{ 
+    return (v2y - v0y) * (v1x - v0x) - (v2x - v0x) * (v1y - v0y);
+}
+
+inline int32 edgeFunctionInt(
+    const int32& v0x, const int32& v0y,
+    const int32& v1x, const int32& v1y,
+    const int32& v2x, const int32& v2y) 
+{ 
+    return (v2x - v0x) * (v1y - v0y) - (v2y - v0y) * (v1x - v0x);
+}
+
+inline int8 testFrontface(const float& sx0, const float& sx1, const float& sx2, const float& sy0, const float& sy1, const float& sy2)
+{
+	return (sx2 - sx0) * (sy1 - sy0) < (sy2 - sy0) * (sx1 - sx0);
+}

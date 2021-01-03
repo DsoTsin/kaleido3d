@@ -82,8 +82,8 @@ namespace ngfx
 				ptr_ = nullptr;
 			}
 		}
-		T& operator*() const { { return *ptr_; } }
-		T* operator->() const { { return ptr_; } }
+		__forceinline T& operator*() const { { return *ptr_; } }
+		__forceinline T* operator->() const { { return ptr_; } }
 		explicit operator bool() const
 		{
 			return ptr_ != nullptr;

@@ -26,8 +26,11 @@
 #if _WIN32
 #define VK_KHR_win32_surface 1
 #define VK_USE_PLATFORM_WIN32_KHR 1
+#elif defined(__ANDROID__)
+#define VK_USE_PLATFORM_ANDROID_KHR 1
 #endif
 
+#include <stdint.h>
 #include <ngfx.h>
 #include "volk.h"
 #define VULKAN_HPP_NO_EXCEPTIONS 1
@@ -42,15 +45,20 @@
 #define NGFXVK_ALLOCATOR  nullptr
 #endif
 
+#define VK_FN_STRNAME(n)		"vk" #n
+
 #define VK_PROTO_FN(name)		PFN_vk##name __##name
 #define VK_PROTO_FN_ZERO(name)	__##name = NULL;
 #define VK_CALL(name, ...)		__##name(__VAR_ARGS__)
-#define VK_FN_RSV(name)			__##name = (PFN_vk##name)soloader_.ResolveSymbol("vk" ## #name)
+#define VK_FN_RSV(name)			__##name = (PFN_vk##name)soloader_.ResolveSymbol(VK_FN_STRNAME(name))
 
-#define VK_INST_FN_RSV(name)	__##name = (PFN_vk##name)__GetInstanceProcAddr(instance_, "vk" ## #name)
+#define VK_INST_FN_RSV(name)	__##name = (PFN_vk##name)__GetInstanceProcAddr(instance_, VK_FN_STRNAME(name))
 
-
+#if _MSC_VER
 #define NGFX_EXPORT __declspec(dllexport)
+#else 
+#define NGFX_EXPORT __attribute__((visibility("default"))) 
+#endif
 
 typedef void(*ngfx_LogCallback)(int level, const char* msg);
 namespace vulkan {
@@ -132,7 +140,7 @@ namespace vulkan {
         GpuAllocator(GpuDevice* device);
         ~GpuAllocator();
 
-		int getMemoryTypeIndex(int typeBits, VkMemoryPropertyFlags properties, bool& memTypeFound);
+		uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties, bool& memTypeFound);
 
 		ngfx::Result allocateForBuffer(VkBuffer buffer, ngfx::StorageMode mode, MemoryItem& memItem);
 		ngfx::Result allocateForImage(VkImage image, ngfx::StorageMode mode, MemoryItem& memItem);
@@ -256,6 +264,7 @@ namespace vulkan {
 #include "instance_procs.inl"
 	};
 
+	// check video decode/encode support, raytracing support, bindless support
 	class GpuDevice : public ngfx::Device/*, public VolkDeviceTable*/
 	{
         using RtProps = VkPhysicalDeviceRayTracingPropertiesNV;
@@ -271,6 +280,7 @@ namespace vulkan {
         void                        setLabel(const char * label) override;
         const char*                 label() const override;
         ngfx::DeviceType            getType() const override;
+		// Compute, Graphics, Transfer (Async Resource Upload via vkCmdFillBuffer), Sparse Bind, Adreno GPU only supports Gfx & Compute
 		ngfx::CommandQueue *		newQueue(ngfx::Result * result) override;
 		ngfx::Shader *				newShader() override;
 		ngfx::Renderpass *			newRenderpass(const ngfx::RenderpassDesc * desc, ngfx::Result * result) override;
@@ -337,6 +347,14 @@ namespace vulkan {
 		VkResult					createSemaphore(const VkSemaphoreCreateInfo& info, VkSemaphore* pSemaphore);
 		void						destroySemaphore(VkSemaphore semaphore);
 
+		VkResult					createCommandPool(const VkCommandPoolCreateInfo* pCreateInfo, VkCommandPool* pCommandPool);
+		void						destroyCommandPool(VkCommandPool commandPool);
+		VkResult					resetCommandPool(VkCommandPool commandPool, VkCommandPoolResetFlags flags);
+		VkResult					allocateCommandBuffer(const VkCommandBufferAllocateInfo* info, VkCommandBuffer* cmds);
+		void						freeCommandBuffer(VkCommandPool commandPool, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers);
+
+		VkResult					queueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
+
         struct SurfaceInfo
         {
             uint32_t				present_family_index;
@@ -402,6 +420,8 @@ namespace vulkan {
 		int image_id_;
 	};
 
+	class GpuCommandBuffer;
+
     class GpuQueue : public ngfx::CommandQueue
 	{
 	public:
@@ -409,6 +429,7 @@ namespace vulkan {
         ~GpuQueue() override;
 
 		ngfx::CommandBuffer*        newCommandBuffer() override;
+		void						submit(GpuCommandBuffer * cmdBuf);
 
     private:
         VkQueue                     queue_;
@@ -432,6 +453,9 @@ namespace vulkan {
 	public:
         GpuCommandBuffer(GpuQueue* queue);
         ~GpuCommandBuffer() override;
+
+		void                        setLabel(const char* label) override;
+		const char*					label() const override;
 
         ngfx::RenderEncoder *       newRenderEncoder(ngfx::Result * result) override;
         ngfx::ComputeEncoder *      newComputeEncoder(ngfx::Result * result) override;
@@ -473,6 +497,16 @@ namespace vulkan {
 		CommandContext&				context_;
 		iptr<GpuCommandBuffer>      command_;
     };
+
+	class ParallelRenderEncoder final : public ngfx::ParallelEncoder 
+	{
+    public:
+
+		ngfx::RenderEncoder* subRenderEncoder(ngfx::Result * result) override;
+
+    private:
+        iptr<GpuCommandBuffer> command_;
+	};
 
     class RenderEncoder final : public ngfx::RenderEncoder
     {

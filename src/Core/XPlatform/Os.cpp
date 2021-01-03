@@ -12,7 +12,10 @@
 #if K3DPLATFORM_OS_WIN
 #include <process.h>
 #else
-#include <sched.h>  
+#include <sched.h>
+#if !K3DPLATFORM_OS_ANDROID
+#include <netinet/tcp.h>
+#endif
 #endif
 
 namespace k3d
@@ -1332,12 +1335,12 @@ bool Socket::Connect(IpAddress const& ipAddr)
 
 void Socket::Listen(int maxConn)
 {
-    d->Listen(maxConn);
+    int ret = d->Listen(maxConn);
 }
 
 void Socket::Bind(IpAddress const& ipAddr)
 {
-    d->Bind(ipAddr);
+    int ret = d->Bind(ipAddr);
 }
 
 Socket::Socket(SockType const& Type, void* RawSocketHandle)
