@@ -13,3 +13,17 @@ This directory includes:
   vector and matrix operations with **SIMD(SSE, NEON) acceleration**.
 
 * Interfaces
+  * Windows/Input framework
+  * Application framework
+  
+* Third Party Libraries:
+  * Compressors
+    * zlib/z
+    * lz4
+    * lzfse
+  * Font
+    * FreeType2
+  * String convert
+    * icu 
+  * Image
+    * spng (BSD-2)

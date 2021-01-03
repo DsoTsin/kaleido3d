@@ -1,0 +1,13 @@
+#pragma once
+
+#ifndef EXPLICIT_VECTOR
+#define EXPLICIT_VECTOR 0
+#endif
+
+struct Vec {
+#if EXPLICIT_VECTOR
+  float<TARGET_WIDTH> V;
+#else
+  float V[programCount];
+#endif
+};

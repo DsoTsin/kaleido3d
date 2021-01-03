@@ -231,6 +231,11 @@ namespace ngfx {
         All
     };
 
+    enum DepthClipMode {
+        Clip,
+        Clamp
+    };
+
     enum ResourceState {
         VertexBuffer,
         UniformBuffer,

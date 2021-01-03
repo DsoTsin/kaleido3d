@@ -53,17 +53,31 @@ namespace vulkan {
 
     void* Allocator::alloc(size_t size, size_t align, VkSystemAllocationScope scope)
     {
+#if _WIN32
         return _aligned_malloc(size, align);
+#else
+		void* res = nullptr;
+		posix_memalign(&res, align, size);
+		return res;
+#endif
     }
 
     void* Allocator::realloc(void* origin, size_t size, size_t align, VkSystemAllocationScope scope)
     {
+#if _WIN32
         return _aligned_realloc(origin, size, align);
+#else
+		return nullptr;
+#endif
     }
 
     void Allocator::free(void* ptr)
     {
+#if _WIN32
         _aligned_free(ptr);
+#else
+		free(ptr);
+#endif
     }
 
     void Allocator::notifyAlloc(size_t size, VkInternalAllocationType type, VkSystemAllocationScope scope)
@@ -83,7 +97,7 @@ namespace vulkan {
     {
     }
 
-	int GpuAllocator::getMemoryTypeIndex(int typeBits, VkMemoryPropertyFlags properties, bool& memTypeFound)
+	uint32_t GpuAllocator::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties, bool& memTypeFound)
 	{
 		for (uint32_t i = 0; i < device_mem_props_.memoryTypeCount; i++)
 		{

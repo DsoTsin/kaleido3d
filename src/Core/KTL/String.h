@@ -606,6 +606,7 @@ Archive& operator >> (Archive & ar, StringBase<BaseChar, Allocator> & str)
 
 
 typedef StringBase<char, kAllocator> String;
+typedef StringBase<wchar_t, kAllocator> String16;
 
 extern K3D_CORE_API String Base64Encode(String const & in);
 extern K3D_CORE_API String Base64Decode(String const& in);

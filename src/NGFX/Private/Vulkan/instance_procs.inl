@@ -22,6 +22,8 @@ VK_PROTO_FN(GetDeviceProcAddr);
 #if defined(VK_KHR_win32_surface)
 VK_PROTO_FN(CreateWin32SurfaceKHR);
 VK_PROTO_FN(GetPhysicalDeviceWin32PresentationSupportKHR);
+#elif defined(VK_KHR_android_surface)
+VK_PROTO_FN(CreateAndroidSurfaceKHR);
 #endif
 
 VK_PROTO_FN(DestroySurfaceKHR);

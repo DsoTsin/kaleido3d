@@ -1,6 +1,6 @@
 #include "vk_common.h"
 
-#define VULKAN_STANDARD_LAYER "VK_LAYER_LUNARG_standard_validation"
+#define VULKAN_STANDARD_LAYER "VK_LAYER_KHRONOS_validation"
 
 namespace vulkan
 {
@@ -33,7 +33,11 @@ namespace vulkan
 		VK_PROTO_FN_ZERO(GetPhysicalDeviceMemoryProperties2);
 
 		//~ surface functions
+#if _WIN32
 		VK_PROTO_FN_ZERO(CreateWin32SurfaceKHR);
+#elif defined(__ANDROID__)
+		VK_PROTO_FN_ZERO(CreateAndroidSurfaceKHR);
+#endif
 		VK_PROTO_FN_ZERO(DestroySurfaceKHR);
 		VK_PROTO_FN_ZERO(GetPhysicalDeviceSurfaceSupportKHR);
 		VK_PROTO_FN_ZERO(GetPhysicalDeviceSurfaceCapabilitiesKHR);
@@ -56,7 +60,7 @@ namespace vulkan
 		VkApplicationInfo appInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr,
 			"ngfx_vulkan", 1,
 			"ngfx", 1,
-			VK_VERSION_1_1
+			VK_API_VERSION_1_1
 		};
 		VkInstanceCreateInfo instanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr,
 			0, &appInfo
@@ -74,10 +78,15 @@ namespace vulkan
 				required_extensions.push(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 			}
 		}
-
+#if _WIN32
 		if (hasExtension(VK_KHR_WIN32_SURFACE_EXTENSION_NAME)) {
 			required_extensions.push(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 		}
+#elif defined(__ANDROID__)
+		if (hasExtension(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME)) {
+			required_extensions.push(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+		}
+#endif
 		if (hasExtension(VK_KHR_SURFACE_EXTENSION_NAME)) {
 			required_extensions.push(VK_KHR_SURFACE_EXTENSION_NAME);
 		}
@@ -89,13 +98,13 @@ namespace vulkan
 			required_extensions.push(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME);
 		}
 		instanceInfo.enabledLayerCount = (uint32_t)required_layers.num();
-		instanceInfo.ppEnabledLayerNames = &required_layers[0];
+		instanceInfo.ppEnabledLayerNames = required_layers.num() > 0 ? &required_layers[0] : nullptr;
 		instanceInfo.enabledExtensionCount = (uint32_t)required_extensions.num();
 		instanceInfo.ppEnabledExtensionNames = &required_extensions[0];
 
 		VkResult result = __CreateInstance(&instanceInfo, NGFXVK_ALLOCATOR, &instance_);
 		check(result == VK_SUCCESS);
-		
+
 		resolveInstanceFunctions();
 
 		if (debug_enable_ && __CreateDebugReportCallbackEXT)
@@ -119,27 +128,27 @@ namespace vulkan
 
 	VkBool32 GpuFactory::debugReport(
 		VkDebugReportFlagsEXT flags,
-		VkDebugReportObjectTypeEXT objectType, 
-		uint64_t object, size_t location, int32_t messageCode, 
-		const char * pLayerPrefix, 
-		const char * pMessage, 
-		void * pUserData)
+		VkDebugReportObjectTypeEXT objectType,
+		uint64_t object, size_t location, int32_t messageCode,
+		const char* pLayerPrefix,
+		const char* pMessage,
+		void* pUserData)
 	{
 		GpuFactory* f = (GpuFactory*)pUserData;
 		return f->report(
 			flags, objectType, object,
-			location, messageCode, pLayerPrefix, 
+			location, messageCode, pLayerPrefix,
 			pMessage);
 	}
 
 	VkBool32 GpuFactory::report(
-		VkDebugReportFlagsEXT flags, 
-		VkDebugReportObjectTypeEXT objectType, 
-		uint64_t object, 
+		VkDebugReportFlagsEXT flags,
+		VkDebugReportObjectTypeEXT objectType,
+		uint64_t object,
 		size_t location,
-		int32_t messageCode, 
-		const char * pLayerPrefix, 
-		const char * pMessage)
+		int32_t messageCode,
+		const char* pLayerPrefix,
+		const char* pMessage)
 	{
 		return VK_TRUE;
 	}
@@ -251,8 +260,8 @@ namespace vulkan
 		}
 	}
 
-	void GpuFactory::getDeviceProps(VkPhysicalDevice device, 
-		VkPhysicalDeviceProperties& deviceProps, 
+	void GpuFactory::getDeviceProps(VkPhysicalDevice device,
+		VkPhysicalDeviceProperties& deviceProps,
 		VkPhysicalDeviceFeatures& deviceFeatures,
 		ngfx::Vec<VkQueueFamilyProperties>& queueProps)
 	{
@@ -289,13 +298,13 @@ namespace vulkan
 		if (!layerName || strlen(layerName) == 0) return false;
 		for (size_t index = 0; index < num(); index++)
 		{
-			if(!strcmp(this->at(index).layerName, layerName))
+			if (!strcmp(this->at(index).layerName, layerName))
 				return true;
 		}
 		return false;
 	}
 
-	bool ExtensionProps::hasExtension(const char * extName) const
+	bool ExtensionProps::hasExtension(const char* extName) const
 	{
 		if (!extName || strlen(extName) == 0) return false;
 		for (size_t index = 0; index < num(); index++)
@@ -325,16 +334,16 @@ namespace vulkan
 		}
 	}
 
-	bool GpuFactory::hasLayer(std::string const & layer_name) const
+	bool GpuFactory::hasLayer(std::string const& layer_name) const
 	{
 		return layer_props_.contains(layer_name);
 	}
 
-	bool GpuFactory::hasExtension(std::string const & extension_name) const
+	bool GpuFactory::hasExtension(std::string const& extension_name) const
 	{
 		return ext_props_.contains(extension_name);
 	}
-	
+
 	void GpuFactory::checkNonUniformIndexing(VkPhysicalDevice physical_device, bool& nonUniformIndex)
 	{
 		nonUniformIndex = false;

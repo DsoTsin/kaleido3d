@@ -1,68 +1,121 @@
-#include "ngfx_shell.h"
 #include "CoreMinimal.h"
+#include "ngfx_shell.h"
 
 static void log_print(int level, const char* msg)
 {
-
+    printf("Log: %s\n", msg);
 }
 
 typedef ngfx::Factory* (*fnCreate)(bool debug, decltype(log_print) call);
+
+class MyGfxApp : public k3d::App {
+public:
+    MyGfxApp()
+        : k3d::App("NewApp", 800, 600)
+    {
+    }
+
+    void OnProcess(k3d::Message& message) override
+    {
+        if (message.type == k3d::Message::Resized) {
+            int x = message.size.height;
+            ++x;
+        }
+    }
+
+    virtual bool OnInit() override
+    {
+        App::OnInit();
+
+        k3d::os::LibraryLoader loader(R"(ngfx_vk.dll)");
+        fnCreate create = (fnCreate)loader.ResolveSymbol("CreateFactory");
+        factory = create(true, log_print);
+        device = factory.getDevice(0);
+        auto handle = HostWindow()->GetHandle();
+        layer = factory.newPresentLayer(
+            ngfx::PresentLayerDesc {
+                ngfx::PixelFormat::BGRA8Unorm, /* format */
+                HostWindow()->Width(), HostWindow()->Height(),
+                ngfx::ColorSpace::SRGBNonLinear, /* colorSpace */
+                true,
+                3,
+                handle, /* hWnd */
+                nullptr /* hInstance */
+            },
+            device
+        );
+
+        fence = device.newFence();
+        gfxQueue = device.newQueue();
+        computeQueue = device.newQueue();
+
+        return true;
+    }
+
+    
+  void OnUpdate() override;
+
+private:
+    ngfxu::Factory factory;
+    ngfxu::Device device;
+    ngfxu::CommandQueue gfxQueue;
+    ngfxu::CommandQueue computeQueue;
+    ngfxu::PresentLayer layer;
+    ngfxu::Fence fence;
+};
+
 /*
  * Metal memoryBarrierWithResources
  */
-int main(int argc, char**argv) {
-    k3d::os::LibraryLoader loader("Kaleido3D.NGFX.dll");
-    fnCreate create = (fnCreate)loader.ResolveSymbol("CreateFactory");
-    ngfxu::Factory factory(create(true, log_print));
+#if _WIN32
+int WinMain(void*, void*, char*, int)
+#else
+int main(int argc, const char* argv[])
+#endif
+{
+    MyGfxApp app;
+    return k3d::RunApplication(app, "MyGfxApp");
+}
 
-	ngfxu::Drawable presentDrawable = factory.getDrawable();
+void MyGfxApp::OnUpdate()
+{
+    auto drawable = layer.nextDrawable();
+    ngfxu::CommandBuffer cmdBuf = gfxQueue.obtainCommandBuffer();
+    ngfxu::CommandBuffer computeCmdBuf = computeQueue.obtainCommandBuffer();
+    ngfxu::ComputeEncoder computeEncoder = computeCmdBuf.newComputeEncoder();
+    // render pass describes the in out resource used in this render pass
+    ngfxu::RenderCommandEncoder renderCmd = cmdBuf.newRenderEncoder(ngfx::RenderpassDesc());
 
-	ngfxu::Device device = factory.getDevice(0);
-	ngfxu::Fence fence = device.newFence();
-	ngfxu::CommandQueue queue = device.newQueue();
-	ngfxu::CommandQueue computeQueue = device.newQueue();
-	ngfxu::Buffer buffer = device.newBuffer(ngfx::BufferDesc{ngfx::BufferUsage::VertexBuffer, 256, 0}, ngfx::StorageMode::Auto);
-    ngfxu::RaytracingAccelerationStructure as = 
-        device.newRaytracingAccelerationStructure(ngfx::RaytracingASDesc());
-    //auto texture = device->newTexture(nullptr, ngfx::StorageMode::Auto);
-	ngfxu::CommandBuffer cmdBuf = queue.obtainCommandBuffer();
-	ngfxu::CommandBuffer computeCmdBuf = computeQueue.obtainCommandBuffer();
-	ngfxu::ComputeEncoder computeEncoder = computeCmdBuf.newComputeEncoder();
-	// render pass describes the in out resource used in this render pass
-	ngfxu::RenderCommandEncoder renderCmd =	cmdBuf.newRenderEncoder(ngfx::RenderpassDesc());
-	
-	//renderCmd.setRenderPipelineState();
-	//renderCmd.setBindGroup();
-	//renderCmd.draw()
-	ngfxu::ParallelRenderEncoder parallelRenderCmd = cmdBuf.newParallelRenderEncoder(ngfx::RenderpassDesc());
-	
-	ngfxu::RenderCommandEncoder subRenderCmd0 = parallelRenderCmd.subEncoder();
-	ngfxu::RenderCommandEncoder subRenderCmd1 = parallelRenderCmd.subEncoder();
-	ngfxu::RenderCommandEncoder subRenderCmd2 = parallelRenderCmd.subEncoder();
-	ngfxu::RenderCommandEncoder subRenderCmd3 = parallelRenderCmd.subEncoder();
+    // renderCmd.setRenderPipelineState();
+    // renderCmd.setBindGroup();
+    // renderCmd.draw()
+    ngfxu::ParallelRenderEncoder parallelRenderCmd = cmdBuf.newParallelRenderEncoder(ngfx::RenderpassDesc());
 
-	subRenderCmd0.endEncode();
-	subRenderCmd1.endEncode();
-	subRenderCmd2.endEncode();
-	subRenderCmd3.endEncode();
+    ngfxu::RenderCommandEncoder subRenderCmd0 = parallelRenderCmd.subEncoder();
+    ngfxu::RenderCommandEncoder subRenderCmd1 = parallelRenderCmd.subEncoder();
+    ngfxu::RenderCommandEncoder subRenderCmd2 = parallelRenderCmd.subEncoder();
+    ngfxu::RenderCommandEncoder subRenderCmd3 = parallelRenderCmd.subEncoder();
 
-	parallelRenderCmd.endEncode();
-	renderCmd.waitForFence(fence); // wait for fence
-	// present drawable
-	renderCmd.presentDrawable(presentDrawable);
-	renderCmd.endEncode();
+    subRenderCmd0.endEncode();
+    subRenderCmd1.endEncode();
+    subRenderCmd2.endEncode();
+    subRenderCmd3.endEncode();
 
-	computeEncoder.dispatch(64, 64, 1);
-	computeEncoder.updateFence(fence); // signal the fence
-	computeEncoder.endEncode();
-	computeCmdBuf.commit();
-	device.wait();
-	// execution order 
-	// renderCmd -> 
-	// parallelRenderCmd -> 
-	// subRenderCmd0 -> subRenderCmd1 -> subRenderCmd2 -> subRenderCmd3
-	cmdBuf.commit();
-	device.wait();
+    parallelRenderCmd.endEncode();
+    renderCmd.waitForFence(fence); // wait for fence
+    // present drawable
+    renderCmd.presentDrawable(drawable);
+    renderCmd.endEncode();
 
-    return 0;
+    computeEncoder.dispatch(64, 64, 1);
+    computeEncoder.updateFence(fence); // signal the fence
+    computeEncoder.endEncode();
+    computeCmdBuf.commit();
+    device.wait();
+    // execution order
+    // renderCmd ->
+    // parallelRenderCmd ->
+    // subRenderCmd0 -> subRenderCmd1 -> subRenderCmd2 -> subRenderCmd3
+    cmdBuf.commit();
+    device.wait();
 }

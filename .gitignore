@@ -21,6 +21,7 @@ Tools/Build/Windows/Intermediate/**
 Tools/Build/Apple/Intermediate/**
 Tools/Build/Linux/Intermediate/**
 Tools/Build/Android/Intermediate/**
+src/Metal/source/air/**
 Build*
 dev/IrisBuild/.vscode/
 !**/build.gradle

@@ -1,67 +1,229 @@
 #include "CoreMinimal.h"
 #include "Base/Platform.h"
 #include <queue>
+#if WINVER > 0x502
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "gdi32.lib")
+// @see https://docs.microsoft.com/en-us/windows/win32/dwm/customframe
+#endif
 
 namespace k3d
 {
-    struct EnvironmentImpl
-    {
-        String InstanceName;
-        String ExecutableDir;
-        String DataDir;
+	struct EnvironmentImpl
+	{
+		String InstanceName;
+		String ExecutableDir;
+		String DataDir;
 
-        EnvironmentImpl()
-            : InstanceName(64)
-            , ExecutableDir(400)
-            , DataDir(400)
-        {
-            String FileName(512);
-            GetModuleFileNameA(NULL, (LPSTR)FileName.Data(), 512);
-            FileName.ReCalculate();
-            auto Pos = FileName.FindLastOf(".");
-            auto BeginPos = FileName.FindLastOf("\\");
-            InstanceName = FileName.SubStr(BeginPos + 1, Pos - BeginPos - 1);
-            ExecutableDir = FileName.SubStr(0, BeginPos);
-            
+		EnvironmentImpl()
+			: InstanceName(64)
+			, ExecutableDir(400)
+			, DataDir(400)
+		{
+			String FileName(512);
+			GetModuleFileNameA(NULL, (LPSTR)FileName.Data(), 512);
+			FileName.ReCalculate();
+			auto Pos = FileName.FindLastOf(".");
+			auto BeginPos = FileName.FindLastOf("\\");
+			InstanceName = FileName.SubStr(BeginPos + 1, Pos - BeginPos - 1);
+			ExecutableDir = FileName.SubStr(0, BeginPos);
 
-            WIN32_FIND_DATAA ffd;
-            HANDLE hFind = FindFirstFileA(os::Join(ExecutableDir, "Data").CStr(), &ffd);
-            String CurrentPath = ExecutableDir;
-            while (INVALID_HANDLE_VALUE == hFind)
-            {
-                auto NewPos = CurrentPath.FindLastOf("\\");
-                if (NewPos == String::npos)
-                {
-                    DataDir = ".";
-                    break;
-                }
-                CurrentPath = CurrentPath.SubStr(0, NewPos);
-                String FindPath = os::Join(CurrentPath, "Data");
-                hFind = FindFirstFileA(FindPath.CStr(), &ffd);
-                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                    DataDir = FindPath;
-                    break;
-                }
-            }
-        }
-    };
+
+			WIN32_FIND_DATAA ffd;
+			HANDLE hFind = FindFirstFileA(os::Join(ExecutableDir, "Data").CStr(), &ffd);
+			String CurrentPath = ExecutableDir;
+			while (INVALID_HANDLE_VALUE == hFind)
+			{
+				auto NewPos = CurrentPath.FindLastOf("\\");
+				if (NewPos == String::npos)
+				{
+					DataDir = ".";
+					break;
+				}
+				CurrentPath = CurrentPath.SubStr(0, NewPos);
+				String FindPath = os::Join(CurrentPath, "Data");
+				hFind = FindFirstFileA(FindPath.CStr(), &ffd);
+				if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					DataDir = FindPath;
+					break;
+				}
+			}
+		}
+	};
 	namespace WindowImpl
 	{
 		namespace Global {
 			unsigned int				gWindowCount = 0;
+			HICON						gIcon = NULL;
 			TCHAR						gClassName[256] = "Kaleido3D";
+
+			typedef NTSTATUS(WINAPI* PFNGetVersionInfo)(OSVERSIONINFOEXW*);
+			struct OsVersion {
+				OsVersion() {
+					OSVERSIONINFOEXW osVersion;
+					ZeroMemory(&osVersion, sizeof(OSVERSIONINFOEXW));
+					osVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+					HMODULE ntdll = GetModuleHandleA("ntdll");
+					auto rtlGetVersion = (PFNGetVersionInfo)GetProcAddress(ntdll, "RtlGetVersion");
+					NTSTATUS status = 0;
+					if (rtlGetVersion)
+					{
+						status = rtlGetVersion(&osVersion);
+						if (status == 0)
+						{
+							Major = osVersion.dwMajorVersion;
+							Minor = osVersion.dwMinorVersion;
+							Build = osVersion.dwBuildNumber;
+						}
+					}
+				}
+
+				U32 Major;
+				U32 Minor;
+				U32 Build;
+
+				bool supportMica() const { return Build >= 22000; }
+				bool supportBackdrop() const { return Build >= 22523; }
+			};
+
+			OsVersion gOsVersion;
 		}
 
-		class WindowsWindow : public IWindow
+		typedef enum _WINDOWCOMPOSITIONATTRIB
+		{
+			WCA_UNDEFINED = 0,
+			WCA_NCRENDERING_ENABLED = 1,
+			WCA_NCRENDERING_POLICY = 2,
+			WCA_TRANSITIONS_FORCEDISABLED = 3,
+			WCA_ALLOW_NCPAINT = 4,
+			WCA_CAPTION_BUTTON_BOUNDS = 5,
+			WCA_NONCLIENT_RTL_LAYOUT = 6,
+			WCA_FORCE_ICONIC_REPRESENTATION = 7,
+			WCA_EXTENDED_FRAME_BOUNDS = 8,
+			WCA_HAS_ICONIC_BITMAP = 9,
+			WCA_THEME_ATTRIBUTES = 10,
+			WCA_NCRENDERING_EXILED = 11,
+			WCA_NCADORNMENTINFO = 12,
+			WCA_EXCLUDED_FROM_LIVEPREVIEW = 13,
+			WCA_VIDEO_OVERLAY_ACTIVE = 14,
+			WCA_FORCE_ACTIVEWINDOW_APPEARANCE = 15,
+			WCA_DISALLOW_PEEK = 16,
+			WCA_CLOAK = 17,
+			WCA_CLOAKED = 18,
+			WCA_ACCENT_POLICY = 19,
+			WCA_FREEZE_REPRESENTATION = 20,
+			WCA_EVER_UNCLOAKED = 21,
+			WCA_VISUAL_OWNER = 22,
+			WCA_LAST = 23
+		} WINDOWCOMPOSITIONATTRIB;
+
+		typedef struct _WINDOWCOMPOSITIONATTRIBDATA
+		{
+			WINDOWCOMPOSITIONATTRIB Attrib;
+			PVOID pvData;
+			SIZE_T cbData;
+		} WINDOWCOMPOSITIONATTRIBDATA;
+
+		typedef enum _ACCENT_STATE
+		{
+			ACCENT_DISABLED = 0,
+			ACCENT_ENABLE_GRADIENT = 1,
+			ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
+			ACCENT_ENABLE_BLURBEHIND = 3,
+			ACCENT_ENABLE_ACRYLICBLURBEHIND = 4,
+			ACCENT_INVALID_STATE = 5
+		} ACCENT_STATE;
+
+		typedef struct _ACCENT_POLICY
+		{
+			ACCENT_STATE AccentState;
+			DWORD AccentFlags;
+			DWORD GradientColor;
+			DWORD AnimationId;
+		} ACCENT_POLICY;
+
+		WINUSERAPI
+			BOOL
+			WINAPI
+			GetWindowCompositionAttribute(
+				_In_ HWND hWnd,
+				_Inout_ WINDOWCOMPOSITIONATTRIBDATA* pAttrData);
+
+		typedef BOOL(WINAPI* pfnGetWindowCompositionAttribute)(HWND, WINDOWCOMPOSITIONATTRIBDATA*);
+
+		WINUSERAPI
+			BOOL
+			WINAPI
+			SetWindowCompositionAttribute(
+				_In_ HWND hWnd,
+				_Inout_ WINDOWCOMPOSITIONATTRIBDATA* pAttrData);
+
+		typedef BOOL(WINAPI* pfnSetWindowCompositionAttribute)(HWND, WINDOWCOMPOSITIONATTRIBDATA*);
+
+		void setAcrylicEffect(HWND hWnd, DWORD accentFlags, DWORD gradientColor, DWORD animationId)
+		{
+			HMODULE hUser = GetModuleHandleW(L"user32.dll");
+			if (hUser)
+			{
+				pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
+				if (setWindowCompositionAttribute)
+				{
+					ACCENT_POLICY accent = { ACCENT_ENABLE_ACRYLICBLURBEHIND, accentFlags, gradientColor, animationId };
+					WINDOWCOMPOSITIONATTRIBDATA data;
+					data.Attrib = WCA_ACCENT_POLICY;
+					data.pvData = &accent;
+					data.cbData = sizeof(accent);
+					setWindowCompositionAttribute(hWnd, &data);
+				}
+			}
+		}
+
+		class WindowsWindow : public IWindow, public IDropTarget
 		{
 		public:
 			WindowsWindow() = default;
-			WindowsWindow(const char *windowName, int width, int height);
+			WindowsWindow(const char* windowName, int width, int height);
+
+			// IUnknown
+			HRESULT WINAPI QueryInterface(REFIID iid, void** ppvObject) override
+			{
+				if (IID_IDropTarget == iid || IID_IUnknown == iid)
+				{
+					AddRef();
+					*ppvObject = (IDropTarget*)(this);
+					return S_OK;
+				}
+				else
+				{
+					*ppvObject = NULL;
+					return E_NOINTERFACE;
+				}
+			}
+			
+			ULONG WINAPI AddRef(void) override
+			{
+				// We only do this for correctness checking
+				InterlockedIncrement(&m_OLERC);
+				return m_OLERC;
+			}
+
+			ULONG WINAPI Release(void) override
+			{
+				InterlockedDecrement(&m_OLERC);
+				return m_OLERC;
+			}
+
+			// IDropTarget interface
+			virtual HRESULT WINAPI DragEnter(__RPC__in_opt IDataObject* DataObjectPointer, ::DWORD KeyState, POINTL CursorPosition, __RPC__inout::DWORD* CursorEffect) override;
+			virtual HRESULT WINAPI DragOver(::DWORD KeyState, POINTL CursorPosition, __RPC__inout::DWORD* CursorEffect) override;
+			virtual HRESULT WINAPI DragLeave(void) override;
+			virtual HRESULT WINAPI Drop(__RPC__in_opt IDataObject* DataObjectPointer, ::DWORD KeyState, POINTL CursorPosition, __RPC__inout::DWORD* CursorEffect) override;
 
 			/**
 			* Interfaces
 			*/
-			void	SetWindowCaption(const char * name) override
+			void	SetWindowCaption(const char* name) override
 			{
 				SetCaption(name);
 			}
@@ -71,12 +233,12 @@ namespace k3d
 				return true;
 			}
 
-			void*	GetHandle() const override
+			void* GetHandle() const override
 			{
 				return handle;
 			}
 
-			bool	PollMessage(Message & message) override
+			bool	PollMessage(Message& message) override
 			{
 				if (PopMessage(message, false))
 				{
@@ -109,13 +271,13 @@ namespace k3d
 			LONG_PTR	callback;
 
 			int			Init();
-			void		SetCaption(const char * name);
+			void		SetCaption(const char* name);
 			void		Show(WindowMode mode) override;
 			void		Resize(int width, int height) override;
 			void		Move(int x, int y) override;
 
-			void		PushMessage(const Message & message);
-			bool		PopMessage(Message & message, bool block);
+			void		PushMessage(const Message& message);
+			bool		PopMessage(Message& message, bool block);
 			void		ProcessMessage();
 
 			static LRESULT CALLBACK WindowProc(HWND hwnd, U32 msg, WPARAM wParam, LPARAM lParam);
@@ -125,6 +287,11 @@ namespace k3d
 			void		ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
 			std::queue<Message> m_MessageQueue;
+
+		private:
+			int			m_InitWidth;
+			int			m_InitHeight;
+			U64			m_OLERC = 0;
 		};
 
 		extern int InitApp();
@@ -251,6 +418,111 @@ namespace k3d
 			return Keyboard::Unknown;
 		}
 
+		enum class WindowStyle : DWORD
+		{
+			Windowed = WS_OVERLAPPEDWINDOW | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+			AeroBorderless = WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
+			BasicBorderless = WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX
+		};
+
+		static bool IsMaxiamized(HWND hwnd)
+		{
+			WINDOWPLACEMENT placement;
+			if (!::GetWindowPlacement(hwnd, &placement))
+			{
+				return false;
+			}
+			return placement.showCmd == SW_MAXIMIZE;
+		}
+
+		static bool CompositionEnabled()
+		{
+			BOOL res = FALSE;
+			bool success = ::DwmIsCompositionEnabled(&res) == S_OK;
+			return res && success;
+		}
+
+		static WindowStyle GetPreferedWindowStyle()
+		{
+			return CompositionEnabled() ? WindowStyle::AeroBorderless : WindowStyle::BasicBorderless;
+		}
+
+		static void SetShadow(HWND handle, bool enabled)
+		{
+			if (CompositionEnabled())
+			{
+				static const MARGINS shadow_state[2]{ { 0,0,0,0 },{ 1,1,1,1 } };
+				::DwmExtendFrameIntoClientArea(handle, &shadow_state[enabled]);
+			}
+		}
+
+		void AdjustMaximizedClientRect(HWND window, RECT& rect)
+		{
+			if (!IsMaxiamized(window))
+			{
+				return;
+			}
+
+			auto monitor = ::MonitorFromWindow(window, MONITOR_DEFAULTTONULL);
+			if (!monitor)
+			{
+				return;
+			}
+
+			MONITORINFO monitor_info{};
+			monitor_info.cbSize = sizeof(monitor_info);
+			if (!::GetMonitorInfoW(monitor, &monitor_info))
+			{
+				return;
+			}
+
+			rect = monitor_info.rcWork;
+		}
+
+		static LRESULT HitTest(HWND handle, POINT cursor)
+		{
+			const POINT border
+			{
+				::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER),
+				::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)
+			};
+			RECT window = {};
+			if (!::GetWindowRect(handle, &window)) 
+			{
+				return HTNOWHERE;
+			}
+			const auto drag = HTCAPTION/*HTCLIENT*/;
+
+			enum RegionMask {
+				Client = 0b0000,
+				Left = 0b0001,
+				Right = 0b0010,
+				Top = 0b0100,
+				Bottom = 0b1000,
+			};
+
+			const auto result =
+				Left * (cursor.x < (window.left + border.x)) |
+				Right * (cursor.x >= (window.right - border.x)) |
+				Top * (cursor.y < (window.top + border.y)) |
+				Bottom * (cursor.y >= (window.bottom - border.y));
+
+			bool borderless_resize = true;
+
+			switch (result) {
+			case Left: return borderless_resize ? HTLEFT : drag;
+			case Right: return borderless_resize ? HTRIGHT : drag;
+			case Top: return borderless_resize ? HTTOP : drag;
+			case Bottom: return borderless_resize ? HTBOTTOM : drag;
+			case Top | Left: return borderless_resize ? HTTOPLEFT : drag;
+			case Top | Right: return borderless_resize ? HTTOPRIGHT : drag;
+			case Bottom | Left: return borderless_resize ? HTBOTTOMLEFT : drag;
+			case Bottom | Right: return borderless_resize ? HTBOTTOMRIGHT : drag;
+			case Client: return drag;
+			default: return HTNOWHERE;
+			}
+		}
+
 		LRESULT WindowsWindow::WindowProc(HWND hwnd, U32 msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (msg == WM_CREATE)
@@ -261,9 +533,32 @@ namespace k3d
 			WindowsWindow* window = hwnd ? reinterpret_cast<WindowsWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) : NULL;
 			if (window)
 			{
+				switch (msg) {
+				case WM_NCCALCSIZE:
+					if (wParam == TRUE)
+					{
+						auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+						AdjustMaximizedClientRect(hwnd, params.rgrc[0]);
+						return 0;
+					}
+					break;
+				case WM_NCHITTEST:
+					return HitTest(hwnd, POINT{ (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam) });
+				case WM_NCACTIVATE:
+					if (!CompositionEnabled())
+					{
+						return 1;
+					}
+					break;
+				default:
+					break;
+				}
+
 				window->ProcessMessage(msg, wParam, lParam);
 				if (window->callback)
+				{
 					return CallWindowProc(reinterpret_cast<WNDPROC>(window->callback), hwnd, msg, wParam, lParam);
+				}
 			}
 
 			if (msg == WM_CLOSE)
@@ -274,23 +569,49 @@ namespace k3d
 			return DefWindowProc(hwnd, msg, wParam, lParam);
 		}
 
-		WindowsWindow::WindowsWindow(const char * windowName, int width, int height)
+		WindowsWindow::WindowsWindow(const char* windowName, int width, int height)
+			: m_InitWidth(width)
+			, m_InitHeight(height)
+			, m_OLERC(0)
 		{
 			Init();
 			SetCaption(windowName);
-			Resize(width, height);
+			//Resize(width, height);
+		}
+
+		HRESULT WINAPI WindowsWindow::DragEnter(IDataObject* DataObjectPointer, ::DWORD KeyState, POINTL CursorPosition, ::DWORD* CursorEffect)
+		{
+			return E_NOTIMPL;
+		}
+
+		HRESULT WINAPI WindowsWindow::DragOver(::DWORD KeyState, POINTL CursorPosition, ::DWORD* CursorEffect)
+		{
+			return E_NOTIMPL;
+		}
+
+		HRESULT WINAPI WindowsWindow::DragLeave(void)
+		{
+			return E_NOTIMPL;
+		}
+
+		HRESULT WINAPI WindowsWindow::Drop(IDataObject* DataObjectPointer, ::DWORD KeyState, POINTL CursorPosition, ::DWORD* CursorEffect)
+		{
+			return E_NOTIMPL;
 		}
 
 		int WindowsWindow::Init() {
+			if (Global::gIcon == NULL)
+			{
+				Global::gIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(101));
+			}
 			if (Global::gWindowCount == 0)
 				RegisterWindowClass();
 
 			callback = NULL;
-			// Create window
-			RECT rc = { 0, 0, 640, 480 };
-			::AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-			handle = CreateWindow(Global::gClassName, "Default Window Name", WS_OVERLAPPEDWINDOW,
-				CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL,
+			bool bSupportMica = Global::gOsVersion.supportMica();
+
+			handle = CreateWindowEx(0, Global::gClassName, "Default Window Name", (DWORD)GetPreferedWindowStyle(),
+				CW_USEDEFAULT, CW_USEDEFAULT, m_InitWidth, m_InitHeight, NULL, NULL,
 				GetModuleHandle(NULL), this);
 
 			if (!handle) {
@@ -298,13 +619,45 @@ namespace k3d
 				return E_FAIL;
 			}
 
-			Global::gWindowCount++;
-			::ShowWindow(handle, SW_NORMAL);
+#if WINVER >= 0x0601
+			if (RegisterTouchWindow(handle, 0) == false) {
+				//uint32 Error = GetLastError();
+			}
+#endif
 
+#if 0
+			const DWMNCRENDERINGPOLICY RenderingPolicy = DWMNCRP_DISABLED;
+			SUCCEEDED(DwmSetWindowAttribute(handle, DWMWA_NCRENDERING_POLICY, &RenderingPolicy, sizeof(RenderingPolicy)));
+			const BOOL bEnableNCPaint = false;
+			SUCCEEDED(DwmSetWindowAttribute(handle, DWMWA_ALLOW_NCPAINT, &bEnableNCPaint, sizeof(bEnableNCPaint)));
+#endif
+			/*
+				const DWMWA_MICA_EFFECT: DWMWINDOWATTRIBUTE = 1029;
+				const DWMWA_SYSTEMBACKDROP_TYPE: DWMWINDOWATTRIBUTE = 38;
+			*/
+			//::SendMessage(handle, WM_SETICON, ICON_BIG, (LPARAM)Global::gIcon);
+			::SetWindowLongPtrW(handle, GWL_STYLE, static_cast<LONG>(WindowStyle::AeroBorderless));
+			SetShadow(handle, true);
+			UINT SetWindowPositionFlags =
+				SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+				SWP_FRAMECHANGED;
+			::SetWindowPos(handle, nullptr, 0, 0, 0, 0, SetWindowPositionFlags);
+			
+			::OleInitialize(NULL);
+			::RegisterDragDrop(handle, this);
+			// RevokeDragDrop
+
+			const DWORD AllowMica = 1;
+			SUCCEEDED(DwmSetWindowAttribute(handle, 1029, &AllowMica, sizeof(AllowMica)));
+			const DWORD AttribWindow = DWMSBT_TRANSIENTWINDOW;
+			SUCCEEDED(DwmSetWindowAttribute(handle, 38, &AttribWindow, sizeof(AttribWindow)));
+
+			Global::gWindowCount++;
+			
 			return S_OK;
 		}
 
-		void WindowsWindow::SetCaption(const char * name) {
+		void WindowsWindow::SetCaption(const char* name) {
 			assert(handle != nullptr && "handle cannot be nullptr");
 			::SetWindowTextA(handle, name);
 		}
@@ -318,48 +671,58 @@ namespace k3d
 				break;
 			case WindowMode::NORMAL:
 			default:
+			{
+				RECT rect = {};
+				::GetWindowRect(handle, &rect);
+				int screenWidth = ::GetSystemMetrics(SM_CXSCREEN);
+				int screenHeight = ::GetSystemMetrics(SM_CYSCREEN);
+				int x = (screenWidth - rect.right + rect.left) / 2;
+				int y = (screenHeight - rect.bottom + rect.top) / 2;
+				x = x > 0 ? x : 0;
+				y = y > 0 ? y : 0;
+				::SetWindowPos(handle, NULL, x, y, rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
 				::ShowWindow(handle, SW_NORMAL);
 				break;
+			}
 			}
 		}
 
 		void WindowsWindow::Resize(int width, int height) {
 			assert(handle != nullptr);
-			RECT rect;
-			GetWindowRect(handle, &rect);
+			RECT rect = {};
+			::GetWindowRect(handle, &rect);
 			::SetWindowPos(handle, NULL, rect.left, rect.top, width, height, SWP_SHOWWINDOW);
 		}
 
 		void WindowsWindow::Move(int x, int y) {
 			assert(handle != nullptr);
 			RECT rect;
-			GetWindowRect(handle, &rect);
+			::GetWindowRect(handle, &rect);
 			::SetWindowPos(handle, NULL, x, y, rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
 		}
 
 		void WindowsWindow::RegisterWindowClass()
 		{
 			WNDCLASS windowClass;
-			windowClass.style = 0;
+			windowClass.style = CS_HREDRAW | CS_VREDRAW;
 			windowClass.lpfnWndProc = &WindowsWindow::WindowProc;
 			windowClass.cbClsExtra = 0;
 			windowClass.cbWndExtra = 0;
 			windowClass.hInstance = GetModuleHandle(NULL);
-			windowClass.hIcon = NULL;
+			windowClass.hIcon = Global::gIcon;
 			windowClass.hCursor = 0;
-			windowClass.hbrBackground = 0;
+			windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 			windowClass.lpszMenuName = NULL;
 			windowClass.lpszClassName = Global::gClassName;
-			RegisterClass(&windowClass);
+			::RegisterClass(&windowClass);
 		}
 
-
-		void WindowsWindow::PushMessage(const Message & message)
+		void WindowsWindow::PushMessage(const Message& message)
 		{
 			m_MessageQueue.push(message);
 		}
 
-		bool WindowsWindow::PopMessage(Message & message, bool block)
+		bool WindowsWindow::PopMessage(Message& message, bool block)
 		{
 			if (m_MessageQueue.empty())
 			{
@@ -416,7 +779,24 @@ namespace k3d
 
 			switch (message)
 			{
-				// Destroy event
+			case WM_NCPAINT:
+				break;
+			case WM_ACTIVATE:
+			{
+				break;
+			}
+			case WM_PAINT:
+			{
+				//RECT client_rect;
+				//::GetClientRect(handle, &client_rect);
+				//PAINTSTRUCT ps;
+				//HDC hdc = ::BeginPaint(handle, &ps);
+				//::FillRect(hdc, &ps.rcPaint,
+				//	(HBRUSH)(COLOR_HIGHLIGHT + 1));
+				//::EndPaint(handle, &ps);
+				break;
+			}
+			// Destroy event
 			case WM_DESTROY:
 			{
 				// Here we must cleanup resources !
@@ -712,6 +1092,9 @@ namespace k3d
 					break;
 				}
 			}
+			case WM_NCHITTEST: {
+				break;
+			}
 			default:
 				if (message >= WM_USER)
 				{
@@ -722,43 +1105,43 @@ namespace k3d
 		}
 	}
 
-	IWindow::Ptr MakePlatformWindow(const char *windowName, int width, int height)
+	IWindow::Ptr MakePlatformWindow(const char* windowName, int width, int height)
 	{
 		return MakeShared<WindowImpl::WindowsWindow>(windowName, width, height);
 	}
 
-    Environment::Environment() 
-    {
-        d = new EnvironmentImpl;
-    }
+	Environment::Environment()
+	{
+		d = new EnvironmentImpl;
+	}
 
-    Environment::~Environment() 
-    {
-        delete d;
-    }
+	Environment::~Environment()
+	{
+		delete d;
+	}
 
-    String Environment::GetLogDir() const
-    {
-        return d->ExecutableDir;
-    }
+	String Environment::GetLogDir() const
+	{
+		return d->ExecutableDir;
+	}
 
-    String Environment::GetModuleDir() const
-    {
-        return d->ExecutableDir;
-    }
+	String Environment::GetModuleDir() const
+	{
+		return d->ExecutableDir;
+	}
 
-    String Environment::GetDataDir()const
-    {
-        return d->DataDir;
-    }
+	String Environment::GetDataDir()const
+	{
+		return d->DataDir;
+	}
 
-    String Environment::GetInstanceName() const
-    {
-        return d->InstanceName;
-    }
+	String Environment::GetInstanceName() const
+	{
+		return d->InstanceName;
+	}
 }
 
-K3D_CORE_API char** CommandLineToArgvA(const char* lpCmdLine, int *pNumArgs)
+K3D_CORE_API char** CommandLineToArgvA(const char* lpCmdLine, int* pNumArgs)
 {
 	int retval;
 	retval = MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, lpCmdLine, -1, NULL, 0);

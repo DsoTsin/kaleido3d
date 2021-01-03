@@ -1,0 +1,21 @@
+[package]
+name = "mix_device"
+version = "0.1.0"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+name = "mix_device"
+path = "src/lib.rs"
+
+[dependencies]
+serde_derive = "1.0.34"
+bincode = "1.0.0"
+libc = "0.2"
+regex = "1.5.4"
+lazy_static = "1.4.0"
+# rustls = "0.19.0"
+serde = { version = "1.0.123", features = ["derive"] }
+plist = { version = "1.1.0", features = [ "enable_unstable_features_that_may_break_with_minor_version_bumps" ] }
+
+[build-dependencies]
+cbindgen = "0.19.0"
