@@ -43,7 +43,7 @@ namespace k3d
         public:
             enum Face { COPLANAR, FRONT, BACK };
 
-            Plane() [[simd]]
+            Plane()
             {
                 Data = { 0.f, 1.f, 0.f, 0 };
             }
@@ -54,7 +54,7 @@ namespace k3d
                 Dist = -DotProduct(normal, position);
             }
 
-            Plane(Vec4f const& Param) [[simd]]
+            Plane(Vec4f const& Param)
             {
                 Data = Param;
             }
@@ -114,7 +114,7 @@ namespace k3d
             }
 
             // Available For SIMD Acceralation
-            explicit Sphere(Vec4f const& PosAndRad) [[simd]]
+            explicit Sphere(Vec4f const& PosAndRad)
             {
                 Data = PosAndRad;
             }
@@ -141,7 +141,7 @@ namespace k3d
             Vec4f Max;
             
             //! Available For SIMD Acceralation
-            AABB& operator |= (AABB const & rhs) [[simd]]
+            AABB& operator |= (AABB const & rhs)
             {
                 Min = Minimize<float, 4>(rhs.Min, Min);
                 Max = Maximize<float, 4>(rhs.Max, Max);

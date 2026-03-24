@@ -37,21 +37,29 @@
 	#pragma comment(lib, "Ws2_32.lib")
 	#pragma comment(lib, "User32.lib")
 	#pragma comment(lib, "shlwapi.lib")
-#elif K3DPLATFORM_OS_UNIX
+#elif K3DPLATFORM_OS_UNIX || K3DPLATFORM_OS_PROSPERO
     #include <unistd.h>
-    #include <dlfcn.h>
     #include <cstring>
     #include <errno.h>
     #include <cmath>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <dirent.h>
-    #include <time.h>
+	    #include <sys/types.h>
+	    #include <sys/stat.h>
+	    #if !K3DPLATFORM_OS_PROSPERO
+	        #include <dirent.h>
+	    #endif
+	    #include <time.h>
 /** Socket **/
-    #include <sys/socket.h>
-    #include <arpa/inet.h>
+	    #include <sys/socket.h>
+	    #include <netinet/in.h>
+	    #if K3DPLATFORM_OS_PROSPERO
+	        #include <netinet6/in6.h>
+	    #endif
+	    #include <arpa/inet.h>
     #include <pthread.h>
 /******/
+    #if !K3DPLATFORM_OS_PROSPERO
+        #include <dlfcn.h>
+    #endif
     #if K3DPLATFORM_OS_IOS
         #include <sys/fcntl.h>
     #else

@@ -18,6 +18,10 @@
 #endif
 #endif
 
+#if K3DPLATFORM_OS_PROSPERO
+#include <kernel.h>
+#endif
+
 namespace k3d
 {
 namespace os 
@@ -102,8 +106,12 @@ File::Open(const char* fileName, IOFlag flag)
   if (m_hFile == INVALID_HANDLE_VALUE)
     return false;
 #else
+#if K3DPLATFORM_OS_PROSPERO
+  m_fd = sceKernelOpen(fileName, flag == IOFlag::Read ? SCE_KERNEL_O_RDONLY: (SCE_KERNEL_O_WRONLY | SCE_KERNEL_O_CREAT), 0);
+#else
   m_fd =
     ::open(fileName, flag == IOFlag::Read ? O_RDONLY : (O_WRONLY | O_CREAT), S_IRWXU);
+#endif
   if (m_fd < 0) {
     int err = errno;
     if (err == EACCES) {
@@ -125,6 +133,12 @@ File::GetSize()
   {
       return -1;
   }
+#elif K3DPLATFORM_OS_PROSPERO
+  SceKernelStat stat;
+  int err = sceKernelFstat(m_fd, &stat);
+  if (err != 0)
+      return -1;
+  len = stat.st_size;
 #else
   struct stat st;
   if (fstat(m_fd, &st) != 0)
@@ -165,6 +179,9 @@ File::Read(char* data, size_t len)
   } while (totalRead < (I64)len);
 
   return totalRead;
+#elif K3DPLATFORM_OS_PROSPERO
+  size_t bytes = sceKernelRead(m_fd, data, len);
+  return bytes;
 #else
   size_t _read = 0;
   _read = ::read(m_fd, data, len);
@@ -178,6 +195,8 @@ File::Write(const void* data, size_t len)
   size_t written = 0;
 #if K3DPLATFORM_OS_WINDOWS
   WriteFile(m_hFile, data, (DWORD)len, (LPDWORD)&written, NULL);
+#elif K3DPLATFORM_OS_PROSPERO
+  written = sceKernelWrite(m_fd, data, len);
 #else
   written = ::write(m_fd, data, len);
 #endif
@@ -191,6 +210,8 @@ File::Seek(size_t offset)
 {
 #if K3DPLATFORM_OS_WINDOWS
   m_CurOffset = ::SetFilePointer(m_hFile, (LONG)offset, NULL, 0);
+#elif K3DPLATFORM_OS_PROSPERO
+  m_CurOffset = ::sceKernelLseek(m_fd, offset, SEEK_SET);
 #else
   m_CurOffset = ::lseek(m_fd, offset, SEEK_SET);
 #endif
@@ -202,6 +223,8 @@ File::Skip(size_t offset)
 {
 #if K3DPLATFORM_OS_WINDOWS
   m_CurOffset = ::SetFilePointer(m_hFile, (LONG)offset, NULL, 1);
+#elif K3DPLATFORM_OS_PROSPERO
+  m_CurOffset = ::sceKernelLseek(m_fd, offset, SEEK_CUR);
 #else
   m_CurOffset = ::lseek(m_fd, offset, SEEK_CUR);
 #endif
@@ -221,9 +244,16 @@ File::Close()
     ::CloseHandle(m_hFile);
     m_hFile = NULL;
   }
+#elif K3DPLATFORM_OS_PROSPERO
+  if (m_fd >= 0) {
+    ::sceKernelClose(m_fd);
+    m_fd = -1;
+  }
 #else
-  if (m_fd)
+  if (m_fd >= 0) {
     ::close(m_fd);
+    m_fd = -1;
+  }
 #endif
 }
 
@@ -400,6 +430,10 @@ MemMapFile::Close()
   // TODO : need fix
   munmap(m_pData, m_szFile);
   close(m_Fd);
+#elif K3DPLATFORM_OS_PROSPERO
+  // TODO : need fix
+  munmap(m_pData, m_szFile);
+  sceKernelClose(m_Fd);
 #endif
 }
 
@@ -413,10 +447,17 @@ struct LibraryPrivate
 {
 #if K3DPLATFORM_OS_WINDOWS
     HMODULE Library;
+#elif K3DPLATFORM_OS_PROSPERO
+    SceKernelModule Library;
 #else
     void*   Library;
 #endif
-    LibraryPrivate() : Library(nullptr) {}
+
+#if K3DPLATFORM_OS_PROSPERO
+    LibraryPrivate() : Library(0) {}
+#else
+    LibraryPrivate() : Library(NULL) {}
+#endif
 
     ~LibraryPrivate()
     {
@@ -424,10 +465,17 @@ struct LibraryPrivate
         {
 #if K3DPLATFORM_OS_WINDOWS
             ::FreeLibrary(Library);
+#elif K3DPLATFORM_OS_PROSPERO
+            sceKernelStopUnloadModule(Library, 0, NULL, 0, NULL, NULL);
 #else
             ::dlclose(Library);
 #endif
-            Library = nullptr;
+
+#if K3DPLATFORM_OS_PROSPERO
+            Library = 0;
+#else
+            Library = NULL;
+#endif
         }
     }
 
@@ -441,6 +489,15 @@ struct LibraryPrivate
         MultiByteToWideChar(CP_UTF8, 0, path, strlen(path), WPath, 2048);
         Library = LoadPackagedLibrary(WPath, 0);
 #endif
+#elif K3DPLATFORM_OS_PROSPERO
+        String loadPath(path);
+        if (strchr(path, '/') == nullptr && strchr(path, '\\') == nullptr && strstr(path, ".prx") == nullptr)
+        {
+            //loadPath.Clear();
+            loadPath.AppendSprintf("%s/lib%s.prx", GetEnv().GetModuleDir().CStr(), path);
+        }
+        int startResult;
+        Library = sceKernelLoadStartModule(loadPath.CStr(), 0, NULL, 0, NULL, &startResult);
 #else
         Library = ::dlopen(path, RTLD_LAZY);
 #endif
@@ -451,6 +508,10 @@ struct LibraryPrivate
     {
 #if K3DPLATFORM_OS_WINDOWS
         return ::GetProcAddress(Library, symbol);
+#elif K3DPLATFORM_OS_PROSPERO
+        void* addr;
+        sceKernelDlsym(Library, symbol, &addr);
+        return addr;
 #else
         return ::dlsym(Library, symbol);
 #endif
@@ -484,6 +545,8 @@ bool MakeDir(const char* name)
 #if K3DPLATFORM_OS_WINDOWS
     auto ret = CreateDirectoryA(name, nullptr);
     return TRUE == ret;
+#elif K3DPLATFORM_OS_PROSPERO
+    return sceKernelMkdir(name, 0777) == 0;
 #else
     int status = mkdir(name, S_IRWXU);
     return status == 0;
@@ -494,8 +557,12 @@ bool Exists(const char* name)
 {
 #if K3DPLATFORM_OS_WIN
     return TRUE == PathFileExistsA(name);
-#elif K3DPLATFORM_OS_UNIX
-    return ::opendir(name) != nullptr;
+#elif K3DPLATFORM_OS_PROSPERO
+    SceKernelStat statBuf;
+    return sceKernelStat(name, &statBuf) == 0;
+#else
+    struct stat statBuf;
+    return ::stat(name, &statBuf) == 0;
 #endif
 }
 
@@ -543,6 +610,16 @@ bool Remove(const char* lpszDir)
     RemoveDirectoryA(szDelDir);
     return true;
 #else
+#if K3DPLATFORM_OS_PROSPERO
+    SceKernelStat statBuf;
+    if (sceKernelStat(lpszDir, &statBuf) != 0) {
+        return false;
+    }
+    if (S_ISDIR(statBuf.st_mode)) {
+        return sceKernelRmdir(lpszDir) == 0;
+    }
+    return sceKernelUnlink(lpszDir) == 0;
+#else
     DIR* d = opendir(lpszDir);
     size_t path_len = strlen(lpszDir);
     int r = -1;
@@ -580,6 +657,7 @@ bool Remove(const char* lpszDir)
         r = rmdir(lpszDir);
     }
     return r != -1;
+#endif
 #endif
 }
 
@@ -628,6 +706,10 @@ Exec(const char* cmd, char* const* argv)
 #else
   return -1;
 #endif
+#elif K3DPLATFORM_OS_PROSPERO
+  K3D_UNUSED(cmd);
+  K3D_UNUSED(argv);
+  return -1;
 #else
   return ::execv(cmd, argv);
 #endif
@@ -649,6 +731,8 @@ Sleep(U32 ms)
 {
 #if K3DPLATFORM_OS_WINDOWS
   ::Sleep(ms);
+#elif K3DPLATFORM_OS_PROSPERO
+  sceKernelUsleep(ms * 1000);
 #else
   ::usleep(ms * 1000);
 #endif
@@ -668,6 +752,8 @@ GetCpuCoreNum()
   return sSysInfo.dwNumberOfProcessors;
 #elif K3DPLATFORM_OS_UNIX
   return sysconf(_SC_NPROCESSORS_CONF);
+#elif K3DPLATFORM_OS_PROSPERO
+  return 8;
 #endif
 }
 
@@ -966,6 +1052,10 @@ void Thread::InternalStart(ThrRoutine Routine, __internal::ThreadClosure* Closur
           ap.affinity_tag = 1<<m_CoreId;
           thread_policy_set(pthread_mach_thread_np((pthread_t)m_ThreadHandle), THREAD_AFFINITY_POLICY,
                             (integer_t*)&ap, THREAD_AFFINITY_POLICY_COUNT);
+#elif K3DPLATFORM_OS_PROSPERO
+        // The generic POSIX affinity path uses Linux cpu_set_t APIs, which are not
+        // source-compatible with Prospero's cpuset_t interfaces.
+        K3D_UNUSED(m_CoreId);
 #else
         cpu_set_t mask;
         CPU_ZERO(&mask);
@@ -1220,7 +1310,7 @@ public:
 #if K3DPLATFORM_OS_WINDOWS
         unsigned long ul = bBlock ? 0 : 1;
         ioctlsocket(Raw, FIONBIO, &ul);
-#elif K3DPLATFORM_OS_UNIX
+#elif K3DPLATFORM_OS_UNIX || K3DPLATFORM_OS_PROSPERO
         int flag = fcntl(Raw, F_GETFL, 0);
         flag = bBlock ? (flag & ~O_NONBLOCK) : (flag | O_NONBLOCK);
         fcntl(Raw, F_SETFL, flag);
@@ -1267,7 +1357,7 @@ public:
 #if K3DPLATFORM_OS_WINDOWS
         ::closesocket(Raw);
         Raw = INVALID_SOCKET;
-#elif K3DPLATFORM_OS_UNIX
+#elif K3DPLATFORM_OS_UNIX || K3DPLATFORM_OS_PROSPERO
         close(Raw);
         Raw = -1;
 #endif

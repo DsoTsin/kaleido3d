@@ -49,5 +49,34 @@ cproj("ngfx_dx12") {
     private = {
         inc_dirs = ["Public"]
     }
-    link_targets = ["vulkan", "kCore"]
+    libs = ["d3d12.lib", "dxgi.lib", "d3dcompiler.lib"]
+    link_targets = ["kCore"]
+}
+
+cproj("ngfx_agc") {
+    type = "shared_lib"
+    srcs = [
+        "Public/**.h",
+        "Private/ShaderLab/**.cpp",
+        "Private/ShaderFormats/**.cpp",
+        "Private/ShaderCompiler/**.cpp",
+        "Private/AGC/**.cpp",
+        "../../dev/IrisBuild/cpp_gen.py"
+    ]
+    srcs = list_files(srcs)
+    private = {
+        inc_dirs = ["Public", "../Core"]
+    }
+    lib_dirs = [
+        "C:/Program Files (x86)/SCE/Prospero SDKs/2.000/target/lib"
+    ]
+    libs = [
+        "SceAgcDriver_stub_weak",
+        "SceAgc_stub_weak",
+        "SceVideoOut_stub_weak",
+        "SceAgc",
+        "SceAgcCore",
+        "SceAgcGpuAddress"
+    ]
+    link_targets = ["kCore"]
 }

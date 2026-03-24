@@ -26,6 +26,9 @@
 #ifndef __k3d_CoreMinimal__
 #define __k3d_CoreMinimal__
 
+#ifndef K3DPLATFORM_OS_PROSPERO
+#define K3DPLATFORM_OS_PROSPERO 0
+#endif
 #define K3DPLATFORM_OS_WINDOWS (K3DPLATFORM_OS_WIN || K3DPLATFORM_OS_WINUWP)
 #define K3DPLATFORM_OS_UNIX (K3DPLATFORM_OS_LINUX || K3DPLATFORM_OS_MAC || K3DPLATFORM_OS_IOS || K3DPLATFORM_OS_ANDROID)
 #define K3DPLATFORM_OS_APPLE (K3DPLATFORM_OS_MAC || K3DPLATFORM_OS_IOS)
@@ -233,6 +236,7 @@ namespace __intrinsics__
         return _InterlockedCompareExchangePointer((void*volatile*)Destination, NewValue, OldValue) == OldValue;
 #else
 		__atomic_exchange(Destination, &NewValue, Destination, __ATOMIC_ACQUIRE);
+		return true;
 #endif
     }
 }

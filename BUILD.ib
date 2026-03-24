@@ -40,6 +40,12 @@ config("core_config") {
         "linux" => {
             defines = ["K3DPLATFORM_OS_LINUX=1", "K3D_USE_SSE=1"]
         }
+        "ps5" => {
+            defines = ["K3DPLATFORM_OS_PROSPERO=1", "K3D_USE_SSE=1"]    
+        }
+        "switch" => {
+            defines = ["K3DPLATFORM_OS_SWITCH=1", "K3D_USE_NEON=1"]    
+        }
     }
 
     defines += [ "FT2_BUILD_LIBRARY=1", "FT_DEBUG_LEVEL_ERROR=1" ]
@@ -80,6 +86,9 @@ source_set("core_srcs") {
         "linux" => { 
             scan_patterns += "Platform/Linux/**.cpp"
         }
+        "ps5" => {
+            scan_patterns += "src/Platform/Prospero/**.cpp"
+        }
     }
 
     configs = [ ":core_config" ]
@@ -112,9 +121,15 @@ source_set("core_srcs") {
         "src/Core/Base/Font/freetype-2.12/src/dlg/dlgwrap.c",
         "src/Core/Base/Font/freetype-2.12/src/gzip/ftgzip.c",
         "src/Core/Base/Font/freetype-2.12/src/gzip/compress.c",
+        //"src/Core/Base/Font/freetype-2.12/src/gzip/adler32.c",
+        //"src/Core/Base/Font/freetype-2.12/src/gzip/crc32.c",
+        //"src/Core/Base/Font/freetype-2.12/src/gzip/inflate.c",
+        //"src/Core/Base/Font/freetype-2.12/src/gzip/inffast.c",
+        //"src/Core/Base/Font/freetype-2.12/src/gzip/inftrees.c",
         "src/Core/Base/Font/freetype-2.12/src/gzip/uncompr.c",
         "src/Core/Base/Font/freetype-2.12/src/gzip/deflate.c",
         "src/Core/Base/Font/freetype-2.12/src/gzip/trees.c",
+        //"src/Core/Base/Font/freetype-2.12/src/gzip/zutil.c",
         "src/Core/Base/Font/freetype-2.12/src/lzw/ftlzw.c",
         "src/Core/Base/Font/freetype-2.12/src/pcf/pcf.c",
         "src/Core/Base/Font/freetype-2.12/src/pfr/pfr.c",
@@ -166,10 +181,10 @@ source_set("core_srcs") {
                 "src/Core/Base/Font/freetype-2.12/windows/ftsystem.c"
             ]
         }
-        "android" | "linux" => {
+        "android" | "linux" | "ps5" => {
             sources += [
-                "src/Core/Base/Font/freetype-2.12/unix/ftsystem.c",
-                "src/Core/Base/Font/freetype-2.12/src/base/ftdebug.c" # Dummy implementation
+                "src/Core/Base/Font/freetype-2.12/src/base/ftsystem.c",
+                "src/Core/Base/Font/freetype-2.12/src/base/ftdebug.c"
             ]
         }
         "macos" => {
@@ -208,6 +223,14 @@ source_set("ngfx_pri") {
 shared_library("core") {
     deps = [ ":core_srcs" ]
     defines = [ "LIB_BUILD=1", "BUILD_SHARED_LIB=1" ]
+    if (target_os == "ps5") {
+        libs = [
+            "ScePosix_stub_weak",
+            "kernel_stub_weak",
+            //"SceZlib_stub_weak",
+            "c_stub_weak"
+        ]
+    }
     on_init = () {
         url = "https://ci.appveyor.com/api/projects/tomicyo/third-party-clibs/artifacts/build/third_party_clibs_windows_shared.zip"
         download_and_extract(url, "${build_dir}/third_party")
@@ -234,13 +257,74 @@ shared_library("soft_render") {
 
 import ("src/Metal/metal.ib")
 
-if (target_os != "macos" && target_os != "ios") {
+if (target_os != "macos" && target_os != "ios" && target_os != "ps5") {
     shared_library("ngfx_vk") {
         deps = [ 
             ":ngfx_pri", 
             ":core"
         ]
         defines = [ "BUILD_SHARED_LIB=1" ]
+        action("prebuild") {
+            echo("Generate NGFX")
+            ret = execute("python ${root_dir}/dev/IrisBuild/cpp_gen.py -o ${root_dir}/src/NGFX/Public/ngfx.h ${root_dir}/src/NGFX/IDL/ngfx.interface.hpp")
+            echo(ret)
+        }
+    }
+}
+
+source_set("ngfx_dx12_pri") {
+    scan_patterns = [
+        "src/NGFX/Public/**.h",
+        "src/NGFX/Private/ShaderLab/**.cpp",
+        "src/NGFX/Private/ShaderFormats/**.cpp",
+        "src/NGFX/Private/ShaderCompiler/**.cpp",
+        "src/NGFX/Private/D3D12/d3d12.cpp",
+        "src/NGFX/Private/ngfx_shell.cpp",
+        "dev/IrisBuild/cpp_gen.py"
+    ]
+    sources = list_files(scan_patterns)
+    include_dirs = [ "src/NGFX/Public", "src/Core", "src/NGFX/Private/third_party", "src/NGFX/Private/third_party/dxc/include" ]
+    visibility = [":*"]
+}
+
+if (target_os == "windows") {
+    shared_library("ngfx_dx12") {
+        deps = [
+            ":ngfx_dx12_pri",
+            ":core"
+        ]
+        defines = [ "BUILD_SHARED_LIB=1" ]
+        libs = [ "d3d12.lib", "dxgi.lib", "d3dcompiler.lib" ]
+    }
+}
+
+source_set("ngfx_agc_pri") {
+    scan_patterns = [
+        "src/NGFX/Public/**.h",
+        "src/NGFX/Private/AGC/**.cpp",
+        "src/NGFX/Private/ngfx_shell.cpp",
+        "dev/IrisBuild/cpp_gen.py"
+    ]
+    sources = list_files(scan_patterns)
+    include_dirs = [ "src/NGFX/Public", "src/Core", "src/NGFX/Private/third_party", "src/NGFX/Private/third_party/dxc/include" ]
+    visibility = [":*"]
+}
+
+if (target_os == "ps5") {
+    shared_library("ngfx_agc") {
+        deps = [
+            ":ngfx_agc_pri",
+            ":core"
+        ]
+        defines = [ "BUILD_SHARED_LIB=1" ]
+        libs = [
+            "SceAgcDriver_stub_weak",
+            "SceAgc_stub_weak",
+            "SceVideoOut_stub_weak",
+            "SceAgc",
+            "SceAgcCore",
+            "SceAgcGpuAddress"
+        ]
         action("prebuild") {
             echo("Generate NGFX")
             ret = execute("python ${root_dir}/dev/IrisBuild/cpp_gen.py -o ${root_dir}/src/NGFX/Public/ngfx.h ${root_dir}/src/NGFX/IDL/ngfx.interface.hpp")
@@ -265,12 +349,20 @@ shared_library("ui") {
 
 group("runtime") {
     deps = [
-        ":core", 
-        ":ngfx_vk", 
+        ":core",
         ":ui",
         ":soft_render",
         ":mtlspv"
     ]
+    if (target_os == "windows") {
+        deps += ":ngfx_dx12"
+    }
+    if (target_os == "ps5") {
+        deps += ":ngfx_agc"
+    }
+    if (target_os != "macos" && target_os != "ios" && target_os != "ps5") {
+        deps += ":ngfx_vk"
+    }
 }
 
 executable("test_core") {
@@ -297,18 +389,39 @@ executable("test_core_app") {
 executable("test_ngfx") {
     sources = ["src/NGFX/Test/vk_ngfx.cpp"]
     deps = [
-        ":core", 
-        ":ngfx_vk"
+        ":core"
     ]
+    if (target_os == "ps5") {
+        deps += ":ngfx_agc"
+    } else {
+        deps += ":ngfx_vk"
+    }
+}
+
+
+executable("sample_0_ngfx_textured_cube") {
+    sources = ["src/NGFX/Samples/ngfx_textured_cube.cpp"]
+    deps = [
+        ":core"
+    ]
+    if (target_os == "ps5") {
+        deps += ":ngfx_agc"
+    } else {
+        deps += ":ngfx_vk"
+    }
 }
 
 executable("test_ui") {
     sources = ["src/UI/Test/GTestUI.cpp", "src/Platform/Microsoft/Win32/win32icon.rc" ]
     deps = [
-        ":core", 
-        ":ngfx_vk",
+        ":core",
         ":ui"
     ]
+    if (target_os == "ps5") {
+        deps += ":ngfx_agc"
+    } else {
+        deps += ":ngfx_vk"
+    }
 }
 
 group("tests") {
@@ -318,5 +431,11 @@ group("tests") {
         ":test_core_app",
         ":test_ngfx",
         ":test_ui"
+    ]
+}
+
+group("samples") {
+    deps = [
+        ":sample_0_ngfx_textured_cube"
     ]
 }

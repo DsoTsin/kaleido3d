@@ -8,6 +8,12 @@ static void log_print(int level, const char* msg)
 
 typedef ngfx::Factory* (*fnCreate)(bool debug, decltype(log_print) call);
 
+#if K3DPLATFORM_OS_PROSPERO
+static constexpr const char* kDefaultNgfxLibrary = "ngfx_agc";
+#else
+static constexpr const char* kDefaultNgfxLibrary = "ngfx_vk.dll";
+#endif
+
 class MyGfxApp : public k3d::App {
 public:
     MyGfxApp()
@@ -27,7 +33,7 @@ public:
     {
         App::OnInit();
 
-        k3d::os::LibraryLoader loader(R"(ngfx_vk.dll)");
+        k3d::os::LibraryLoader loader(kDefaultNgfxLibrary);
         fnCreate create = (fnCreate)loader.ResolveSymbol("CreateFactory");
         factory = create(true, log_print);
         device = factory.getDevice(0);

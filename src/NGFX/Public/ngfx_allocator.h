@@ -25,6 +25,8 @@
 #ifndef __ngfx_allocator_h__
 #define __ngfx_allocator_h__
 
+#include <stddef.h>
+
 #ifndef BUILD_SHARED_LIB
 #define BUILD_SHARED_LIB 0
 #endif

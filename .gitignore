@@ -30,6 +30,8 @@ Bin/*
 Source/local.properties
 local.properties
 gradle.properties
+compile_commands.json
+src/Metal/third_party/
 
 # Visual Studio files
 debug

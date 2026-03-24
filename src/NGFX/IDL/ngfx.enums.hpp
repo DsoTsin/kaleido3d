@@ -10,7 +10,9 @@ namespace ngfx {
 	{
 		Vulkan,
 		Metal,
-		Direct3D12
+		Direct3D12,
+        NVN, // and NVN2 (dlss, mesh_task, raytracing, etc.)
+        Agc,
 	};
     
     enum DeviceType {

@@ -15,6 +15,8 @@ enum class Backend : uint8_t {
   Vulkan,
   Metal,
   Direct3D12,
+  NVN,
+  Agc,
 };
 enum class DeviceType : uint8_t {
   Integrate,

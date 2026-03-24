@@ -27,6 +27,11 @@
 
 #include <stdint.h>
 
+
+#if defined(__clang__) || defined(__GNUC__)
+#define __forceinline inline
+#endif
+
 namespace ngfx
 {
 #if defined(_MSC_VER)

@@ -1,5 +1,8 @@
 #include "CoreMinimal.h"
 #include "Platform.h"
+#if K3DPLATFORM_OS_PROSPERO
+#include <kernel.h>
+#endif
 #include <list>
 #include <algorithm>
 #include <unordered_map>
@@ -78,7 +81,28 @@ namespace k3d
 			return true;
 		}
 #else
-
+#if K3DPLATFORM_OS_PROSPERO
+        String libDir = os::Join(GetEnv().GetModuleDir(), String("lib") + moduleName + ".prx");
+        if (libDir.Length() == 0)
+        {
+            return false;
+        }
+        int startResult = 0;
+        SceKernelModule handle = sceKernelLoadStartModule(libDir.CStr(), 0, NULL, 0, NULL, &startResult);
+        if (handle > 0)
+        {
+            void* fnAddr = nullptr;
+            if (sceKernelDlsym(handle, entryFunction.CStr(), &fnAddr) != 0 || fnAddr == nullptr)
+            {
+                sceKernelStopUnloadModule(handle, 0, NULL, 0, NULL, NULL);
+                return false;
+            }
+            PFN_GetModule fn = reinterpret_cast<PFN_GetModule>(fnAddr);
+            auto mod = fn();
+            p->g_ModuleMap.insert({moduleName, ModuleRef(mod)});
+            return true;
+        }
+#else
 #if !K3DPLATFORM_OS_IOS
         String libDir = os::Join(GetEnv().GetModuleDir(), String("lib") + moduleName +
 #if K3DPLATFORM_OS_MAC
@@ -115,6 +139,7 @@ namespace k3d
 			p->g_ModuleMap.insert({moduleName, ModuleRef(mod)});
 			return true;
 		}
+#endif
 #endif
 		return false;
 	}

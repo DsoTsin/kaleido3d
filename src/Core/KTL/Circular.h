@@ -82,7 +82,7 @@ namespace k3d
 
         bool IsEmpty() const { return m_Head == m_Tail; }
         bool IsFull() const { return Super::NextIndex(m_Tail) == m_Head; }
-        void Empty() { m_Head == m_Tail; }
+        void Empty() { m_Head = m_Tail; }
 
         bool Enqueue(const T& InElem)
         {
